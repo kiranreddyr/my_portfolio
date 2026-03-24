@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WMS-Integrated Automation for Distributor Productivity — Kiran R</title>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#06080f;--bg2:#0a0e18;--card:rgba(12,16,28,.88);--card-h:rgba(18,24,44,.92);
+  --accent:#14b8a6;--accent2:#22d3ee;--accent-dim:#0d9488;
+  --glow:rgba(20,184,166,.15);--glow2:rgba(20,184,166,.08);
+  --text:#f0edf2;--muted:#b0bcc9;--dim:#7a8899;
+  --border:rgba(255,255,255,.07);--border-h:rgba(20,184,166,.35);
+  --sans:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
+  --max:860px;--ease:cubic-bezier(.4,0,.2,1);
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7}
+a{text-decoration:none;color:inherit}
+::selection{background:rgba(20,184,166,.3);color:#fff}
+
+/* ── SCROLL PROGRESS ── */
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:10001;width:0;box-shadow:0 0 10px var(--glow)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(6,8,15,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.3px}.nav-logo span{color:var(--accent)}
+.nav-back{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);transition:color .25s}
+.nav-back:hover{color:var(--accent)}
+.nav-back svg{transition:transform .3s}.nav-back:hover svg{transform:translateX(-3px)}
+
+/* ── HERO ── */
+.case-hero{padding:120px 5% 60px;max-width:var(--max);margin:0 auto}
+.case-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);padding:6px 16px;background:var(--glow2);border:1px solid rgba(20,184,166,.2);border-radius:100px;margin-bottom:24px}
+.case-title{font-size:clamp(32px,5vw,48px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:20px}
+.case-title em{font-style:normal;color:var(--accent)}
+.case-desc{font-size:16px;color:var(--muted);line-height:1.8;max-width:680px}
+
+/* ── METRICS BAR ── */
+.metrics-bar{display:flex;gap:40px;padding:32px 0;margin:40px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);max-width:var(--max);margin-left:auto;margin-right:auto;padding-left:5%;padding-right:5%}
+.met{display:flex;flex-direction:column;gap:4px}
+.met-n{font-size:28px;font-weight:700;color:var(--accent);letter-spacing:-1px}
+.met-l{font-size:11px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--dim)}
+
+/* ── CONTENT SECTIONS ── */
+.content{max-width:var(--max);margin:0 auto;padding:0 5% 80px}
+.section{margin-bottom:64px}
+.section-label{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.section-label::before{content:'';width:24px;height:1.5px;background:var(--accent)}
+.section h2{font-size:clamp(24px,3.5vw,36px);font-weight:700;letter-spacing:-1px;margin-bottom:24px;line-height:1.15}
+.section h2 em{font-style:normal;color:var(--accent)}
+.section p{font-size:15px;color:var(--muted);line-height:1.85;margin-bottom:16px}
+.section p strong{color:var(--text);font-weight:600}
+.section ul{margin:0 0 20px 20px;color:var(--muted);font-size:15px;line-height:1.85}
+.section li{margin-bottom:8px}
+.section li strong{color:var(--text)}
+
+/* ── JOURNEY MAP ── */
+.journey{display:flex;gap:0;margin:32px 0;position:relative;overflow-x:auto;padding-bottom:16px}
+.journey::before{content:'';position:absolute;top:28px;left:32px;right:32px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));opacity:.3}
+.j-step{flex:1;min-width:160px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;z-index:1}
+.j-num{width:56px;height:56px;border-radius:50%;background:var(--card);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent)}
+.j-title{font-size:13px;font-weight:600;text-align:center;letter-spacing:-.2px}
+.j-desc{font-size:12px;color:var(--dim);text-align:center;line-height:1.5;max-width:140px}
+
+/* ── CARDS ── */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+.card{padding:24px;background:var(--card);border:1px solid var(--border);border-radius:14px;transition:all .3s var(--ease)}
+.card:hover{border-color:var(--border-h);transform:translateY(-2px)}
+.card-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.card h4{font-size:16px;font-weight:600;margin-bottom:8px;letter-spacing:-.2px}
+.card p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:0}
+
+/* ── HIGHLIGHT BOX ── */
+.highlight{padding:28px 32px;background:linear-gradient(135deg,rgba(20,184,166,.06),rgba(34,211,238,.04));border:1px solid rgba(20,184,166,.2);border-radius:16px;margin:24px 0}
+.highlight h4{font-size:15px;font-weight:600;color:var(--accent);margin-bottom:10px}
+.highlight p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:0}
+
+/* ── BACK TO TOP / NAV ── */
+.case-nav{display:flex;justify-content:space-between;align-items:center;padding:40px 5%;max-width:var(--max);margin:0 auto;border-top:1px solid var(--border)}
+.case-nav a{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--muted);transition:color .25s}
+.case-nav a:hover{color:var(--accent)}
+
+/* ── FOOTER ── */
+footer{background:#040610;border-top:1px solid var(--border);padding:24px 5%;display:flex;justify-content:space-between;align-items:center}
+footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){.case-hero{padding:100px 16px 40px}.content{padding:0 16px 60px}.metrics-bar{flex-wrap:wrap;gap:24px;padding-left:16px;padding-right:16px}.journey{flex-direction:column;align-items:flex-start}.journey::before{display:none}.card-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav>
+  <a href="../" class="nav-logo">Kiran <span>R.</span></a>
+  <a href="../#cases" class="nav-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> All Case Studies</a>
+</nav>
+
+<div class="case-hero">
+  <span class="case-tag">WMS Automation</span>
+  <h1 class="case-title">WMS-Integrated Automation for Distributor <em>Productivity</em></h1>
+  <p class="case-desc">QR code scanning for GRN, service-level driven pickslip automation, and mobile picker apps that halved warehouse processing time while reducing manual coordination by 40-60%.</p>
+</div>
+
+<div class="metrics-bar">
+  <div class="met"><span class="met-n">50%</span><span class="met-l">Time Reduction</span></div>
+  <div class="met"><span class="met-n">40-60%</span><span class="met-l">Less Coordination</span></div>
+  <div class="met"><span class="met-n">90+</span><span class="met-l">Distributors Deployed</span></div>
+  <div class="met"><span class="met-n">Mobile-First</span><span class="met-l">Picker Operations</span></div>
+</div>
+
+<div class="content">
+
+  <!-- THE PROBLEM -->
+  <div class="section">
+    <div class="section-label">The Problem</div>
+    <h2>Warehouse operations were <em>paper-based</em></h2>
+    <p>Across the distributor network, goods arrival processing was manual and decoupled from the WMS. GRNs were still paper-based or loosely integrated, creating a coordination nightmare: paper receipts, manual data entry, picking instructions printed on sheets, and no real-time visibility into completion status.</p>
+    <p>Pickers didn't have mobile access to picking lists. Instead, they relied on printed pickslips that became outdated as orders changed. Warehouse managers spent hours on manual coordination — chasing pickers for status updates, reprinting pickslips when orders were cancelled, and manually tracking completion.</p>
+
+    <div class="highlight">
+      <h4>Key Insight</h4>
+      <p>The core inefficiency wasn't warehouse capacity — it was process fragmentation. Every step (GRN, prioritization, picking, tracking) was disconnected, creating a cascade of rework and coordination overhead. Integration was the key to unlocking productivity.</p>
+    </div>
+  </div>
+
+  <!-- DESIGN THINKING -->
+  <div class="section">
+    <div class="section-label">Design Thinking</div>
+    <h2>Empathize, define, <em>ideate</em></h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Empathize</div>
+        <h4>Warehouse Operations Pain</h4>
+        <p>Observed manual GRN processes taking 45+ minutes per receipt, pickers waiting for instructions, and managers doing manual status tracking. Warehouse staff felt like coordinators, not operators.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Define</div>
+        <h4>Problem Statement</h4>
+        <p>How might we digitize warehouse operations end-to-end, from GRN to picking to completion, to eliminate manual coordination and give pickers real-time actionable instructions?</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Ideate</div>
+        <h4>Solution Approach</div>
+        <p>Three models considered: mobile-first from scratch (startup-like, high risk), desktop-first (slow adoption), and integration-first (leverage existing WMS). Chose integration-first with progressive mobile enablement.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Validate</div>
+        <h4>Pilot & Rollout</h4>
+        <p>Piloted with 5 beta distributors, validated QR-based GRN and mobile picking reduced processing time by 50%. Phased rollout to 90+ distributors over 8 months.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER JOURNEY -->
+  <div class="section">
+    <div class="section-label">User Journey Map</div>
+    <h2>From goods arrival to <em>completion tracking</em></h2>
+
+    <div class="journey">
+      <div class="j-step">
+        <div class="j-num">1</div>
+        <div class="j-title">Goods Arrival</div>
+        <div class="j-desc">Inbound shipment received at dock</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">2</div>
+        <div class="j-title">QR Scan GRN</div>
+        <div class="j-desc">Mobile device scans receipt QR code</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">3</div>
+        <div class="j-title">Auto Pickslip</div>
+        <div class="j-desc">System generates batched picking instructions</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">4</div>
+        <div class="j-title">Picker Mobile App</div>
+        <div class="j-desc">Picker receives real-time instructions on phone</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">5</div>
+        <div class="j-title">Completion Tracking</div>
+        <div class="j-desc">Real-time status updates to manager dashboard</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">6</div>
+        <div class="j-title">Shipment Ready</div>
+        <div class="j-desc">Fulfillment complete, ready for dispatch</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT THINKING -->
+  <div class="section">
+    <div class="section-label">Product Thinking</div>
+    <h2>Strategic decisions that <em>shaped the product</em></h2>
+
+    <p><strong>Why mobile-first for pickers?</strong> Desktop picking isn't feasible in a warehouse — pickers are constantly moving. A mobile app meant pickers could receive instructions on the floor, mark completion in real-time, and eliminate the manual status chasing that consumed managers' time.</p>
+
+    <p><strong>QR code strategy:</strong> Rather than overhaul the entire GRN process, we added QR codes to existing receipt documents. A simple scan unlocked digital workflows, reducing adoption friction and allowing distributors to phase in digitization at their own pace.</p>
+
+    <p><strong>Change management challenge:</strong> Warehouse staff had been doing manual processes for years. Success required focusing on tangible benefits they could feel immediately — fewer reprinted pickslips, fewer manager interruptions, real-time completion visibility. We made the shift feel like relief, not disruption.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Phased Rollout</div>
+        <h4>Regional Waves</h4>
+        <p>Rather than big-bang rollout, deployed region by region. Early waves informed training for later regions, reducing adoption friction significantly.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Success Metric</div>
+        <h4>Processing Time</h4>
+        <p>Primary north star: reduce goods inbound-to-picking processing time from 45 minutes to under 25 minutes per receipt by month 3.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECHNICAL APPROACH -->
+  <div class="section">
+    <div class="section-label">Technical Approach</div>
+    <h2>How the <em>integration</em> works</h2>
+    <ul>
+      <li><strong>QR-Based GRN Digitization:</strong> Added QR codes to receipt documents that, when scanned, create digital GRN records in the WMS instantly, eliminating manual data entry and paper shuffling</li>
+      <li><strong>Service-Level Driven Pickslip Automation:</strong> Integrated SLA risk scores with picking algorithms to auto-generate batched pickslips that respect service level priorities while optimizing picker efficiency</li>
+      <li><strong>Mobile Picker App:</strong> Built a mobile-optimized app that gives pickers real-time picking instructions, tracks completion in real-time, and syncs back to the WMS instantly</li>
+      <li><strong>Manager Dashboard:</strong> Created a real-time completion tracking dashboard that gives warehouse managers visibility into picking progress without manual status chasing</li>
+    </ul>
+  </div>
+
+  <!-- IMPACT -->
+  <div class="section">
+    <div class="section-label">Impact & Results</div>
+    <h2>Cut processing time <em>in half</em></h2>
+    <p><strong>50% reduction in goods processing time</strong> (45→22 minutes per receipt) and <strong>40-60% reduction in manual coordination overhead</strong>. Warehouse managers shifted from reactive firefighting to proactive planning. Pickers had clear, real-time instructions and saw completion reflected instantly in the system.</p>
+
+    <div class="highlight">
+      <h4>The Bigger Picture</h4>
+      <p>This wasn't just a speed play — it unlocked a feedback loop. Real-time data from picking operations informed better future prioritization, smarter pickslip batching, and continuous improvement cycles that kept productivity gains compounding month over month.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="case-nav">
+  <a href="service-level-ai.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Prev: Service Level AI</a>
+  <a href="distributor-benchmarking.html">Next: Benchmarking AI <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+</div>
+
+<footer><p>&copy; 2026 Kiran R. All rights reserved.</p><p>Built with <span class="ft-a">&hearts;</span> and purpose.</p></footer>
+
+<script>
+// Progress bar
+const b=document.getElementById('prog');
+window.addEventListener('scroll',()=>{b.style.width=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100+'%'});
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributor Benchmarking & Best-Practice AI — Kiran R</title>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#06080f;--bg2:#0a0e18;--card:rgba(12,16,28,.88);--card-h:rgba(18,24,44,.92);
+  --accent:#14b8a6;--accent2:#22d3ee;--accent-dim:#0d9488;
+  --glow:rgba(20,184,166,.15);--glow2:rgba(20,184,166,.08);
+  --text:#f0edf2;--muted:#b0bcc9;--dim:#7a8899;
+  --border:rgba(255,255,255,.07);--border-h:rgba(20,184,166,.35);
+  --sans:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
+  --max:860px;--ease:cubic-bezier(.4,0,.2,1);
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7}
+a{text-decoration:none;color:inherit}
+::selection{background:rgba(20,184,166,.3);color:#fff}
+
+/* ── SCROLL PROGRESS ── */
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:10001;width:0;box-shadow:0 0 10px var(--glow)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(6,8,15,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.3px}.nav-logo span{color:var(--accent)}
+.nav-back{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);transition:color .25s}
+.nav-back:hover{color:var(--accent)}
+.nav-back svg{transition:transform .3s}.nav-back:hover svg{transform:translateX(-3px)}
+
+/* ── HERO ── */
+.case-hero{padding:120px 5% 60px;max-width:var(--max);margin:0 auto}
+.case-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);padding:6px 16px;background:var(--glow2);border:1px solid rgba(20,184,166,.2);border-radius:100px;margin-bottom:24px}
+.case-title{font-size:clamp(32px,5vw,48px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:20px}
+.case-title em{font-style:normal;color:var(--accent)}
+.case-desc{font-size:16px;color:var(--muted);line-height:1.8;max-width:680px}
+
+/* ── METRICS BAR ── */
+.metrics-bar{display:flex;gap:40px;padding:32px 0;margin:40px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);max-width:var(--max);margin-left:auto;margin-right:auto;padding-left:5%;padding-right:5%}
+.met{display:flex;flex-direction:column;gap:4px}
+.met-n{font-size:28px;font-weight:700;color:var(--accent);letter-spacing:-1px}
+.met-l{font-size:11px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--dim)}
+
+/* ── CONTENT SECTIONS ── */
+.content{max-width:var(--max);margin:0 auto;padding:0 5% 80px}
+.section{margin-bottom:64px}
+.section-label{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.section-label::before{content:'';width:24px;height:1.5px;background:var(--accent)}
+.section h2{font-size:clamp(24px,3.5vw,36px);font-weight:700;letter-spacing:-1px;margin-bottom:24px;line-height:1.15}
+.section h2 em{font-style:normal;color:var(--accent)}
+.section p{font-size:15px;color:var(--muted);line-height:1.85;margin-bottom:16px}
+.section p strong{color:var(--text);font-weight:600}
+.section ul{margin:0 0 20px 20px;color:var(--muted);font-size:15px;line-height:1.85}
+.section li{margin-bottom:8px}
+.section li strong{color:var(--text)}
+
+/* ── JOURNEY MAP ── */
+.journey{display:flex;gap:0;margin:32px 0;position:relative;overflow-x:auto;padding-bottom:16px}
+.journey::before{content:'';position:absolute;top:28px;left:32px;right:32px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));opacity:.3}
+.j-step{flex:1;min-width:160px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;z-index:1}
+.j-num{width:56px;height:56px;border-radius:50%;background:var(--card);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent)}
+.j-title{font-size:13px;font-weight:600;text-align:center;letter-spacing:-.2px}
+.j-desc{font-size:12px;color:var(--dim);text-align:center;line-height:1.5;max-width:140px}
+
+/* ── CARDS ── */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+.card{padding:24px;background:var(--card);border:1px solid var(--border);border-radius:14px;transition:all .3s var(--ease)}
+.card:hover{border-color:var(--border-h);transform:translateY(-2px)}
+.card-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.card h4{font-size:16px;font-weight:600;margin-bottom:8px;letter-spacing:-.2px}
+.card p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:0}
+
+/* ── HIGHLIGHT BOX ── */
+.highlight{padding:28px 32px;background:linear-gradient(135deg,rgba(20,184,166,.06),rgba(34,211,238,.04));border:1px solid rgba(20,184,166,.2);border-radius:16px;margin:24px 0}
+.highlight h4{font-size:15px;font-weight:600;color:var(--accent);margin-bottom:10px}
+.highlight p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:0}
+
+/* ── BACK TO TOP / NAV ── */
+.case-nav{display:flex;justify-content:space-between;align-items:center;padding:40px 5%;max-width:var(--max);margin:0 auto;border-top:1px solid var(--border)}
+.case-nav a{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--muted);transition:color .25s}
+.case-nav a:hover{color:var(--accent)}
+
+/* ── FOOTER ── */
+footer{background:#040610;border-top:1px solid var(--border);padding:24px 5%;display:flex;justify-content:space-between;align-items:center}
+footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){.case-hero{padding:100px 16px 40px}.content{padding:0 16px 60px}.metrics-bar{flex-wrap:wrap;gap:24px;padding-left:16px;padding-right:16px}.journey{flex-direction:column;align-items:flex-start}.journey::before{display:none}.card-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav>
+  <a href="../" class="nav-logo">Kiran <span>R.</span></a>
+  <a href="../#cases" class="nav-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> All Case Studies</a>
+</nav>
+
+<div class="case-hero">
+  <span class="case-tag">Benchmarking AI</span>
+  <h1 class="case-title">Distributor Benchmarking & Best-Practice <em>AI</em></h1>
+  <p class="case-desc">Real-time KPI visibility with anonymous peer benchmarking, continuous performance tracking, and AI-driven root cause analysis that enabled a data-driven improvement culture across the network.</p>
+</div>
+
+<div class="metrics-bar">
+  <div class="met"><span class="met-n">90+</span><span class="met-l">Distributors Covered</span></div>
+  <div class="met"><span class="met-n">Real-Time</span><span class="met-l">KPI Visibility</span></div>
+  <div class="met"><span class="met-n">Anonymous</span><span class="met-l">Peer Comparison</span></div>
+  <div class="met"><span class="met-n">AI-Driven</span><span class="met-l">Root Cause Analysis</span></div>
+</div>
+
+<div class="content">
+
+  <!-- THE PROBLEM -->
+  <div class="section">
+    <div class="section-label">The Problem</div>
+    <h2>Distributors didn't know they were <em>underperforming</em></h2>
+    <p>Most distributors in the network operated in a data vacuum. They tracked their own metrics but had no visibility into how they compared against peers. A distributor with 78% service level thought they were doing okay — they didn't know the network average was 85% and the best-in-class was 92%.</p>
+    <p>This information asymmetry meant no healthy competitive pressure or peer learning. Distributors that were underperforming weren't even aware of it. There was no mechanism for the network to learn from best practices or for laggards to understand where they were falling short.</p>
+
+    <div class="highlight">
+      <h4>Key Insight</h4>
+      <p>Performance is relative. Without peer visibility, distributors can't benchmark progress or learn from network-wide best practices. Transparent performance data — especially anonymous — creates healthy competition and drives continuous improvement across the ecosystem.</p>
+    </div>
+  </div>
+
+  <!-- DESIGN THINKING -->
+  <div class="section">
+    <div class="section-label">Design Thinking</div>
+    <h2>Empathize, define, <em>ideate</em></h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Empathize</div>
+        <h4>Distributor Blind Spot</h4>
+        <p>Distributors operated without external feedback. Interviews revealed: "We thought our 78% SL was acceptable until we found out it was bottom quartile. We had no idea where to improve."</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Define</div>
+        <h4>Problem Statement</h4>
+        <p>How might we provide distributors with real-time KPI visibility and anonymous peer benchmarking to unlock data-driven improvement conversations and network-level optimization?</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Ideate</div>
+        <h4>Solution Concepts</h4>
+        <p>Considered: public leaderboards (too political), manual benchmarking reports (too slow), and real-time anonymous dashboards (best balance). Built interactive KPI portal with peer comparison and AI recommendations.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Validate</div>
+        <h4>Pilot Learning</h4>
+        <p>Beta tested with 12 distributors. Instant feedback: 87% of underperformers immediately wanted to know "how to catch up to top quartile?" — proof of concept validated.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER JOURNEY -->
+  <div class="section">
+    <div class="section-label">User Journey Map</div>
+    <h2>From blind spot to <em>continuous improvement</em></h2>
+
+    <div class="journey">
+      <div class="j-step">
+        <div class="j-num">1</div>
+        <div class="j-title">KPI Dashboard</div>
+        <div class="j-desc">Real-time performance metrics across all KPIs</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">2</div>
+        <div class="j-title">Peer Comparison</div>
+        <div class="j-desc">Anonymous benchmarking vs network average and quartiles</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">3</div>
+        <div class="j-title">Gap Identification</div>
+        <div class="j-desc">System highlights performance gaps and opportunities</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">4</div>
+        <div class="j-title">Root Cause AI</div>
+        <div class="j-desc">AI analyzes causes of underperformance</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">5</div>
+        <div class="j-title">Recommendations</div>
+        <div class="j-desc">Personalized improvement actions from best practices</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">6</div>
+        <div class="j-title">Improvement Tracking</div>
+        <div class="j-desc">Monitor progress and celebrate wins</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT THINKING -->
+  <div class="section">
+    <div class="section-label">Product Thinking</div>
+    <h2>Strategic decisions that <em>shaped the product</em></h2>
+
+    <p><strong>Why anonymous benchmarking?</strong> If distributors knew "you're worse than Distributor X," it could create defensiveness. Anonymous comparison eliminates ego and focuses conversations on performance against the network, not against individuals. It's about "how do we reach top quartile" not "why are we losing to them."</p>
+
+    <p><strong>Privacy considerations:</strong> Built strict data governance — no distributor can see another distributor's data, only aggregate statistics and rankings. This protected competitive sensitivity while enabling benchmark transparency.</p>
+
+    <p><strong>Gamification elements:</strong> Top performers got recognition; underperformers got targeted AI recommendations. This created positive reinforcement cycles — visible progress motivated continued effort. Monthly "KPI highlights" reports celebrated improvements across the network.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Data Trust</div>
+        <h4>Privacy-First Design</h4>
+        <p>No distributor can identify peers from data alone. All comparisons are anonymized, with access controls preventing data leakage. Built trust through transparent data governance.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Success Metric</div>
+        <h4>Network Improvement</h4>
+        <p>Primary north star: increase network average service level from 85% to 88%+ through peer-driven continuous improvement cycles within 6 months.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECHNICAL APPROACH -->
+  <div class="section">
+    <div class="section-label">Technical Approach</div>
+    <h2>How the <em>benchmarking engine</em> works</h2>
+    <ul>
+      <li><strong>Real-Time KPI Aggregation:</strong> Built ETL pipelines that aggregate KPI data from 90+ distributors hourly, creating real-time views without compromising privacy or performance</li>
+      <li><strong>Anonymous Peer Comparison:</strong> Created ranking and quartile systems that let distributors see how they compare without revealing peer identities, using statistical aggregates and anonymized cohorts</li>
+      <li><strong>Root Cause Analysis Engine:</strong> Developed AI models that correlate performance gaps with operational factors (days pending, unserviceable rate, GRN velocity) to suggest actionable root causes</li>
+      <li><strong>Personalized Recommendation System:</strong> Built recommendation engine that surfaces best practices from top-performing distributors and tailors them to each distributor's specific gaps</li>
+    </ul>
+  </div>
+
+  <!-- IMPACT -->
+  <div class="section">
+    <div class="section-label">Impact & Results</div>
+    <h2>Transformed culture to <em>data-driven improvement</em></h2>
+    <p><strong>90+ distributors now have real-time KPI visibility</strong> and peer benchmarking access. Within 6 months of launch, <strong>75% of underperforming distributors had closed their gap by at least 2%</strong>, demonstrating the power of transparent performance data and peer learning.</p>
+
+    <div class="highlight">
+      <h4>The Bigger Picture</h4>
+      <p>This wasn't just a reporting tool — it became the foundation for a data-driven culture shift. Distributors started having conversations: "What are top quartile distributors doing differently?" and "How do we reach their performance level?" The network lifted together.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="case-nav">
+  <a href="wms-automation.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Prev: WMS Automation</a>
+  <a href="demand-matching.html">Next: Demand Matching <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+</div>
+
+<footer><p>&copy; 2026 Kiran R. All rights reserved.</p><p>Built with <span class="ft-a">&hearts;</span> and purpose.</p></footer>
+
+<script>
+// Progress bar
+const b=document.getElementById('prog');
+window.addEventListener('scroll',()=>{b.style.width=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100+'%'});
+</script>
+</body>
+</html>

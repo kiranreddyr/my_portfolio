@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributor-to-Distributor Demand Matching — Kiran R</title>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#06080f;--bg2:#0a0e18;--card:rgba(12,16,28,.88);--card-h:rgba(18,24,44,.92);
+  --accent:#14b8a6;--accent2:#22d3ee;--accent-dim:#0d9488;
+  --glow:rgba(20,184,166,.15);--glow2:rgba(20,184,166,.08);
+  --text:#f0edf2;--muted:#b0bcc9;--dim:#7a8899;
+  --border:rgba(255,255,255,.07);--border-h:rgba(20,184,166,.35);
+  --sans:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
+  --max:860px;--ease:cubic-bezier(.4,0,.2,1);
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7}
+a{text-decoration:none;color:inherit}
+::selection{background:rgba(20,184,166,.3);color:#fff}
+
+/* ── SCROLL PROGRESS ── */
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:10001;width:0;box-shadow:0 0 10px var(--glow)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(6,8,15,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.3px}.nav-logo span{color:var(--accent)}
+.nav-back{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);transition:color .25s}
+.nav-back:hover{color:var(--accent)}
+.nav-back svg{transition:transform .3s}.nav-back:hover svg{transform:translateX(-3px)}
+
+/* ── HERO ── */
+.case-hero{padding:120px 5% 60px;max-width:var(--max);margin:0 auto}
+.case-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);padding:6px 16px;background:var(--glow2);border:1px solid rgba(20,184,166,.2);border-radius:100px;margin-bottom:24px}
+.case-title{font-size:clamp(32px,5vw,48px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:20px}
+.case-title em{font-style:normal;color:var(--accent)}
+.case-desc{font-size:16px;color:var(--muted);line-height:1.8;max-width:680px}
+
+/* ── METRICS BAR ── */
+.metrics-bar{display:flex;gap:40px;padding:32px 0;margin:40px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);max-width:var(--max);margin-left:auto;margin-right:auto;padding-left:5%;padding-right:5%}
+.met{display:flex;flex-direction:column;gap:4px}
+.met-n{font-size:28px;font-weight:700;color:var(--accent);letter-spacing:-1px}
+.met-l{font-size:11px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--dim)}
+
+/* ── CONTENT SECTIONS ── */
+.content{max-width:var(--max);margin:0 auto;padding:0 5% 80px}
+.section{margin-bottom:64px}
+.section-label{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.section-label::before{content:'';width:24px;height:1.5px;background:var(--accent)}
+.section h2{font-size:clamp(24px,3.5vw,36px);font-weight:700;letter-spacing:-1px;margin-bottom:24px;line-height:1.15}
+.section h2 em{font-style:normal;color:var(--accent)}
+.section p{font-size:15px;color:var(--muted);line-height:1.85;margin-bottom:16px}
+.section p strong{color:var(--text);font-weight:600}
+.section ul{margin:0 0 20px 20px;color:var(--muted);font-size:15px;line-height:1.85}
+.section li{margin-bottom:8px}
+.section li strong{color:var(--text)}
+
+/* ── JOURNEY MAP ── */
+.journey{display:flex;gap:0;margin:32px 0;position:relative;overflow-x:auto;padding-bottom:16px}
+.journey::before{content:'';position:absolute;top:28px;left:32px;right:32px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));opacity:.3}
+.j-step{flex:1;min-width:160px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;z-index:1}
+.j-num{width:56px;height:56px;border-radius:50%;background:var(--card);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent)}
+.j-title{font-size:13px;font-weight:600;text-align:center;letter-spacing:-.2px}
+.j-desc{font-size:12px;color:var(--dim);text-align:center;line-height:1.5;max-width:140px}
+
+/* ── CARDS ── */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+.card{padding:24px;background:var(--card);border:1px solid var(--border);border-radius:14px;transition:all .3s var(--ease)}
+.card:hover{border-color:var(--border-h);transform:translateY(-2px)}
+.card-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.card h4{font-size:16px;font-weight:600;margin-bottom:8px;letter-spacing:-.2px}
+.card p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:0}
+
+/* ── HIGHLIGHT BOX ── */
+.highlight{padding:28px 32px;background:linear-gradient(135deg,rgba(20,184,166,.06),rgba(34,211,238,.04));border:1px solid rgba(20,184,166,.2);border-radius:16px;margin:24px 0}
+.highlight h4{font-size:15px;font-weight:600;color:var(--accent);margin-bottom:10px}
+.highlight p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:0}
+
+/* ── BACK TO TOP / NAV ── */
+.case-nav{display:flex;justify-content:space-between;align-items:center;padding:40px 5%;max-width:var(--max);margin:0 auto;border-top:1px solid var(--border)}
+.case-nav a{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--muted);transition:color .25s}
+.case-nav a:hover{color:var(--accent)}
+
+/* ── FOOTER ── */
+footer{background:#040610;border-top:1px solid var(--border);padding:24px 5%;display:flex;justify-content:space-between;align-items:center}
+footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){.case-hero{padding:100px 16px 40px}.content{padding:0 16px 60px}.metrics-bar{flex-wrap:wrap;gap:24px;padding-left:16px;padding-right:16px}.journey{flex-direction:column;align-items:flex-start}.journey::before{display:none}.card-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav>
+  <a href="../" class="nav-logo">Kiran <span>R.</span></a>
+  <a href="../#cases" class="nav-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> All Case Studies</a>
+</nav>
+
+<div class="case-hero">
+  <span class="case-tag">Demand Intelligence</span>
+  <h1 class="case-title">Distributor-to-Distributor Demand <em>Matching</em></h1>
+  <p class="case-desc">Intelligent demand-supply matching across distributor nodes enabling lateral stock transfers, reducing fulfillment gaps, and optimizing network-wide inventory utilization through AI-powered predictions.</p>
+</div>
+
+<div class="metrics-bar">
+  <div class="met"><span class="met-n">Network-Wide</span><span class="met-l">Cross-Distributor Matching</span></div>
+  <div class="met"><span class="met-n">AI Demand</span><span class="met-l">Prediction</span></div>
+  <div class="met"><span class="met-n">Reduced</span><span class="met-l">Fulfillment Gaps</span></div>
+  <div class="met"><span class="met-n">Optimized</span><span class="met-l">Network Inventory</span></div>
+</div>
+
+<div class="content">
+
+  <!-- THE PROBLEM -->
+  <div class="section">
+    <div class="section-label">The Problem</div>
+    <h2>Inventory was locked in <em>silos</em></h2>
+    <p>The distributor network operated as independent nodes. When a customer in Mumbai needed a part that Distributor A didn't stock, they faced a stockout and delay. Meanwhile, 80km away in Thane, Distributor B had surplus stock of that same part sitting idle.</p>
+    <p>There was no visibility into network-wide supply. Each distributor only knew their own inventory. Customers experienced frustrating wait times and cancellations, while the network as a whole had sufficient inventory — it was just in the wrong places. This represented massive lost revenue and customer dissatisfaction.</p>
+
+    <div class="highlight">
+      <h4>Key Insight</h4>
+      <p>The network had a distribution problem, not a supply problem. By connecting demand signals from one distributor with surplus inventory at another, we could optimize the entire network's fulfillment velocity and reduce customer wait times dramatically.</p>
+    </div>
+  </div>
+
+  <!-- DESIGN THINKING -->
+  <div class="section">
+    <div class="section-label">Design Thinking</div>
+    <h2>Empathize, define, <em>ideate</em></h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Empathize</div>
+        <h4>Customer Frustration</h4>
+        <p>Field research revealed: customers experienced 5-7 day delays for parts that were actually available elsewhere in the network. Distributor sales teams felt helpless — they couldn't fulfill urgent orders even though inventory existed.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Define</div>
+        <h4>Problem Statement</h4>
+        <p>How might we create a network intelligence layer that matches unmet demand at one distributor with surplus inventory at another, enabling fast lateral transfers?</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Ideate</div>
+        <h4>Solution Concepts</h4>
+        <p>Explored: central warehouse (expensive), manual broker (slow), and AI matching engine (scalable). Built intelligent demand-supply matcher with predictive demand and logistics optimization.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Validate</div>
+        <h4>Pilot Results</h4>
+        <p>Tested cross-distributor transfers in South region. Matched 200+ shipments in 6 weeks. Reduced average fulfillment time by 3-4 days and captured 15% of would-be lost sales.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER JOURNEY -->
+  <div class="section">
+    <div class="section-label">User Journey Map</div>
+    <h2>From demand signal to <em>network fulfillment</em></h2>
+
+    <div class="journey">
+      <div class="j-step">
+        <div class="j-num">1</div>
+        <div class="j-title">Demand Signal</div>
+        <div class="j-desc">Unmet customer demand at one distributor</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">2</div>
+        <div class="j-title">Mismatch Detection</div>
+        <div class="j-desc">System identifies supply-demand gap in inventory</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">3</div>
+        <div class="j-title">Surplus Identification</div>
+        <div class="j-desc">Algorithm finds nearby distributors with available stock</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">4</div>
+        <div class="j-title">Transfer Recommendation</div>
+        <div class="j-desc">Optimizes logistics and suggests transfer</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">5</div>
+        <div class="j-title">Approval & Execution</div>
+        <div class="j-desc">Distributors approve, shipment transferred</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">6</div>
+        <div class="j-title">Delivery</div>
+        <div class="j-desc">Fast fulfillment from local distributor to customer</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT THINKING -->
+  <div class="section">
+    <div class="section-label">Product Thinking</div>
+    <h2>Strategic decisions that <em>shaped the product</em></h2>
+
+    <p><strong>Why AI-powered matching?</strong> Manual broker systems are slow and expensive to scale. By automating the matching logic, we could surface opportunities in real-time. The algorithm considers: demand urgency, inventory proximity, logistics cost, and historical conversion probability.</p>
+
+    <p><strong>Logistics cost optimization:</strong> A nearby distributor can transfer faster and cheaper than a distant one, even if the distant one has surplus. Our matching algorithm factors distance, transit time, and transfer cost into recommendations — some transfers are economically viable, others aren't.</p>
+
+    <p><strong>Trust between competitors:</strong> Distributors are naturally competitive. We solved this by making transfers mutually beneficial: the supplying distributor gets the cost of goods + agreed margin (no loss), the demanding distributor fills a customer order that would otherwise be lost, and TVS captures data. Everyone wins.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Network Effects</div>
+        <h4>Scale Advantage</h4>
+        <p>The more distributors in the network, the more opportunities for matches. This creates a virtuous cycle — bigger network = more matches = higher fulfillment rates = more value for members.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Success Metric</div>
+        <h4>Network Fulfillment</h4>
+        <p>Primary north star: reduce network-wide stock-out duration through lateral transfers. Secondary: increase overall parts availability from 88% to 92%+.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECHNICAL APPROACH -->
+  <div class="section">
+    <div class="section-label">Technical Approach</div>
+    <h2>How the <em>matching engine</em> works</h2>
+    <ul>
+      <li><strong>Demand-Supply Matching:</strong> Built real-time pipelines that detect unmet customer demand and correlate with available inventory across the distributor network</li>
+      <li><strong>Logistics Optimization:</strong> Created algorithms that balance transfer cost (distance, urgency) against demand urgency and conversion probability to recommend only economically viable transfers</li>
+      <li><strong>Predictive Demand Modeling:</strong> Developed models that forecast demand spikes and pre-position inventory at strategic distributor nodes to minimize future transfer needs</li>
+      <li><strong>Trust and Incentive Alignment:</strong> Designed pricing mechanism where supplying distributor receives cost + margin, preventing loss of income while enabling network-wide fulfillment optimization</li>
+    </ul>
+  </div>
+
+  <!-- IMPACT -->
+  <div class="section">
+    <div class="section-label">Impact & Results</div>
+    <h2>Transformed network fulfillment <em>efficiency</em></h2>
+    <p>Demand-supply matching unlocked lateral stock transfers across distributors, reducing fulfillment gaps and enabling faster customer delivery. In the pilot, <strong>200+ successful lateral transfers were completed, recovering 15% of would-be lost sales</strong> and reducing average fulfillment delay by 3-4 days.</p>
+
+    <div class="highlight">
+      <h4>The Bigger Picture</h4>
+      <p>This demonstrated the power of network intelligence. By treating the distributor network as a connected system rather than isolated nodes, we unlocked significant optimization opportunities. Future evolution will add demand prediction to pre-position inventory and further reduce transfer overhead.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="case-nav">
+  <a href="distributor-benchmarking.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Prev: Benchmarking</a>
+  <a href="dms-ai-suite.html">Next: DMS AI Suite <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+</div>
+
+<footer><p>&copy; 2026 Kiran R. All rights reserved.</p><p>Built with <span class="ft-a">&hearts;</span> and purpose.</p></footer>
+
+<script>
+// Progress bar
+const b=document.getElementById('prog');
+window.addEventListener('scroll',()=>{b.style.width=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100+'%'});
+</script>
+</body>
+</html>

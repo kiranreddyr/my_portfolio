@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8 AI Use Cases Transforming DMS — Kiran R</title>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#06080f;--bg2:#0a0e18;--card:rgba(12,16,28,.88);--card-h:rgba(18,24,44,.92);
+  --accent:#14b8a6;--accent2:#22d3ee;--accent-dim:#0d9488;
+  --glow:rgba(20,184,166,.15);--glow2:rgba(20,184,166,.08);
+  --text:#f0edf2;--muted:#b0bcc9;--dim:#7a8899;
+  --border:rgba(255,255,255,.07);--border-h:rgba(20,184,166,.35);
+  --sans:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
+  --max:860px;--ease:cubic-bezier(.4,0,.2,1);
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7}
+a{text-decoration:none;color:inherit}
+::selection{background:rgba(20,184,166,.3);color:#fff}
+
+/* ── SCROLL PROGRESS ── */
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:10001;width:0;box-shadow:0 0 10px var(--glow)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(6,8,15,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.3px}.nav-logo span{color:var(--accent)}
+.nav-back{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);transition:color .25s}
+.nav-back:hover{color:var(--accent)}
+.nav-back svg{transition:transform .3s}.nav-back:hover svg{transform:translateX(-3px)}
+
+/* ── HERO ── */
+.case-hero{padding:120px 5% 60px;max-width:var(--max);margin:0 auto}
+.case-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);padding:6px 16px;background:var(--glow2);border:1px solid rgba(20,184,166,.2);border-radius:100px;margin-bottom:24px}
+.case-title{font-size:clamp(32px,5vw,48px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:20px}
+.case-title em{font-style:normal;color:var(--accent)}
+.case-desc{font-size:16px;color:var(--muted);line-height:1.8;max-width:680px}
+
+/* ── METRICS BAR ── */
+.metrics-bar{display:flex;gap:40px;padding:32px 0;margin:40px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);max-width:var(--max);margin-left:auto;margin-right:auto;padding-left:5%;padding-right:5%}
+.met{display:flex;flex-direction:column;gap:4px}
+.met-n{font-size:28px;font-weight:700;color:var(--accent);letter-spacing:-1px}
+.met-l{font-size:11px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--dim)}
+
+/* ── CONTENT SECTIONS ── */
+.content{max-width:var(--max);margin:0 auto;padding:0 5% 80px}
+.section{margin-bottom:64px}
+.section-label{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.section-label::before{content:'';width:24px;height:1.5px;background:var(--accent)}
+.section h2{font-size:clamp(24px,3.5vw,36px);font-weight:700;letter-spacing:-1px;margin-bottom:24px;line-height:1.15}
+.section h2 em{font-style:normal;color:var(--accent)}
+.section p{font-size:15px;color:var(--muted);line-height:1.85;margin-bottom:16px}
+.section p strong{color:var(--text);font-weight:600}
+.section ul{margin:0 0 20px 20px;color:var(--muted);font-size:15px;line-height:1.85}
+.section li{margin-bottom:8px}
+.section li strong{color:var(--text)}
+
+/* ── JOURNEY MAP ── */
+.journey{display:flex;gap:0;margin:32px 0;position:relative;overflow-x:auto;padding-bottom:16px}
+.journey::before{content:'';position:absolute;top:28px;left:32px;right:32px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));opacity:.3}
+.j-step{flex:1;min-width:160px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;z-index:1}
+.j-num{width:56px;height:56px;border-radius:50%;background:var(--card);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent)}
+.j-title{font-size:13px;font-weight:600;text-align:center;letter-spacing:-.2px}
+.j-desc{font-size:12px;color:var(--dim);text-align:center;line-height:1.5;max-width:140px}
+
+/* ── CARDS ── */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+.card{padding:24px;background:var(--card);border:1px solid var(--border);border-radius:14px;transition:all .3s var(--ease)}
+.card:hover{border-color:var(--border-h);transform:translateY(-2px)}
+.card-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.card h4{font-size:16px;font-weight:600;margin-bottom:8px;letter-spacing:-.2px}
+.card p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:0}
+
+/* ── HIGHLIGHT BOX ── */
+.highlight{padding:28px 32px;background:linear-gradient(135deg,rgba(20,184,166,.06),rgba(34,211,238,.04));border:1px solid rgba(20,184,166,.2);border-radius:16px;margin:24px 0}
+.highlight h4{font-size:15px;font-weight:600;color:var(--accent);margin-bottom:10px}
+.highlight p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:0}
+
+/* ── BACK TO TOP / NAV ── */
+.case-nav{display:flex;justify-content:space-between;align-items:center;padding:40px 5%;max-width:var(--max);margin:0 auto;border-top:1px solid var(--border)}
+.case-nav a{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--muted);transition:color .25s}
+.case-nav a:hover{color:var(--accent)}
+
+/* ── FOOTER ── */
+footer{background:#040610;border-top:1px solid var(--border);padding:24px 5%;display:flex;justify-content:space-between;align-items:center}
+footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){.case-hero{padding:100px 16px 40px}.content{padding:0 16px 60px}.metrics-bar{flex-wrap:wrap;gap:24px;padding-left:16px;padding-right:16px}.journey{flex-direction:column;align-items:flex-start}.journey::before{display:none}.card-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav>
+  <a href="../" class="nav-logo">Kiran <span>R.</span></a>
+  <a href="../#cases" class="nav-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> All Case Studies</a>
+</nav>
+
+<div class="case-hero">
+  <span class="case-tag">DMS AI Suite</span>
+  <h1 class="case-title">8 AI Use Cases Transforming <em>DMS</em></h1>
+  <p class="case-desc">A comprehensive AI transformation across the entire DMS workflow — from material inward through inventory health and network intelligence — creating an end-to-end intelligent distribution platform.</p>
+</div>
+
+<div class="metrics-bar">
+  <div class="met"><span class="met-n">8</span><span class="met-l">AI Use Cases</span></div>
+  <div class="met"><span class="met-n">End-to-End</span><span class="met-l">Process Coverage</span></div>
+  <div class="met"><span class="met-n">Reactive</span><span class="met-l">to Predictive</span></div>
+  <div class="met"><span class="met-n">Network</span><span class="met-l">Intelligent</span></div>
+</div>
+
+<div class="content">
+
+  <!-- THE PROBLEM -->
+  <div class="section">
+    <div class="section-label">The Problem</div>
+    <h2>DMS was fragmented and <em>reactive</em></h2>
+    <p>The distributor management system (DMS) was a collection of isolated modules. GRN processing was manual. Service levels were reactive (respond after they breach). Inventory decisions were reactive (reorder when stock runs out). There was no unified intelligence connecting inbound, fulfillment, inventory, and network optimization.</p>
+    <p>Each module solved a local problem without considering system-wide efficiency. A single AI intervention could improve one metric, but without integration, broader optimization was impossible. The distributor network needed a unified platform where every stage of the workflow was enhanced by intelligence.</p>
+
+    <div class="highlight">
+      <h4>Key Insight</h4>
+      <p>The opportunity wasn't in individual point solutions — it was in a holistic AI platform that unified the entire workflow. By adding intelligence across 8 critical use cases, we could transform DMS from a transaction processor to a strategic decision-making platform.</p>
+    </div>
+  </div>
+
+  <!-- DESIGN THINKING -->
+  <div class="section">
+    <div class="section-label">Design Thinking</div>
+    <h2>Empathize, define, <em>ideate</em></h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Empathize</div>
+        <h4>Operational Frustration</h4>
+        <p>Warehouse managers, logistics teams, and distributor leaders all felt the same pain: operating with incomplete information, reacting to problems instead of preventing them, and having no visibility into how their actions impacted network-level metrics.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Define</div>
+        <h4>Problem Statement</h4>
+        <p>How might we create a unified AI platform that intelligently optimizes the entire DMS workflow — from inbound to fulfillment to inventory health — enabling predictive, data-driven operations?</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Ideate</div>
+        <h4>Solution Approach</div>
+        <p>Mapped the entire DMS workflow end-to-end (8 critical stages). Identified the highest-impact AI opportunity at each stage. Sequenced rollout to build integration, not just isolated tools.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Validate</div>
+        <h4>Sequenced Rollout</h4>
+        <p>Launched 3 use cases first, validated integration benefits, then sequentially added 5 more. Each new use case worked synergistically with prior ones, multiplying overall impact.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER JOURNEY -->
+  <div class="section">
+    <div class="section-label">User Journey Map</div>
+    <h2>From inbound to <em>network intelligence</em></h2>
+
+    <div class="journey">
+      <div class="j-step">
+        <div class="j-num">1</div>
+        <div class="j-title">Material Inward</div>
+        <div class="j-desc">Goods arrival at distributor dock</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">2</div>
+        <div class="j-title">GRN & QC</div>
+        <div class="j-desc">Smart quality prediction and processing</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">3</div>
+        <div class="j-title">Replenishment</div>
+        <div class="j-desc">AI-driven stocking decisions</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">4</div>
+        <div class="j-title">SLA Scoring</div>
+        <div class="j-desc">Real-time risk assessment on orders</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">5</div>
+        <div class="j-title">Pickslip Generation</div>
+        <div class="j-desc">Intelligent batching and prioritization</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">6</div>
+        <div class="j-title">Picking Execution</div>
+        <div class="j-desc">Mobile-guided fulfillment</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">7</div>
+        <div class="j-title">Inventory Health</div>
+        <div class="j-desc">Dead stock prediction and optimization</div>
+      </div>
+      <div class="j-step">
+        <div class="j-num">8</div>
+        <div class="j-title">Network Intelligence</div>
+        <div class="j-desc">Cross-distributor matching and insights</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT THINKING -->
+  <div class="section">
+    <div class="section-label">Product Thinking</div>
+    <h2>Strategic decisions that <em>shaped the product</em></h2>
+
+    <p><strong>Why a suite approach vs individual tools?</strong> Individual AI tools create silos. The true power comes from integration — a service level risk score informs pickslip generation, inventory health feeds into replenishment decisions, network intelligence optimizes stock positioning. A unified platform multiplies impact across the workflow.</p>
+
+    <p><strong>Sequencing the rollout:</strong> We didn't launch all 8 use cases simultaneously. Instead, we prioritized: GRN automation + Service Level AI + Pickslip Automation (Phase 1). These three proved value and built trust. Then we sequentially added: WMS integration, Benchmarking, Dead Stock Prevention, Demand Matching, and Network Intelligence (Phases 2-3).</p>
+
+    <p><strong>Dependency management:</strong> Later use cases depend on data quality and infrastructure from earlier ones. By sequencing smartly, we ensured each new capability had clean data, proven integration patterns, and trained teams ready to adopt it.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Integration Strategy</div>
+        <h4>Unified Platform</h4>
+        <p>Built all 8 use cases on a common data foundation. Service level signals feed into prioritization. Inventory insights feed into replenishment. Network data feeds into demand matching. Each module strengthens the others.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Success Metric</div>
+        <h4>Holistic Improvement</h4>
+        <p>Primary north star: transform DMS from reactive to predictive. Measure end-to-end impact: service level +8%, processing time -50%, inventory efficiency +15%, dead stock -20%.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECHNICAL APPROACH -->
+  <div class="section">
+    <div class="section-label">Technical Approach</div>
+    <h2>How the <em>unified platform</em> works</h2>
+    <ul>
+      <li><strong>1. Smart GRN & Quality Prediction:</strong> AI predicts unserviceable lines at goods arrival, enabling proactive quality checks and expedited processing</li>
+      <li><strong>2. AI-Driven Replenishment:</strong> Predictive models forecast demand by SKU and optimize stocking decisions in real-time, reducing stockouts and dead stock</li>
+      <li><strong>3. Service Level Risk Scoring:</strong> Continuous assessment of pending orders against deadlines enables proactive intervention before SLA breach</li>
+      <li><strong>4. Intelligent Pickslip Automation:</strong> Algorithms batch orders respecting SLA priorities while optimizing picker efficiency through location clustering</li>
+      <li><strong>5. Mobile Picker Operations:</strong> Real-time picking instructions and completion tracking via mobile app eliminates manual coordination overhead</li>
+      <li><strong>6. Dead Stock Prevention:</strong> Predictive models identify slow-moving inventory before it becomes unsellable, enabling early intervention</li>
+      <li><strong>7. Distributor Benchmarking:</strong> Real-time KPI visibility with anonymous peer comparison drives continuous improvement culture</li>
+      <li><strong>8. Demand-Supply Matching:</strong> Network intelligence matches unmet demand with surplus inventory across distributor nodes, optimizing network-wide fulfillment</li>
+    </ul>
+  </div>
+
+  <!-- IMPACT -->
+  <div class="section">
+    <div class="section-label">Impact & Results</div>
+    <h2>End-to-end AI transformation of <em>DMS</em></h2>
+    <p>The 8 AI use cases created a unified intelligent distribution platform with compounding benefits:</p>
+    <p><strong>Service Level:</strong> Improved from 82% to 88%+ through predictive prioritization. <strong>Processing Time:</strong> Reduced inbound-to-picking by 50% through automation. <strong>Inventory Efficiency:</strong> Dead stock reduced 20% through predictive identification. <strong>Network Fulfillment:</strong> 15% of would-be lost sales recovered through cross-distributor matching.</p>
+
+    <div class="highlight">
+      <h4>The Bigger Picture</h4>
+      <p>This suite isn't just about incremental metrics improvement — it represents a fundamental shift in how distributor operations work. From reactive (responding to problems after they occur) to predictive (preventing problems before they happen). From siloed (each function optimizing locally) to integrated (each function strengthens the others). The distributor network became a truly intelligent ecosystem.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="case-nav">
+  <a href="demand-matching.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Prev: Demand Matching</a>
+  <a href="../#cases">All Case Studies <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+</div>
+
+<footer><p>&copy; 2026 Kiran R. All rights reserved.</p><p>Built with <span class="ft-a">&hearts;</span> and purpose.</p></footer>
+
+<script>
+// Progress bar
+const b=document.getElementById('prog');
+window.addEventListener('scroll',()=>{b.style.width=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100+'%'});
+</script>
+</body>
+</html>
