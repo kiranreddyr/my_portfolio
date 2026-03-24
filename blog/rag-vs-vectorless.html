@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG vs Vectorless RAG — Kiran R</title>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+
+/* Root Variables */
+:root{
+  --bg:#06080f;--bg2:#0a0e18;--card:rgba(12,16,28,.88);--card-h:rgba(18,24,44,.92);
+  --accent:#14b8a6;--accent2:#22d3ee;--accent-dim:#0d9488;
+  --glow:rgba(20,184,166,.15);--glow2:rgba(20,184,166,.08);
+  --text:#f0edf2;--muted:#b0bcc9;--dim:#7a8899;
+  --border:rgba(255,255,255,.07);--border-h:rgba(20,184,166,.35);
+  --sans:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
+  --max:860px;--ease:cubic-bezier(.4,0,.2,1);
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7}
+a{text-decoration:none;color:inherit}
+::selection{background:rgba(20,184,166,.3);color:#fff}
+
+/* ── SCROLL PROGRESS ── */
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:10001;width:0;box-shadow:0 0 10px var(--glow)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(6,8,15,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.3px}.nav-logo span{color:var(--accent)}
+.nav-back{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);transition:color .25s}
+.nav-back:hover{color:var(--accent)}
+.nav-back svg{transition:transform .3s}.nav-back:hover svg{transform:translateX(-3px)}
+
+/* ── BLOG CONTENT WRAPPER ── */
+.blog-wrapper{padding:80px 5% 60px;max-width:var(--max);margin:0 auto}
+
+/* ── Blog HTML Styles ── */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+.blog-wrapper *{box-sizing:border-box}
+.blog-wrapper {--blog-bg:#08090f;--blog-card:#0f1018;--blog-border:#1e2035;--blog-teal:#00e5c4;--blog-purple:#a78bfa;--blog-amber:#f59e0b;--blog-text:#e8eaf6;--blog-muted:#6b7280;--blog-glow-teal:rgba(0,229,196,0.15);--blog-glow-purple:rgba(167,139,250,0.15)}
+
+.header{text-align:center;margin-bottom:48px;animation:fadeDown 0.8s ease both}.tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--blog-teal);border:1px solid rgba(0,229,196,0.3);padding:6px 14px;border-radius:2px;margin-bottom:16px}h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;letter-spacing:-1px}h1 .t{color:var(--blog-teal)}h1 .p{color:var(--blog-purple)}.subtitle{font-family:'Space Mono',monospace;font-size:12px;color:var(--blog-muted);margin-top:12px;letter-spacing:1px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;width:100%;margin:0 auto}.panel{background:var(--blog-card);border:1px solid var(--blog-border);border-radius:12px;padding:28px;position:relative;overflow:hidden}.panel.tp{border-color:rgba(0,229,196,0.25)}.panel.pp{border-color:rgba(167,139,250,0.25)}.panel-glow{position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;pointer-events:none}.tp .panel-glow{background:var(--blog-glow-teal)}.pp .panel-glow{background:var(--blog-glow-purple)}.pt{font-size:11px;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:8px}.tp .pt{color:var(--blog-teal)}.pp .pt{color:var(--blog-purple)}.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.tp .dot{background:var(--blog-teal);box-shadow:0 0 8px var(--blog-teal)}.pp .dot{background:var(--blog-purple);box-shadow:0 0 8px var(--blog-purple)}.flow{display:flex;flex-direction:column;gap:0}.step{display:flex;align-items:center;gap:12px;padding:10px 0;animation:stepIn 0.5s ease both}.step-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}.tp .step-icon{background:rgba(0,229,196,0.1);border:1px solid rgba(0,229,196,0.2)}.pp .step-icon{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2)}.step-label{font-size:13px;font-weight:600}.step-desc{font-size:11px;color:var(--blog-muted);margin-top:2px;font-family:'Space Mono',monospace}.conn{display:flex;flex-direction:column;align-items:center;padding:0 0 0 18px;height:28px;position:relative}.conn-line{width:1.5px;height:100%;position:relative;overflow:hidden}.tp .conn-line{background:rgba(0,229,196,0.15)}.pp .conn-line{background:rgba(167,139,250,0.15)}.conn-line::after{content:'';position:absolute;top:-100%;left:0;width:100%;height:100%;animation:flowDown 1.5s linear infinite}.tp .conn-line::after{background:linear-gradient(to bottom,transparent,var(--blog-teal),transparent)}.pp .conn-line::after{background:linear-gradient(to bottom,transparent,var(--blog-purple),transparent)}.badge{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:700;font-family:'Space Mono',monospace;margin-top:16px;letter-spacing:1px;animation:pulse 2s ease-in-out infinite}.tb{background:rgba(0,229,196,0.1);border:1px solid rgba(0,229,196,0.3);color:var(--blog-teal)}.pb{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);color:var(--blog-purple)}.risk{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:4px;font-size:10px;font-family:'Space Mono',monospace;margin-top:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);color:var(--blog-amber)}.compare-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;width:100%;margin:24px auto 0}.compare-card{background:var(--blog-card);border:1px solid var(--blog-border);border-radius:12px;padding:20px;animation:fadeUp 0.8s ease both}.compare-label{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;color:var(--blog-muted)}.ci{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}.ck{font-size:11px;font-family:'Space Mono',monospace;color:var(--blog-muted);min-width:80px;flex-shrink:0}.cv{font-size:12px;font-weight:600}.tv{color:var(--blog-teal)}.pv{color:var(--blog-purple)}.verdict{max-width:900px;width:100%;margin:24px auto 0;background:linear-gradient(135deg,rgba(0,229,196,0.05),rgba(167,139,250,0.05));border:1px solid var(--blog-border);border-radius:12px;padding:24px 28px;display:flex;align-items:center;gap:20px;animation:fadeUp 1s ease both;animation-delay:0.4s}.verdict-icon{font-size:28px;flex-shrink:0}.verdict-text{font-size:14px;line-height:1.7;color:var(--blog-muted)}.verdict-text strong{color:var(--blog-text);font-weight:700}.verdict-text .t{color:var(--blog-teal)}.verdict-text .p{color:var(--blog-purple)}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1}}
+@keyframes stepIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1}}
+@keyframes flowDown{0%{top:-100%}100%{top:200%}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.92)}}
+
+/* ── FOOTER ── */
+footer{background:#040610;border-top:1px solid var(--border);padding:24px 5%;display:flex;justify-content:space-between;align-items:center}
+footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .blog-wrapper{padding:100px 16px 60px}
+  .grid,.compare-row{grid-template-columns:1fr}
+  .verdict{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav>
+  <a href="../" class="nav-logo">Kiran <span>R.</span></a>
+  <a href="../#blog" class="nav-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Back to Blog</a>
+</nav>
+
+<div class="blog-wrapper">
+  <div class="header">
+    <div class="tag">RAG Architecture 2025</div>
+    <h1><span class="t">Traditional RAG</span> vs <span class="p">Vectorless RAG</span></h1>
+    <p class="subtitle">vector RAG finds similar text &middot; vectorless RAG finds the right place</p>
+  </div>
+
+  <div class="grid">
+    <div class="panel tp">
+      <div class="panel-glow"></div>
+      <div class="pt"><div class="dot"></div>Traditional RAG</div>
+      <div class="flow">
+        <div class="step">
+          <div class="step-icon">📄</div>
+          <div><div class="step-label">Document</div><div class="step-desc">raw unstructured input</div></div>
+        </div>
+        <div class="conn"><div class="conn-line"></div></div>
+        <div class="step">
+          <div class="step-icon">✏️</div>
+          <div><div class="step-label">Chunking</div><div class="step-desc">split into 300-token pieces</div></div>
+        </div>
+        <div class="conn"><div class="conn-line"></div></div>
+        <div class="step">
+          <div class="step-icon">🔢</div>
+          <div><div class="step-label">Embeddings</div><div class="step-desc">convert to 1536-dim vectors</div></div>
+        </div>
+        <div class="conn"><div class="conn-line"></div></div>
+        <div class="step">
+          <div class="step-icon">🔍</div>
+          <div><div class="step-label">Similarity Search</div><div class="step-desc">cosine similarity across chunks</div></div>
+        </div>
+        <div class="conn"><div class="conn-line"></div></div>
+        <div class="step">
+          <div class="step-icon">📨</div>
+          <div><div class="step-label">Top-K Chunks</div><div class="step-desc">most similar returned to LLM</div></div>
+        </div>
+      </div>
+      <div class="badge tb">LLM Output — Similarity based</div>
+      <div class="risk">Risk: may return irrelevant matches</div>
+    </div>
+
+    <div class="panel pp">
+      <div class="panel-glow"></div>
+      <div class="pt"><div class="dot"></div>Vectorless RAG</div>
+      <div class="flow">
+        <div class="step">
+          <div class="step-icon">📄</div>
+          <div><div class="step-label">Document</div><div class="step-desc">structured input preserved</div></div>
+        </div>
+        <div class="conn"><div class="conn-line"></div></div>
+        <div class="step">
+          <div class="step-icon">📁</div>
+          <div><div class="step-label">Structured Index</div><div class="step-desc">sections &middot; clauses &middot; hierarchy mapped</div></div>
+        </div>
+        <div class="conn"><div class="conn-line"></div></div>
+        <div class="step">
+          <div class="step-icon">🤖</div>
+          <div><div class="step-label">Query Routing</div><div class="step-desc">intent maps to document region</div></div>
+        </div>
+        <div class="conn"><div class="conn-line"></div></div>
+        <div class="step">
+          <div class="step-icon">🏅</div>
+          <div><div class="step-label">Precise Retrieval</div><div class="step-desc">exact right place returned</div></div>
+        </div>
+        <div class="conn"><div class="conn-line"></div></div>
+        <div class="step">
+          <div class="step-icon">✅</div>
+          <div><div class="step-label">Zero Noise</div><div class="step-desc">no similar-but-wrong content</div></div>
+        </div>
+      </div>
+      <div class="badge pb">LLM Output — Structure based</div>
+      <div class="risk" style="background:rgba(0,229,196,0.05);border-color:rgba(0,229,196,0.15);color:#6ee7d4">Risk: depends on structure quality</div>
+    </div>
+  </div>
+
+  <div class="compare-row">
+    <div class="compare-card">
+      <div class="compare-label">when to use each</div>
+      <div class="ci"><div class="ck">Vector</div><div class="cv tv">Unstructured &middot; multi-doc search &middot; semantic meaning</div></div>
+      <div class="ci"><div class="ck">Vectorless</div><div class="cv pv">Legal contracts &middot; manuals &middot; regulatory docs</div></div>
+      <div class="ci"><div class="ck">Hybrid</div><div class="cv" style="color:#f59e0b">Navigate by structure then search within section</div></div>
+    </div>
+    <div class="compare-card">
+      <div class="compare-label">retrieval logic</div>
+      <div class="ci"><div class="ck">Vector</div><div class="cv tv">Semantic similarity — finds what looks like your query</div></div>
+      <div class="ci"><div class="ck">Vectorless</div><div class="cv pv">Structural navigation — goes to exactly the right place</div></div>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <div class="verdict-icon">💡</div>
+    <div class="verdict-text"><strong>The real insight:</strong> Most teams default to vector RAG for everything. But when you chunk a 200-page legal contract into 300-token pieces — you <strong>destroy the document map.</strong> <span class="t">Vector RAG finds similar text.</span> <span class="p">Vectorless RAG finds the right place.</span> The model is rarely the bottleneck in enterprise AI. <strong>Retrieval architecture almost always is.</strong></div>
+  </div>
+</div>
+
+<footer><p>&copy; 2026 Kiran R. All rights reserved.</p><p>Built with <span class="ft-a">&hearts;</span> and purpose.</p></footer>
+
+<script>
+// Progress bar
+const b=document.getElementById('prog');
+window.addEventListener('scroll',()=>{b.style.width=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100+'%'});
+</script>
+
+</body>
+</html>
