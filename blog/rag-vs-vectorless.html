@@ -1,188 +1,1727 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RAG vs Vectorless RAG — Kiran R</title>
-<!-- Google Analytics GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
-@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
-@font-face{font-family:'SF Pro Display';src:url('https://sf.abarber.me/SF-Pro-Display-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traditional RAG vs Vectorless RAG - Kiran R.</title>
+    <meta name="description" content="Understanding the fundamental differences between vector-based and vectorless RAG architectures. A practical guide for PMs and engineers.">
 
-/* Root Variables */
-:root{
-  --bg:#06080f;--bg2:#0a0e18;--card:rgba(12,16,28,.88);--card-h:rgba(18,24,44,.92);
-  --accent:#14b8a6;--accent2:#22d3ee;--accent-dim:#0d9488;
-  --glow:rgba(20,184,166,.15);--glow2:rgba(20,184,166,.08);
-  --text:#f0edf2;--muted:#b0bcc9;--dim:#7a8899;
-  --border:rgba(255,255,255,.07);--border-h:rgba(20,184,166,.35);
-  --sans:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
-  --max:860px;--ease:cubic-bezier(.4,0,.2,1);
-}
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-TJ0M15YBYT');
+    </script>
 
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7}
-a{text-decoration:none;color:inherit}
-::selection{background:rgba(20,184,166,.3);color:#fff}
+    <style>
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: url('https://sf.abarber.me/SF-Pro-Display-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: url('https://sf.abarber.me/SF-Pro-Display-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: url('https://sf.abarber.me/SF-Pro-Display-Semibold.woff2') format('woff2');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: url('https://sf.abarber.me/SF-Pro-Display-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
 
-/* ── SCROLL PROGRESS ── */
-#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:10001;width:0;box-shadow:0 0 10px var(--glow)}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(6,8,15,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
-.nav-logo{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.3px}.nav-logo span{color:var(--accent)}
-.nav-back{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);transition:color .25s}
-.nav-back:hover{color:var(--accent)}
-.nav-back svg{transition:transform .3s}.nav-back:hover svg{transform:translateX(-3px)}
+        :root {
+            --bg: #06080f;
+            --card-bg: rgba(12,16,28,0.88);
+            --accent-teal: #14b8a6;
+            --accent-teal-bright: #00e5c4;
+            --accent-purple: #a78bfa;
+            --accent-amber: #f59e0b;
+            --text: #f0edf2;
+            --text-muted: #b0bcc9;
+            --border: rgba(255,255,255,0.08);
+            --transition: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-/* ── BLOG CONTENT WRAPPER ── */
-.blog-wrapper{padding:80px 5% 60px;max-width:var(--max);margin:0 auto}
+        html {
+            scroll-behavior: smooth;
+        }
 
-/* ── Blog HTML Styles ── */
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
 
-.blog-wrapper *{box-sizing:border-box}
-.blog-wrapper {--blog-bg:#08090f;--blog-card:#0f1018;--blog-border:#1e2035;--blog-teal:#00e5c4;--blog-purple:#a78bfa;--blog-amber:#f59e0b;--blog-text:#e8eaf6;--blog-muted:#6b7280;--blog-glow-teal:rgba(0,229,196,0.15);--blog-glow-purple:rgba(167,139,250,0.15)}
+        /* Scroll Progress Bar */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-teal), var(--accent-purple));
+            width: 0%;
+            z-index: 1000;
+            transition: width 100ms linear;
+        }
 
-.header{text-align:center;margin-bottom:48px;animation:fadeDown 0.8s ease both}.tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--blog-teal);border:1px solid rgba(0,229,196,0.3);padding:6px 14px;border-radius:2px;margin-bottom:16px}h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;letter-spacing:-1px}h1 .t{color:var(--blog-teal)}h1 .p{color:var(--blog-purple)}.subtitle{font-family:'Space Mono',monospace;font-size:12px;color:var(--blog-muted);margin-top:12px;letter-spacing:1px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;width:100%;margin:0 auto}.panel{background:var(--blog-card);border:1px solid var(--blog-border);border-radius:12px;padding:28px;position:relative;overflow:hidden}.panel.tp{border-color:rgba(0,229,196,0.25)}.panel.pp{border-color:rgba(167,139,250,0.25)}.panel-glow{position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;pointer-events:none}.tp .panel-glow{background:var(--blog-glow-teal)}.pp .panel-glow{background:var(--blog-glow-purple)}.pt{font-size:11px;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:8px}.tp .pt{color:var(--blog-teal)}.pp .pt{color:var(--blog-purple)}.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.tp .dot{background:var(--blog-teal);box-shadow:0 0 8px var(--blog-teal)}.pp .dot{background:var(--blog-purple);box-shadow:0 0 8px var(--blog-purple)}.flow{display:flex;flex-direction:column;gap:0}.step{display:flex;align-items:center;gap:12px;padding:10px 0;animation:stepIn 0.5s ease both}.step-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}.tp .step-icon{background:rgba(0,229,196,0.1);border:1px solid rgba(0,229,196,0.2)}.pp .step-icon{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2)}.step-label{font-size:13px;font-weight:600}.step-desc{font-size:11px;color:var(--blog-muted);margin-top:2px;font-family:'Space Mono',monospace}.conn{display:flex;flex-direction:column;align-items:center;padding:0 0 0 18px;height:28px;position:relative}.conn-line{width:1.5px;height:100%;position:relative;overflow:hidden}.tp .conn-line{background:rgba(0,229,196,0.15)}.pp .conn-line{background:rgba(167,139,250,0.15)}.conn-line::after{content:'';position:absolute;top:-100%;left:0;width:100%;height:100%;animation:flowDown 1.5s linear infinite}.tp .conn-line::after{background:linear-gradient(to bottom,transparent,var(--blog-teal),transparent)}.pp .conn-line::after{background:linear-gradient(to bottom,transparent,var(--blog-purple),transparent)}.badge{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:700;font-family:'Space Mono',monospace;margin-top:16px;letter-spacing:1px;animation:pulse 2s ease-in-out infinite}.tb{background:rgba(0,229,196,0.1);border:1px solid rgba(0,229,196,0.3);color:var(--blog-teal)}.pb{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);color:var(--blog-purple)}.risk{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:4px;font-size:10px;font-family:'Space Mono',monospace;margin-top:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);color:var(--blog-amber)}.compare-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;width:100%;margin:24px auto 0}.compare-card{background:var(--blog-card);border:1px solid var(--blog-border);border-radius:12px;padding:20px;animation:fadeUp 0.8s ease both}.compare-label{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;color:var(--blog-muted)}.ci{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}.ck{font-size:11px;font-family:'Space Mono',monospace;color:var(--blog-muted);min-width:80px;flex-shrink:0}.cv{font-size:12px;font-weight:600}.tv{color:var(--blog-teal)}.pv{color:var(--blog-purple)}.verdict{max-width:900px;width:100%;margin:24px auto 0;background:linear-gradient(135deg,rgba(0,229,196,0.05),rgba(167,139,250,0.05));border:1px solid var(--blog-border);border-radius:12px;padding:24px 28px;display:flex;align-items:center;gap:20px;animation:fadeUp 1s ease both;animation-delay:0.4s}.verdict-icon{font-size:28px;flex-shrink:0}.verdict-text{font-size:14px;line-height:1.7;color:var(--blog-muted)}.verdict-text strong{color:var(--blog-text);font-weight:700}.verdict-text .t{color:var(--blog-teal)}.verdict-text .p{color:var(--blog-purple)}
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(6, 8, 15, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 32px;
+            z-index: 100;
+        }
 
-@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1}}
-@keyframes stepIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1}}
-@keyframes flowDown{0%{top:-100%}100%{top:200%}}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.92)}}
+        .nav-logo {
+            font-weight: 600;
+            font-size: 18px;
+            text-decoration: none;
+            color: var(--text);
+            transition: color var(--transition);
+        }
 
-/* ── FOOTER ── */
-footer{background:#040610;border-top:1px solid var(--border);padding:24px 5%;display:flex;justify-content:space-between;align-items:center}
-footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
+        .nav-logo:hover {
+            color: var(--accent-teal);
+        }
 
-/* ── RESPONSIVE ── */
-@media(max-width:768px){
-  .blog-wrapper{padding:100px 16px 60px}
-  .grid,.compare-row{grid-template-columns:1fr}
-  .verdict{flex-direction:column;text-align:center}
-}
-</style>
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: color var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-teal);
+        }
+
+        /* Main Content */
+        main {
+            margin-top: 64px;
+            padding: 80px 40px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 120px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-teal);
+            margin-bottom: 16px;
+            padding: 6px 12px;
+            border: 1px solid var(--accent-teal);
+            border-radius: 20px;
+        }
+
+        .hero-title {
+            font-size: 52px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            padding: 6px 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text-muted);
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 100px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: var(--text);
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        /* RAG Intro Section */
+        .rag-intro {
+            background: var(--card-bg);
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        .rag-intro-content {
+            margin-bottom: 20px;
+        }
+
+        .rag-intro p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+
+        .deep-dive-toggle {
+            background: transparent;
+            border: 1px solid var(--accent-teal);
+            color: var(--accent-teal);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: inherit;
+        }
+
+        .deep-dive-toggle:hover {
+            background: rgba(20, 184, 166, 0.1);
+        }
+
+        .deep-dive-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition);
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .deep-dive-content.expanded {
+            max-height: 400px;
+        }
+
+        .deep-dive-content p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        /* Flow Comparison */
+        .flow-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 60px;
+        }
+
+        .flow-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .flow-column-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .flow-column-title-teal {
+            color: var(--accent-teal);
+        }
+
+        .flow-column-title-teal::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--accent-teal);
+            border-radius: 2px;
+        }
+
+        .flow-column-title-purple {
+            color: var(--accent-purple);
+        }
+
+        .flow-column-title-purple::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--accent-purple);
+            border-radius: 2px;
+        }
+
+        .flow-step {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flow-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: currentColor;
+        }
+
+        .flow-step.teal {
+            color: var(--accent-teal);
+        }
+
+        .flow-step.teal:hover {
+            background: rgba(20, 184, 166, 0.08);
+            border-color: var(--accent-teal);
+        }
+
+        .flow-step.purple {
+            color: var(--accent-purple);
+        }
+
+        .flow-step.purple:hover {
+            background: rgba(167, 139, 250, 0.08);
+            border-color: var(--accent-purple);
+        }
+
+        .flow-step-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .flow-step-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .flow-step-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: currentColor;
+            color: var(--bg);
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .flow-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition);
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .flow-detail.expanded {
+            max-height: 600px;
+        }
+
+        .detail-block {
+            margin-bottom: 20px;
+        }
+
+        .detail-block-title {
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .detail-block-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        /* PM Guide Section */
+        .pm-guide-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .pm-guide-tab {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: color var(--transition);
+            position: relative;
+            font-family: inherit;
+        }
+
+        .pm-guide-tab:hover {
+            color: var(--text);
+        }
+
+        .pm-guide-tab.active {
+            color: var(--accent-teal);
+        }
+
+        .pm-guide-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-teal);
+        }
+
+        .pm-guide-content {
+            display: none;
+        }
+
+        .pm-guide-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .pm-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .pm-item {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-teal);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .pm-item.warning {
+            border-left-color: var(--accent-amber);
+        }
+
+        .pm-item.metric {
+            border-left-color: var(--accent-purple);
+        }
+
+        .pm-item.talking {
+            border-left-color: var(--accent-teal);
+        }
+
+        /* Decision Tree */
+        .decision-tree {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .tree-node {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .tree-question {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 24px;
+        }
+
+        .tree-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tree-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: inherit;
+            border: 2px solid;
+        }
+
+        .tree-btn-yes {
+            background: var(--accent-teal);
+            color: var(--bg);
+            border-color: var(--accent-teal);
+        }
+
+        .tree-btn-yes:hover {
+            background: var(--accent-teal-bright);
+            border-color: var(--accent-teal-bright);
+        }
+
+        .tree-btn-no {
+            background: transparent;
+            color: var(--accent-purple);
+            border-color: var(--accent-purple);
+        }
+
+        .tree-btn-no:hover {
+            background: rgba(167, 139, 250, 0.1);
+        }
+
+        .tree-result {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition);
+        }
+
+        .tree-result.show {
+            max-height: 300px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+        }
+
+        .tree-recommendation {
+            background: rgba(20, 184, 166, 0.1);
+            border-left: 3px solid var(--accent-teal);
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        /* Examples Section */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .example-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .example-card:hover {
+            border-color: var(--accent-teal);
+            box-shadow: 0 8px 24px rgba(20, 184, 166, 0.1);
+        }
+
+        .example-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .example-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .example-winner {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .example-winner.teal {
+            background: rgba(20, 184, 166, 0.2);
+            color: var(--accent-teal);
+        }
+
+        .example-winner.purple {
+            background: rgba(167, 139, 250, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .example-winner.hybrid {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-amber);
+        }
+
+        .example-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition);
+        }
+
+        .example-body.expanded {
+            max-height: 400px;
+        }
+
+        .example-content {
+            padding: 24px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .example-content p {
+            margin-bottom: 12px;
+        }
+
+        .example-content strong {
+            color: var(--accent-teal);
+        }
+
+        /* Comparison Table */
+        .comparison-wrapper {
+            overflow-x: auto;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .comparison-table thead {
+            background: rgba(20, 184, 166, 0.05);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .comparison-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .comparison-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(20, 184, 166, 0.03);
+        }
+
+        .comparison-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .category-label {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .winner-teal {
+            color: var(--accent-teal);
+            font-weight: 600;
+        }
+
+        .winner-purple {
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .winner-tie {
+            color: var(--accent-amber);
+            font-weight: 600;
+        }
+
+        /* Verdict Section */
+        .verdict-section {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(167, 139, 250, 0.1));
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 80px;
+        }
+
+        .verdict-content {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        .verdict-callout {
+            background: var(--card-bg);
+            border-left: 4px solid var(--accent-teal);
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        /* Tooltip */
+        .tooltip-trigger {
+            cursor: help;
+            border-bottom: 1px dotted var(--accent-teal);
+            position: relative;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--card-bg);
+            border: 1px solid var(--accent-teal);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            z-index: 50;
+            display: none;
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--card-bg);
+        }
+
+        .tooltip-trigger:hover .tooltip {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        footer p {
+            margin-bottom: 12px;
+        }
+
+        footer a {
+            color: var(--accent-teal);
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+
+        footer a:hover {
+            color: var(--accent-teal-bright);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .reveal {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            main {
+                padding: 40px 20px;
+                margin-top: 64px;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-subtitle {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .flow-container {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .pm-guide-tabs {
+                flex-direction: column;
+            }
+
+            .comparison-table {
+                font-size: 12px;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 12px;
+            }
+
+            nav {
+                padding: 0 16px;
+            }
+
+            .tree-question {
+                font-size: 18px;
+            }
+
+            .verdict-section {
+                padding: 24px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="scroll-progress"></div>
 
-<div id="prog"></div>
+    <nav>
+        <a href="../" class="nav-logo">Kiran R.</a>
+        <ul class="nav-links">
+            <li><a href="../#blog">Back to Blog</a></li>
+        </ul>
+    </nav>
 
-<nav>
-  <a href="../" class="nav-logo">Kiran <span>R.</span></a>
-  <a href="../#blog" class="nav-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Back to Blog</a>
-</nav>
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-tag">RAG Architecture 2025</div>
+            <h1 class="hero-title">Traditional RAG vs Vectorless RAG</h1>
+            <p class="hero-subtitle">Understanding which retrieval architecture fits your use case</p>
+            <div class="hero-meta">
+                <div class="badge">
+                    <span>📖</span>
+                    <span>8 min read</span>
+                </div>
+                <div class="badge">
+                    <span>🎓</span>
+                    <span>Intermediate</span>
+                </div>
+                <div class="badge">
+                    <span>🔧</span>
+                    <span>Product + Engineering</span>
+                </div>
+            </div>
+        </section>
 
-<div class="blog-wrapper">
-  <div class="header">
-    <div class="tag">RAG Architecture 2025</div>
-    <h1><span class="t">Traditional RAG</span> vs <span class="p">Vectorless RAG</span></h1>
-    <p class="subtitle">vector RAG finds similar text &middot; vectorless RAG finds the right place</p>
-  </div>
+        <!-- RAG Intro Section -->
+        <section>
+            <h2 class="section-title">What is RAG?</h2>
+            <div class="rag-intro">
+                <div class="rag-intro-content">
+                    <p>
+                        RAG stands for <span class="tooltip-trigger">Retrieval-Augmented Generation<span class="tooltip">Fetching relevant information before generating answers</span></span>. Think of it like this: instead of asking an AI to answer from memory alone, you give it a pile of relevant documents first, then ask the question. It's the difference between a student taking an exam from memory versus being allowed to reference their notes while answering.
+                    </p>
+                    <p>
+                        The core challenge in RAG is the retrieval part: How do you quickly find the right documents from your database when a user asks a question? That single decision (vector-based vs vectorless) changes everything about your system.
+                    </p>
+                </div>
+                <button class="deep-dive-toggle" onclick="toggleDeepDive(this)">
+                    + Technical Deep Dive
+                </button>
+                <div class="deep-dive-content">
+                    <p>
+                        <strong>Vector-based RAG:</strong> Embeddings are dense numerical representations of text (typically 384-1536 dimensions). Your documents are converted to vectors and stored in a vector database. When a query comes in, it's also converted to a vector, and you find the most similar vectors using cosine similarity or other metrics. This is semantic search, it understands meaning.
+                    </p>
+                    <p>
+                        <strong>Vectorless RAG:</strong> Uses traditional information retrieval techniques: keyword matching, BM25, TF-IDF, boolean logic, and structural metadata. It's deterministic, fast, and doesn't require embeddings. Trade-off: less semantic understanding, but faster and more predictable.
+                    </p>
+                </div>
+            </div>
+        </section>
 
-  <div class="grid">
-    <div class="panel tp">
-      <div class="panel-glow"></div>
-      <div class="pt"><div class="dot"></div>Traditional RAG</div>
-      <div class="flow">
-        <div class="step">
-          <div class="step-icon">📄</div>
-          <div><div class="step-label">Document</div><div class="step-desc">raw unstructured input</div></div>
-        </div>
-        <div class="conn"><div class="conn-line"></div></div>
-        <div class="step">
-          <div class="step-icon">✏️</div>
-          <div><div class="step-label">Chunking</div><div class="step-desc">split into 300-token pieces</div></div>
-        </div>
-        <div class="conn"><div class="conn-line"></div></div>
-        <div class="step">
-          <div class="step-icon">🔢</div>
-          <div><div class="step-label">Embeddings</div><div class="step-desc">convert to 1536-dim vectors</div></div>
-        </div>
-        <div class="conn"><div class="conn-line"></div></div>
-        <div class="step">
-          <div class="step-icon">🔍</div>
-          <div><div class="step-label">Similarity Search</div><div class="step-desc">cosine similarity across chunks</div></div>
-        </div>
-        <div class="conn"><div class="conn-line"></div></div>
-        <div class="step">
-          <div class="step-icon">📨</div>
-          <div><div class="step-label">Top-K Chunks</div><div class="step-desc">most similar returned to LLM</div></div>
-        </div>
-      </div>
-      <div class="badge tb">LLM Output — Similarity based</div>
-      <div class="risk">Risk: may return irrelevant matches</div>
-    </div>
+        <!-- Flow Comparison -->
+        <section>
+            <h2 class="section-title">How They Work: Step by Step</h2>
+            <p class="section-subtitle">Click any step to see what happens under the hood</p>
 
-    <div class="panel pp">
-      <div class="panel-glow"></div>
-      <div class="pt"><div class="dot"></div>Vectorless RAG</div>
-      <div class="flow">
-        <div class="step">
-          <div class="step-icon">📄</div>
-          <div><div class="step-label">Document</div><div class="step-desc">structured input preserved</div></div>
-        </div>
-        <div class="conn"><div class="conn-line"></div></div>
-        <div class="step">
-          <div class="step-icon">📁</div>
-          <div><div class="step-label">Structured Index</div><div class="step-desc">sections &middot; clauses &middot; hierarchy mapped</div></div>
-        </div>
-        <div class="conn"><div class="conn-line"></div></div>
-        <div class="step">
-          <div class="step-icon">🤖</div>
-          <div><div class="step-label">Query Routing</div><div class="step-desc">intent maps to document region</div></div>
-        </div>
-        <div class="conn"><div class="conn-line"></div></div>
-        <div class="step">
-          <div class="step-icon">🏅</div>
-          <div><div class="step-label">Precise Retrieval</div><div class="step-desc">exact right place returned</div></div>
-        </div>
-        <div class="conn"><div class="conn-line"></div></div>
-        <div class="step">
-          <div class="step-icon">✅</div>
-          <div><div class="step-label">Zero Noise</div><div class="step-desc">no similar-but-wrong content</div></div>
-        </div>
-      </div>
-      <div class="badge pb">LLM Output — Structure based</div>
-      <div class="risk" style="background:rgba(0,229,196,0.05);border-color:rgba(0,229,196,0.15);color:#6ee7d4">Risk: depends on structure quality</div>
-    </div>
-  </div>
+            <div class="flow-container">
+                <!-- Traditional RAG -->
+                <div class="flow-column">
+                    <div class="flow-column-title flow-column-title-teal">Traditional RAG (Vector-based)</div>
 
-  <div class="compare-row">
-    <div class="compare-card">
-      <div class="compare-label">when to use each</div>
-      <div class="ci"><div class="ck">Vector</div><div class="cv tv">Unstructured &middot; multi-doc search &middot; semantic meaning</div></div>
-      <div class="ci"><div class="ck">Vectorless</div><div class="cv pv">Legal contracts &middot; manuals &middot; regulatory docs</div></div>
-      <div class="ci"><div class="ck">Hybrid</div><div class="cv" style="color:#f59e0b">Navigate by structure then search within section</div></div>
-    </div>
-    <div class="compare-card">
-      <div class="compare-label">retrieval logic</div>
-      <div class="ci"><div class="ck">Vector</div><div class="cv tv">Semantic similarity — finds what looks like your query</div></div>
-      <div class="ci"><div class="ck">Vectorless</div><div class="cv pv">Structural navigation — goes to exactly the right place</div></div>
-    </div>
-  </div>
+                    <div class="flow-step teal" onclick="toggleFlowDetail(this, 'trad-1')">
+                        <span class="flow-step-number">1</span>
+                        <div class="flow-step-title">Ingest Documents</div>
+                        <div class="flow-step-desc">Convert to embeddings</div>
+                        <div class="flow-detail" id="trad-1">
+                            <div class="detail-block">
+                                <div class="detail-block-title">Simple Explanation</div>
+                                <div class="detail-block-content">Documents are converted into vectors (lists of numbers) that capture their meaning. It's like translating every document into a special fingerprint that computers can compare.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Technical Details</div>
+                                <div class="detail-block-content">Uses embedding models (OpenAI, Cohere, or local models like all-MiniLM). Each token chunk becomes a 384-1536 dimensional vector. Stored in FAISS, Pinecone, Weaviate, etc.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Real-World Example</div>
+                                <div class="detail-block-content">A customer support document about "password reset" becomes a vector. So does your query "how do I change my password". These vectors are nearby in the vector space.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Why It Matters</div>
+                                <div class="detail-block-content">This upfront cost pays off later: you get semantic matching without needing exact keywords.</div>
+                            </div>
+                        </div>
+                    </div>
 
-  <div class="verdict">
-    <div class="verdict-icon">💡</div>
-    <div class="verdict-text"><strong>The real insight:</strong> Most teams default to vector RAG for everything. But when you chunk a 200-page legal contract into 300-token pieces — you <strong>destroy the document map.</strong> <span class="t">Vector RAG finds similar text.</span> <span class="p">Vectorless RAG finds the right place.</span> The model is rarely the bottleneck in enterprise AI. <strong>Retrieval architecture almost always is.</strong></div>
-  </div>
-</div>
+                    <div class="flow-step teal" onclick="toggleFlowDetail(this, 'trad-2')">
+                        <span class="flow-step-number">2</span>
+                        <div class="flow-step-title">Store in Vector DB</div>
+                        <div class="flow-step-desc">Organize for similarity search</div>
+                        <div class="flow-detail" id="trad-2">
+                            <div class="detail-block">
+                                <div class="detail-block-title">Simple Explanation</div>
+                                <div class="detail-block-content">Your vectors live in a special database designed for fast similarity searches, like a filing system organized by meaning rather than alphabetical order.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Technical Details</div>
+                                <div class="detail-block-content">Vector DBs use approximate nearest neighbor (ANN) algorithms like HNSW or IVF to make retrieval fast (milliseconds). Metadata is stored alongside vectors.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Real-World Example</div>
+                                <div class="detail-block-content">10,000 customer support documents become 10,000 vectors in Pinecone, organized in a way that makes finding similar ones super fast.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Why It Matters</div>
+                                <div class="detail-block-content">This is where the complexity lives. Vector DB selection, dimensionality, and indexing directly impact speed and accuracy.</div>
+                            </div>
+                        </div>
+                    </div>
 
-<footer><p>&copy; 2026 Kiran R. All rights reserved.</p><p>Built with <span class="ft-a">&hearts;</span> and purpose.</p></footer>
+                    <div class="flow-step teal" onclick="toggleFlowDetail(this, 'trad-3')">
+                        <span class="flow-step-number">3</span>
+                        <div class="flow-step-title">User Asks Question</div>
+                        <div class="flow-step-desc">Embed query, search vectors</div>
+                        <div class="flow-detail" id="trad-3">
+                            <div class="detail-block">
+                                <div class="detail-block-title">Simple Explanation</div>
+                                <div class="detail-block-content">When a user asks a question, convert it to a vector using the same embedding model, then find the nearest neighbors in your vector database.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Technical Details</div>
+                                <div class="detail-block-content">Query embedding + cosine similarity search. Typically retrieves top-K results (k=5 to 10). Latency: 10-100ms depending on DB size and indexing.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Real-World Example</div>
+                                <div class="detail-block-content">User: "I forgot my password". System creates vector for this query, searches, and returns the 5 most similar documents about authentication.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Why It Matters</div>
+                                <div class="detail-block-content">This is the strength of vectors: it understands semantic meaning, not just keywords. Catches paraphrased questions.</div>
+                            </div>
+                        </div>
+                    </div>
 
-<script>
-// Progress bar
-const b=document.getElementById('prog');
-window.addEventListener('scroll',()=>{b.style.width=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100+'%'});
-</script>
+                    <div class="flow-step teal" onclick="toggleFlowDetail(this, 'trad-4')">
+                        <span class="flow-step-number">4</span>
+                        <div class="flow-step-title">Retrieve and Generate</div>
+                        <div class="flow-step-desc">Pass context to LLM</div>
+                        <div class="flow-detail" id="trad-4">
+                            <div class="detail-block">
+                                <div class="detail-block-title">Simple Explanation</div>
+                                <div class="detail-block-content">Take the top matching documents and feed them to an LLM along with the original question. The LLM generates a grounded answer.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Technical Details</div>
+                                <div class="detail-block-content">Prompt engineering matters here. Context window management, chunk overlap, and retrieval ranking all affect output quality.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Real-World Example</div>
+                                <div class="detail-block-content">LLM gets: [original question] + [top 5 similar documents] and generates an answer citing those specific docs.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Why It Matters</div>
+                                <div class="detail-block-content">Quality is only as good as what you retrieved. Garbage in, garbage out.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Vectorless RAG -->
+                <div class="flow-column">
+                    <div class="flow-column-title flow-column-title-purple">Vectorless RAG</div>
+
+                    <div class="flow-step purple" onclick="toggleFlowDetail(this, 'vec-1')">
+                        <span class="flow-step-number">1</span>
+                        <div class="flow-step-title">Index Documents</div>
+                        <div class="flow-step-desc">Extract structure + metadata</div>
+                        <div class="flow-detail" id="vec-1">
+                            <div class="detail-block">
+                                <div class="detail-block-title">Simple Explanation</div>
+                                <div class="detail-block-content">Instead of converting to vectors, you organize documents by their structure: section headers, document type, creation date, and other metadata. Build an inverted index for keyword search.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Technical Details</div>
+                                <div class="detail-block-content">Index documents using BM25, TF-IDF, or SQL full-text search. Extract and tag metadata: document type, source, date, author. No embeddings needed.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Real-World Example</div>
+                                <div class="detail-block-content">Legal contracts indexed by clause type, date, parties involved, and keyword terms. No embeddings, just structured metadata + inverted index.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Why It Matters</div>
+                                <div class="detail-block-content">Fast to implement, no embedding costs, deterministic, and works extremely well for structured data.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step purple" onclick="toggleFlowDetail(this, 'vec-2')">
+                        <span class="flow-step-number">2</span>
+                        <div class="flow-step-title">Store in DB</div>
+                        <div class="flow-step-desc">SQL, ElasticSearch, or similar</div>
+                        <div class="flow-detail" id="vec-2">
+                            <div class="detail-block">
+                                <div class="detail-block-title">Simple Explanation</div>
+                                <div class="detail-block-content">Store your indexed documents in a traditional database. No special vector DB needed. PostgreSQL with full-text search works great.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Technical Details</div>
+                                <div class="detail-block-content">ElasticSearch, PostgreSQL with pg_trgm or gin_index, or even SQLite FTS. Supports boolean queries, fuzzy matching, and field-level filtering.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Real-World Example</div>
+                                <div class="detail-block-content">PostgreSQL table with full-text search index on document content. Queries like "indemnification AND 2024 AND vendor" work instantly.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Why It Matters</div>
+                                <div class="detail-block-content">Lower cost, easier to maintain, works offline, and scales differently than vector DBs.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step purple" onclick="toggleFlowDetail(this, 'vec-3')">
+                        <span class="flow-step-number">3</span>
+                        <div class="flow-step-title">User Asks Question</div>
+                        <div class="flow-step-desc">Keyword search with filters</div>
+                        <div class="flow-detail" id="vec-3">
+                            <div class="detail-block">
+                                <div class="detail-block-title">Simple Explanation</div>
+                                <div class="detail-block-content">Extract keywords from the query. Search your index using boolean logic, field filters, and metadata. No embedding step.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Technical Details</div>
+                                <div class="detail-block-content">Query parsing + BM25 ranking. Supports field queries (e.g., "indemnity:true AND source:contract"). Fast, especially with proper indexing.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Real-World Example</div>
+                                <div class="detail-block-content">User: "Show me all indemnification clauses in vendor agreements from 2024". Direct SQL: SELECT * FROM contracts WHERE clause_type='indemnification' AND year=2024.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Why It Matters</div>
+                                <div class="detail-block-content">Precision retrieval for structured questions. Users get exactly what they ask for, not fuzzy approximations.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step purple" onclick="toggleFlowDetail(this, 'vec-4')">
+                        <span class="flow-step-number">4</span>
+                        <div class="flow-step-title">Retrieve and Generate</div>
+                        <div class="flow-step-desc">Pass results to LLM</div>
+                        <div class="flow-detail" id="vec-4">
+                            <div class="detail-block">
+                                <div class="detail-block-title">Simple Explanation</div>
+                                <div class="detail-block-content">Results are directly tied to your structured queries, so you get deterministic retrieval. Feed to LLM for final answer generation.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Technical Details</div>
+                                <div class="detail-block-content">Retrieval is reproducible. Same question, same results. Easier to debug and audit. Less hallucination risk.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Real-World Example</div>
+                                <div class="detail-block-content">Legal search: "Find all indemnification clauses" returns 23 exact matches. LLM summarizes them with citations to original documents and line numbers.</div>
+                            </div>
+                            <div class="detail-block">
+                                <div class="detail-block-title">Why It Matters</div>
+                                <div class="detail-block-content">Auditability and precision. Great for compliance and legal contexts where you need to point to exact source passages.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PM Guide -->
+        <section>
+            <h2 class="section-title">The PM's Guide</h2>
+            <p class="section-subtitle">What you should know and ask</p>
+
+            <div class="pm-guide-tabs">
+                <button class="pm-guide-tab active" onclick="switchPMTab(this, 'questions')">Questions to Ask</button>
+                <button class="pm-guide-tab" onclick="switchPMTab(this, 'red-flags')">Red Flags</button>
+                <button class="pm-guide-tab" onclick="switchPMTab(this, 'metrics')">Success Metrics</button>
+                <button class="pm-guide-tab" onclick="switchPMTab(this, 'talking-points')">Talking Points</button>
+            </div>
+
+            <div class="pm-guide-content active" id="questions">
+                <div class="pm-list">
+                    <div class="pm-item">
+                        <strong>What's our retrieval bottleneck?</strong> Is it accuracy, latency, cost, or maintainability? That single answer determines everything.
+                    </div>
+                    <div class="pm-item">
+                        <strong>How structured is our content?</strong> If it's highly structured (contracts, medical records, financial docs), vectorless might win. Unstructured? Vector-based is your friend.
+                    </div>
+                    <div class="pm-item">
+                        <strong>What's our chunk overlap strategy?</strong> (Vector teams only) Small chunks with overlap? Large chunks? This affects retrieval accuracy more than most realize.
+                    </div>
+                    <div class="pm-item">
+                        <strong>Are we measuring retrieval precision vs recall?</strong> One misses relevant docs, the other returns too much noise. Do we track both or optimize blindly?
+                    </div>
+                    <div class="pm-item">
+                        <strong>What's the cost per query?</strong> Vector embeddings + vector DB. Vectorless text search + traditional DB. Compare real infrastructure costs.
+                    </div>
+                    <div class="pm-item">
+                        <strong>How often do our documents change?</strong> Frequent updates? Re-embedding is expensive. Vectorless indexing is usually faster.
+                    </div>
+                    <div class="pm-item">
+                        <strong>Can our users tell why they got these results?</strong> Vectors are a black box. Keywords and boolean logic are transparent. Does explainability matter to your users?
+                    </div>
+                    <div class="pm-item">
+                        <strong>What's our embedding quality baseline?</strong> (Vector teams) Use a test set. Measure actual retrieval accuracy, not just architectural preference.
+                    </div>
+                    <div class="pm-item">
+                        <strong>Are we re-ranking retrieved results?</strong> Raw vector similarity isn't always the final answer. Some teams use vectors to retrieve broad set, then re-rank with business logic.
+                    </div>
+                    <div class="pm-item">
+                        <strong>What's our fallback if retrieval fails?</strong> Vector retrieval can silently return garbage. Vectorless fails more obviously. Plan for both.
+                    </div>
+                </div>
+            </div>
+
+            <div class="pm-guide-content" id="red-flags">
+                <div class="pm-list">
+                    <div class="pm-item warning">
+                        <strong>No baseline measurements.</strong> Team chose vector approach because it sounds advanced, not because they tested it against alternatives.
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>Optimizing for retrieval quality without measuring it.</strong> "Better vectors" isn't a strategy. Do you have labeled data? A test set? Metrics?
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>Embedding everything the same way.</strong> A contract clause shouldn't be chunked the same as a support ticket. Context matters.
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>Building vector retrieval for highly structured data.</strong> Legal docs, financial records, medical data often don't need semantic search. You're paying for something you don't use.
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>No monitoring for retrieval failures.</strong> Vector systems can return irrelevant results confidently. Is your team tracking when retrieval goes wrong?
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>Over-relying on vector similarity scores.</strong> A similarity score of 0.87 vs 0.84 doesn't mean anything without context. Treat scores as relative rankings, not confidence.
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>No re-ranking or filtering post-retrieval.</strong> Raw vector results are first-pass. Most production systems benefit from a second filtering stage.
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>Chunking without understanding overlap trade-offs.</strong> Overlap increases recall but changes semantics. Document this decision.
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>Not tracking the cost of vector operations at scale.</strong> Embeddings are cheap per query but add up. Have you calculated 1M or 10M queries per month?
+                    </div>
+                    <div class="pm-item warning">
+                        <strong>Building a vector system for documents that rarely change.</strong> One-time embedding cost is negligible. But ongoing maintenance and re-embeddings will surprise you.
+                    </div>
+                </div>
+            </div>
+
+            <div class="pm-guide-content" id="metrics">
+                <div class="pm-list">
+                    <div class="pm-item metric">
+                        <strong>Retrieval Hit Rate:</strong> What % of queries retrieve at least one relevant document? Target: 90%+. This is your ceiling for answer quality.
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>Mean Reciprocal Rank (MRR):</strong> On average, at what position is the first relevant result? 1.0 is perfect. Track this per query type.
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>Retrieval Precision @ K:</strong> Of the top K results, how many are actually relevant? Precision@5 and Precision@10 are standard.
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>Retrieval Recall @ K:</strong> Of all relevant documents, how many appear in the top K? If there are 100 relevant docs for a query, do your top 10 find 5 of them or 9?
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>Query Latency (P95, P99):</strong> If your users notice 500ms latency, you have a problem. Measure 95th and 99th percentile, not just average.
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>Cost per Query:</strong> Sum of embedding costs (if vector), DB storage, compute. Calculate for your actual query volume.
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>Hallucination Rate:</strong> % of LLM outputs that contradict retrieved documents. Users should flag these. Track trends.
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>User Feedback on Result Relevance:</strong> Thumbs up, down on retrieved results. Imperfect but real-world signal of what matters.
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>Time to Update Knowledge Base:</strong> New document in, ready to retrieve. Vector system needs re-embedding. Vectorless just re-indexes. Track both.
+                    </div>
+                    <div class="pm-item metric">
+                        <strong>Drift in Embedding Quality:</strong> (Vector only) Re-run your test set quarterly. Embedding model updates or distribution shift might degrade performance silently.
+                    </div>
+                </div>
+            </div>
+
+            <div class="pm-guide-content" id="talking-points">
+                <div class="pm-list">
+                    <div class="pm-item talking">
+                        <strong>To Finance, Cost Hawks:</strong> "Vectorless RAG costs X per year to operate. Vector RAG costs 3X due to embedding and vector DB licenses. We benchmarked both and vectorless meets our accuracy targets."
+                    </div>
+                    <div class="pm-item talking">
+                        <strong>To Engineering Leaders:</strong> "Retrieval is the bottleneck, not the LLM. We're optimizing for the right problem. We can swap underlying tech (vectors, BM25, hybrid) without changing the interface."
+                    </div>
+                    <div class="pm-item talking">
+                        <strong>To Customers, End Users:</strong> "When you search, we find results by [understanding meaning / exact keyword match]. You'll see relevant documents ranked by [similarity / relevance]."
+                    </div>
+                    <div class="pm-item talking">
+                        <strong>To Board, Executives:</strong> "This is about choosing the right tool for the job. We tested both approaches against our data and use cases. Vector approach is trendy but costlier. Vectorless is proven and faster for our use case."
+                    </div>
+                    <div class="pm-item talking">
+                        <strong>To Privacy, Compliance teams:</strong> "Vectorless systems are auditable: we can show exactly why a result was returned (keyword match, metadata filter). Vectors are a black box."
+                    </div>
+                    <div class="pm-item talking">
+                        <strong>To New Hires, Onboarding:</strong> "We don't use vectors because [our data is structured / we prioritize transparency / latency is critical]. That's a deliberate choice, not a limitation."
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Decision Tree -->
+        <section>
+            <h2 class="section-title">Which Approach Fits Your Use Case?</h2>
+            <p class="section-subtitle">Interactive decision tool, click to explore</p>
+
+            <div class="decision-tree">
+                <div id="tree-root">
+                    <div class="tree-node">
+                        <div class="tree-question">Is your content highly structured?</div>
+                        <div class="tree-buttons">
+                            <button class="tree-btn tree-btn-yes" onclick="treeAnswer('q1', 'yes')">Yes, structured data</button>
+                            <button class="tree-btn tree-btn-no" onclick="treeAnswer('q1', 'no')">No, unstructured text</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="q1-yes" class="tree-node" style="display: none;">
+                    <div class="tree-question">Do you need semantic/paraphrased query matching?</div>
+                    <div class="tree-buttons">
+                        <button class="tree-btn tree-btn-yes" onclick="treeAnswer('q1-yes', 'yes')">Yes, users paraphrase</button>
+                        <button class="tree-btn tree-btn-no" onclick="treeAnswer('q1-yes', 'no')">No, exact keywords</button>
+                    </div>
+                </div>
+
+                <div id="q1-no" class="tree-node" style="display: none;">
+                    <div class="tree-question">Is precision more important than recall?</div>
+                    <div class="tree-buttons">
+                        <button class="tree-btn tree-btn-yes" onclick="treeAnswer('q1-no', 'yes')">Precision (fewer, better results)</button>
+                        <button class="tree-btn tree-btn-no" onclick="treeAnswer('q1-no', 'no')">Recall (find everything relevant)</button>
+                    </div>
+                </div>
+
+                <div id="q1-yes-yes" class="tree-result">
+                    <div class="tree-recommendation">
+                        <strong>Recommendation: Hybrid RAG (Best of Both)</strong><br><br>
+                        Your structured data with semantic needs is a sweet spot for hybrid. Start with vectorless retrieval (fast, deterministic), then use embeddings to re-rank results by semantic relevance. You get the best of both worlds: structured precision + semantic understanding. Implementation: BM25 first pass, then vector re-ranking.
+                    </div>
+                </div>
+
+                <div id="q1-yes-no" class="tree-result">
+                    <div class="tree-recommendation">
+                        <strong>Recommendation: Vectorless RAG (Winner)</strong><br><br>
+                        You have structured data and users ask with clear keywords. Vectorless is your fastest path. Use ElasticSearch, PostgreSQL full-text search, or Solr. Boolean queries + metadata filters will crush it. Save the embedding cost for something else.
+                    </div>
+                </div>
+
+                <div id="q1-no-yes" class="tree-result">
+                    <div class="tree-recommendation">
+                        <strong>Recommendation: Vector RAG (Clear Winner)</strong><br><br>
+                        Unstructured content + precision focus = vector embeddings shine. Use dense vector search (FAISS, Pinecone) with a good embedding model. Your semantic understanding will catch paraphrased queries that keyword search misses. Worth the added complexity.
+                    </div>
+                </div>
+
+                <div id="q1-no-no" class="tree-result">
+                    <div class="tree-recommendation">
+                        <strong>Recommendation: Vector RAG (Strong Choice)</strong><br><br>
+                        Unstructured content with high recall requirements. Vectors are built for this. They'll find relevant documents even when phrased differently. Add retrieval re-ranking if you want to improve precision for high-stakes queries. Start simple, iterate based on metrics.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Real-World Examples -->
+        <section>
+            <h2 class="section-title">Real-World Examples</h2>
+            <p class="section-subtitle">Click each to see the full scenario</p>
+
+            <div class="examples-grid">
+                <!-- Legal Contract Analysis -->
+                <div class="example-card" onclick="toggleExample(this)">
+                    <div class="example-header">
+                        <div class="example-title">Legal Contract Analysis</div>
+                        <div class="example-winner teal">Vectorless Wins</div>
+                    </div>
+                    <div class="example-body">
+                        <div class="example-content">
+                            <p>
+                                <strong>Scenario:</strong> A legal team needs to search 10,000 contracts for specific clauses (indemnification, liability caps, termination clauses).
+                            </p>
+                            <p>
+                                <strong>Why Vectorless:</strong> Lawyers ask with specific legal terms. "Show me indemnification clauses from 2024" is precise. Boolean queries work perfectly. You need to cite the exact clause and line number.
+                            </p>
+                            <p>
+                                <strong>Technical Stack:</strong> PostgreSQL with full-text search + metadata tags for clause type, date, counterparty. Queries like: WHERE clause_type = 'indemnification' AND year = 2024 AND party = 'vendor'.
+                            </p>
+                            <p>
+                                <strong>Cost:</strong> Minimal. One PostgreSQL instance. No embedding fees.
+                            </p>
+                            <p>
+                                <strong>Trade-off:</strong> If a lawyer asks "What happens if my vendor goes out of business?" in plain English, vectorless might miss it. (Hybrid: vectorless first, then vector re-ranking if confidence is low.)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Support KB -->
+                <div class="example-card" onclick="toggleExample(this)">
+                    <div class="example-header">
+                        <div class="example-title">Customer Support Knowledge Base</div>
+                        <div class="example-winner purple">Vector RAG Wins</div>
+                    </div>
+                    <div class="example-body">
+                        <div class="example-content">
+                            <p>
+                                <strong>Scenario:</strong> A support team has 5,000 articles. Customers ask questions in natural language with many variations.
+                            </p>
+                            <p>
+                                <strong>Why Vector RAG:</strong> Customers ask "I can't log in" and "my password isn't working" and "authentication failed". These mean the same thing semantically but have no keyword overlap. Vector embeddings catch this.
+                            </p>
+                            <p>
+                                <strong>Technical Stack:</strong> Pinecone or Weaviate for vectors. OpenAI embeddings or open-source. LLM summarizes top 3-5 articles into a conversational answer.
+                            </p>
+                            <p>
+                                <strong>Cost:</strong> Embedding API costs ($0.05 per 1M tokens) + vector DB subscription ($100-500 per month). Total: 1-2K per month at scale.
+                            </p>
+                            <p>
+                                <strong>Trade-off:</strong> You'll sometimes get off-topic articles with high similarity scores. Requires good re-ranking and feedback loops.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical Documentation -->
+                <div class="example-card" onclick="toggleExample(this)">
+                    <div class="example-header">
+                        <div class="example-title">Medical Record Search</div>
+                        <div class="example-winner hybrid">Hybrid Wins</div>
+                    </div>
+                    <div class="example-body">
+                        <div class="example-content">
+                            <p>
+                                <strong>Scenario:</strong> Hospital searching 100,000 patient records for research purposes. Doctors ask complex questions mixing structured and semantic needs.
+                            </p>
+                            <p>
+                                <strong>Why Hybrid:</strong> "Show me all patients with diabetes treated between 2020-2023" needs metadata filtering (date range) + semantic search (treatment documents). Vectorless alone misses the date range. Vectors alone miss the boolean logic.
+                            </p>
+                            <p>
+                                <strong>Technical Stack:</strong> PostgreSQL for structured metadata + full-text index. Vector retrieval for semantic matching over clinical notes. Combine results, then re-rank.
+                            </p>
+                            <p>
+                                <strong>Cost:</strong> Higher than pure vectorless or vector approach, but worth it for accuracy + compliance.
+                            </p>
+                            <p>
+                                <strong>Trade-off:</strong> Complex to implement and maintain. Requires careful pipeline design.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supply Chain Manuals -->
+                <div class="example-card" onclick="toggleExample(this)">
+                    <div class="example-header">
+                        <div class="example-title">Supply Chain Manuals</div>
+                        <div class="example-winner teal">Vectorless Wins</div>
+                    </div>
+                    <div class="example-body">
+                        <div class="example-content">
+                            <p>
+                                <strong>Scenario:</strong> Warehouse workers searching 500 procedural documents and manuals. They ask specific questions about processes.
+                            </p>
+                            <p>
+                                <strong>Why Vectorless:</strong> Workers ask "How do I handle returned pallets?" with specific keywords. Semantic search adds no value. Speed and clarity matter more. Workers need exact procedures, not fuzzy approximations.
+                            </p>
+                            <p>
+                                <strong>Technical Stack:</strong> ElasticSearch with simple BM25 ranking. Tag procedures by step type (receiving, packing, shipping). Workers filter by category first, then search.
+                            </p>
+                            <p>
+                                <strong>Cost:</strong> Very low. ElasticSearch (self-hosted or managed) ~$500 per month.
+                            </p>
+                            <p>
+                                <strong>Trade-off:</strong> If procedures are updated, need to re-index (fast). No semantic understanding, so paraphrased questions might miss.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Table -->
+        <section>
+            <h2 class="section-title">Head-to-Head Comparison</h2>
+            <p class="section-subtitle">Hover to see which approach wins each dimension</p>
+
+            <div class="comparison-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Traditional RAG (Vector)</th>
+                            <th>Vectorless RAG</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="category-label">Setup Complexity</td>
+                            <td><span class="winner-purple">Harder</span> - requires embedding model choice, vector DB setup, chunking strategy</td>
+                            <td><span class="winner-teal">Simpler</span> - index documents, configure search, done</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Semantic Understanding</td>
+                            <td><span class="winner-teal">Strong</span> - catches paraphrased queries, understands meaning</td>
+                            <td><span class="winner-purple">Weak</span> - keyword-based, exact matching required</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Retrieval Accuracy (Unstructured)</td>
+                            <td><span class="winner-teal">Higher</span> - semantic similarity works well</td>
+                            <td><span class="winner-purple">Lower</span> - unless queries are keyword-rich</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Retrieval Accuracy (Structured)</td>
+                            <td><span class="winner-purple">Variable</span> - depends on embedding quality</td>
+                            <td><span class="winner-teal">Higher</span> - boolean logic + metadata filters</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Query Latency</td>
+                            <td><span class="winner-tie">Similar</span> - 10-100ms depending on vector DB size</td>
+                            <td><span class="winner-tie">Similar</span> - 10-100ms depending on index size</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Cost (Small Scale)</td>
+                            <td><span class="winner-purple">Higher</span> - embedding API costs</td>
+                            <td><span class="winner-teal">Lower</span> - no embedding fees</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Cost (Large Scale)</td>
+                            <td><span class="winner-purple">Higher</span> - vector DB licensing, embedding volume</td>
+                            <td><span class="winner-teal">Lower</span> - standard database infrastructure</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Update Frequency</td>
+                            <td><span class="winner-purple">Slower</span> - need to re-embed documents</td>
+                            <td><span class="winner-teal">Faster</span> - just re-index</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Explainability</td>
+                            <td><span class="winner-purple">Hard</span> - why was this document retrieved? (similarity score)</td>
+                            <td><span class="winner-teal">Easy</span> - document matched these keywords, filters</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Maintenance Burden</td>
+                            <td><span class="winner-purple">Higher</span> - embedding model updates, drift monitoring</td>
+                            <td><span class="winner-teal">Lower</span> - stable algorithms, straightforward</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Scalability</td>
+                            <td><span class="winner-teal">Good</span> - vector DBs are built for scale</td>
+                            <td><span class="winner-teal">Good</span> - traditional DBs scale well too</td>
+                        </tr>
+                        <tr>
+                            <td class="category-label">Vendor Lock-In</td>
+                            <td><span class="winner-purple">Higher</span> - Pinecone, OpenAI APIs, proprietary</td>
+                            <td><span class="winner-teal">Lower</span> - PostgreSQL, ElasticSearch, open-source</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Verdict Section -->
+        <section class="verdict-section">
+            <h2 class="section-title">The Real Insight</h2>
+
+            <div class="verdict-content">
+                <p>
+                    Here's what separates good RAG systems from mediocre ones: <strong>most teams optimize the wrong part of the pipeline.</strong>
+                </p>
+                <p style="margin-top: 16px;">
+                    They obsess over which LLM to use (GPT-4, Llama, Claude) or embedding model, when the real bottleneck is retrieval. A great retrieval system with a basic LLM beats a perfect LLM with bad retrieval every single time. Your LLM can only work with what you give it.
+                </p>
+                <p style="margin-top: 16px;">
+                    The vector vs vectorless question isn't about technology sophistication. It's about matching the problem to the tool. If your data is structured and users ask with specific terms, vectors add cost with no benefit. If your data is unstructured and users paraphrase questions, vectors unlock understanding you can't get any other way.
+                </p>
+                <p style="margin-top: 16px;">
+                    The best teams measure both approaches on their actual data before committing. They build for flexibility so they can swap retrieval methods without rewriting the entire system. And they obsess over those PM questions earlier in this article, because that's where the real leverage is.
+                </p>
+            </div>
+
+            <div class="verdict-callout" style="margin-top: 32px;">
+                <strong>Remember:</strong> Retrieval is the bottleneck, not the LLM. Solve retrieval first. Everything else follows.
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Written by Kiran R., Senior Product Manager</p>
+        <p>Published 2025 | <a href="../">Back to portfolio</a></p>
+    </footer>
+
+    <script>
+        // Scroll Progress Bar
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.querySelector('.scroll-progress').style.width = scrollPercent + '%';
+        });
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Deep Dive Toggle
+        function toggleDeepDive(btn) {
+            const content = btn.nextElementSibling;
+            content.classList.toggle('expanded');
+            btn.textContent = content.classList.contains('expanded')
+                ? '- Hide Details'
+                : '+ Technical Deep Dive';
+        }
+
+        // Flow Detail Toggle - only one expanded at a time per column
+        function toggleFlowDetail(element, detailId) {
+            const detail = document.getElementById(detailId);
+            const column = element.closest('.flow-column');
+
+            // Close all other expanded details in this column
+            column.querySelectorAll('.flow-detail.expanded').forEach(d => {
+                if (d.id !== detailId) {
+                    d.classList.remove('expanded');
+                }
+            });
+
+            detail.classList.toggle('expanded');
+        }
+
+        // PM Guide Tabs
+        function switchPMTab(btn, tabId) {
+            // Deactivate all tabs and contents
+            document.querySelectorAll('.pm-guide-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.pm-guide-content').forEach(c => c.classList.remove('active'));
+
+            // Activate clicked tab and corresponding content
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Decision Tree
+        function treeAnswer(currentId, answer) {
+            // Hide all tree nodes
+            document.querySelectorAll('.tree-node, .tree-result').forEach(node => {
+                node.style.display = 'none';
+            });
+
+            const nextId = currentId + '-' + answer;
+            const nextElement = document.getElementById(nextId);
+
+            if (nextElement) {
+                nextElement.style.display = 'block';
+            }
+
+            // Scroll to tree
+            document.querySelector('.decision-tree').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Example Cards Toggle
+        function toggleExample(card) {
+            const body = card.querySelector('.example-body');
+            body.classList.toggle('expanded');
+        }
+
+        // Analytics event tracking
+        function trackEvent(eventName, eventData) {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', eventName, eventData);
+            }
+        }
+
+        // Track section views
+        document.querySelectorAll('section').forEach(section => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const title = entry.target.querySelector('.section-title');
+                        if (title) {
+                            trackEvent('section_view', {
+                                section_title: title.textContent
+                            });
+                        }
+                    }
+                });
+            }, { threshold: 0.5 });
+            observer.observe(section);
+        });
+
+        // Track interactive interactions
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('deep-dive-toggle')) {
+                trackEvent('deep_dive_clicked', {
+                    expanded: e.target.nextElementSibling.classList.contains('expanded')
+                });
+            }
+            if (e.target.classList.contains('pm-guide-tab')) {
+                trackEvent('pm_tab_clicked', {
+                    tab: e.target.textContent
+                });
+            }
+            if (e.target.classList.contains('tree-btn')) {
+                trackEvent('decision_tree_clicked', {
+                    answer: e.target.textContent
+                });
+            }
+            if (e.target.closest('.example-card')) {
+                trackEvent('example_expanded', {
+                    example: e.target.closest('.example-card').querySelector('.example-title').textContent
+                });
+            }
+        });
+    </script>
 </body>
 </html>
