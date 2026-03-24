@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>System-Driven Service Level Improvements — Kiran R</title>
+<title>System-Driven Service Level Improvements - Kiran R</title>
 <!-- Google Analytics GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
@@ -128,12 +128,12 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
   <div class="section">
     <div class="section-label">The Problem</div>
     <h2>Service levels were <em>plateaued</em></h2>
-    <p>Despite best efforts, warehouse service levels across the distributor network had stalled at 82%. The issue wasn't capacity or staffing — it was information asymmetry. Pending orders weren't being prioritized by urgency; instead, warehouse managers were picking based on order sequence or convenience.</p>
+    <p>Despite best efforts, warehouse service levels across the distributor network had stalled at 82%. The issue wasn't capacity or staffing: it was information asymmetry. Pending orders weren't being prioritized by urgency; instead, warehouse managers were picking based on order sequence or convenience.</p>
     <p>Unserviceable lines (parts that couldn't be fulfilled) were discovered reactively, often after GRN was completed. By that point, it was too late to course-correct and meet SLAs. There was no systematic way to predict which lines would fail before they tied up warehouse resources.</p>
 
     <div class="highlight">
       <h4>Key Insight</h4>
-      <p>The problem wasn't effort — it was visibility. Warehouses lacked real-time intelligence on which orders were at risk of missing SLA and which items would be unserviceable before GRN. Predictive intervention could shift fulfillment from reactive to proactive.</p>
+      <p>The problem wasn't effort: it was visibility. Warehouses lacked real-time intelligence on which orders were at risk of missing SLA and which items would be unserviceable before GRN. Predictive intervention could shift fulfillment from reactive to proactive.</p>
     </div>
   </div>
 
@@ -156,7 +156,7 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
       <div class="card">
         <div class="card-label">Ideate</div>
         <h4>Solution Approach</h4>
-        <p>Explored risk scoring (immediate but reactive), predictive ML (delayed signals), and hybrid approach. Hybrid won — real-time SLA risk scoring + GRN-time unserviceable prediction + auto pickslip generation.</p>
+        <p>Explored risk scoring (immediate but reactive), predictive ML (delayed signals), and hybrid approach. Hybrid won with real-time SLA risk scoring, GRN-time unserviceable prediction, and auto pickslip generation.</p>
       </div>
       <div class="card">
         <div class="card-label">Validate</div>
@@ -210,7 +210,7 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
     <div class="section-label">Product Thinking</div>
     <h2>Strategic decisions that <em>shaped the product</em></h2>
 
-    <p><strong>Why predictive over reactive?</strong> A reactive alert system (flag when SLA is about to breach) comes too late. By the time you know there's a problem, your options are limited. Predictive scoring gives warehouse managers 24-48 hours to take action — request expedited inbound, substitute parts, or split shipments.</p>
+    <p><strong>Why predictive over reactive?</strong> A reactive alert system (flag when SLA is about to breach) comes too late. By the time you know there's a problem, your options are limited. Predictive scoring gives warehouse managers 24-48 hours to take action: request expedited inbound, substitute parts, or split shipments.</p>
 
     <p><strong>SLA risk scoring model:</strong> We built a hybrid scoring system combining historical fulfillment velocity at that warehouse, current queue depth, part-level availability, and deadline cushion. The model updates every 4 hours to account for changing queue dynamics.</p>
 
@@ -250,7 +250,7 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
 
     <div class="highlight">
       <h4>The Bigger Picture</h4>
-      <p>This wasn't just a service level tool — it represented a fundamental shift in warehouse operations philosophy. By moving from reactive (fixing failures) to predictive (preventing failures), we created a scalable path to 90%+ service levels across the entire distributor network.</p>
+      <p>This wasn't just a service level tool: it represented a fundamental shift in warehouse operations philosophy. By moving from reactive (fixing failures) to predictive (preventing failures), we created a scalable path to 90%+ service levels across the entire distributor network.</p>
     </div>
   </div>
 
