@@ -276,7 +276,8 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
   .nav-logo{font-size:18px}
   .nav-links{display:none}
   .nav-cta{display:none}
-  #hero{padding:100px 16px 60px;min-height:auto}
+  #hero{padding:100px 16px 80px;min-height:auto}
+  .scroll-hint{display:none}
   .hero-title{font-size:clamp(32px,8vw,48px);letter-spacing:-1.5px}
   .hero-sub{font-size:15px;margin-bottom:28px}
   .hero-stats{flex-wrap:wrap;gap:24px}
@@ -289,13 +290,16 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
   .sk-grid{grid-template-columns:1fr}
   .edu-grid{grid-template-columns:1fr}
   /* Journey mobile: stack vertically, line on left */
-  .journey::before{left:16px;transform:none}
-  .j-chapter{grid-template-columns:1fr;padding-bottom:56px;padding-left:48px}
+  /* Journey mobile: stack vertically, no visible timeline */
+  .journey::before{display:none}
+  .j-chapter{grid-template-columns:1fr;padding-bottom:48px;padding-left:0}
   .j-chapter:nth-child(odd) .j-card,.j-chapter:nth-child(even) .j-card{grid-column:1;padding-right:0;padding-left:0;text-align:left}
   .j-chapter:nth-child(odd) .j-aside,.j-chapter:nth-child(even) .j-aside{grid-column:1;grid-row:auto;padding-left:0;padding-right:0;text-align:left;align-items:flex-start}
   .j-chapter:nth-child(odd) .j-narrative{margin-left:0}
-  .j-node{left:16px;transform:translateX(-50%)}
-  .j-chapter:not(:last-child)::after{left:16px}
+  .j-node{position:relative;left:auto;top:auto;transform:none;margin-bottom:16px;align-items:flex-start}
+  .j-pulse{display:none}
+  .j-year{font-size:12px;padding:5px 14px}
+  .j-chapter:not(:last-child)::after{display:none}
   .blog-grid{grid-template-columns:1fr}
   .st{font-size:clamp(28px,7vw,40px)}
   #contact::before{width:300px;height:300px}
@@ -310,10 +314,11 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
   .hero-sub{font-size:14px}
   .hero-btns{flex-direction:column;width:100%}
   .btn-p,.btn-o{justify-content:center;width:100%}
-  .hero-stats{flex-direction:column;gap:16px;align-items:center}
+  .hero-stats{flex-direction:column;gap:28px;align-items:center}
+  .hero-stat-n{font-size:clamp(24px,6vw,32px)}
   .imp-grid{grid-template-columns:1fr}
   .st{font-size:clamp(24px,6.5vw,32px)}
-  .j-chapter{padding-left:40px;padding-bottom:44px}
+  .j-chapter{padding-left:0;padding-bottom:40px}
   .j-role{font-size:20px}
 }
 </style>
@@ -373,13 +378,13 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
 
 <!-- ABOUT -->
 <section id="about"><div class="si">
-  <div class="about-grid" style="grid-template-columns:1fr;max-width:720px;margin:0 auto;text-align:center">
+  <div class="about-grid" style="grid-template-columns:1fr;max-width:720px">
     <div class="about-text">
-      <div class="sl rv" style="justify-content:center">About Me</div>
+      <div class="sl rv">About Me</div>
       <h2 class="st rv" data-d="1">9 years of shipping products <em>that scale.</em></h2>
       <p class="rv" data-d="2">I started as a software engineer building IoT apps. What I kept seeing was the same problem: <strong>the intelligence existed in the data, but the people who needed it had no way to act on it.</strong> That gap between raw enterprise data and decisions on the ground is what I've spent 9 years closing.</p>
       <p class="rv" data-d="3">At TVS Motors, I own the supply chain platform serving <strong>90+ distributors nationwide</strong> on a <strong>&#8377;3,000Cr+ annual revenue</strong> base. I've deployed AI replenishment engines, built dealer e-commerce generating <strong>&#8377;50L+ monthly</strong>, and defined the architecture for an LLM analytics copilot.</p>
-      <div class="tags rv" data-d="4" style="justify-content:center">
+      <div class="tags rv" data-d="4">
         <span class="tag">AI Product Strategy</span><span class="tag">SAP SD</span><span class="tag">Supply Chain Intelligence</span><span class="tag">LLM Systems</span><span class="tag">Enterprise SaaS</span><span class="tag">IIMK Executive MBA</span>
       </div>
     </div>
