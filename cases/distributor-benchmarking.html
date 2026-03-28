@@ -26,6 +26,19 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
   --sans:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
   --max:860px;--ease:cubic-bezier(.4,0,.2,1);
 }
+[data-theme="light"]{
+  --bg:#f8fafb;--bg2:#eef2f5;
+  --card:rgba(255,255,255,.9);--card-h:rgba(255,255,255,.98);
+  --accent:#0d9488;--accent2:#0891b2;--accent-dim:#14b8a6;
+  --glow:rgba(13,148,136,.12);--glow2:rgba(13,148,136,.06);
+  --text:#1a1a2e;--muted:#4a5568;--dim:#94a3b8;
+  --border:rgba(0,0,0,.08);--border-h:rgba(13,148,136,.35);
+}
+[data-theme="light"] nav{background:rgba(248,250,251,.92) !important;box-shadow:0 1px 8px rgba(0,0,0,.04)}
+[data-theme="light"] footer{background:#eef2f5}
+[data-theme="light"] .card,[data-theme="light"] .highlight,[data-theme="light"] .j-step{box-shadow:0 1px 4px rgba(0,0,0,.04)}
+[data-theme="light"] ::selection{color:#1a1a2e}
+
 body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7}
 a{text-decoration:none;color:inherit}
 ::selection{background:rgba(20,184,166,.3);color:#fff}
@@ -93,7 +106,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;al
 .case-nav a:hover{color:var(--accent)}
 
 /* ── FOOTER ── */
-footer{background:#040610;border-top:1px solid var(--border);padding:24px 5%;display:flex;justify-content:space-between;align-items:center}
+footer{background:var(--footer-bg, #040610);border-top:1px solid var(--border);padding:24px 5%;display:flex;justify-content:space-between;align-items:center}
 footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
 
 /* ── RESPONSIVE ── */
@@ -136,15 +149,33 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
   .metrics-bar{padding:20px 14px}
   .case-nav{padding:24px 14px}
 }
+
+/* ── THEME TOGGLE ── */
+.theme-toggle{width:40px;height:22px;border-radius:100px;background:var(--border);border:1px solid var(--border);cursor:pointer;position:relative;transition:all .3s;flex-shrink:0;display:flex;align-items:center;padding:0 3px}
+.theme-toggle:hover{border-color:var(--accent, #14b8a6)}
+.theme-toggle .toggle-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent, #14b8a6);transition:transform .3s;display:flex;align-items:center;justify-content:center}
+[data-theme="light"] .theme-toggle .toggle-thumb{transform:translateX(18px)}
+.toggle-icon-dark,.toggle-icon-light{position:absolute;top:50%;transform:translateY(-50%);font-size:10px;pointer-events:none;transition:opacity .3s}
+.toggle-icon-dark{left:4px;opacity:1}
+.toggle-icon-light{right:4px;opacity:.4}
+[data-theme="light"] .toggle-icon-dark{opacity:.4}
+[data-theme="light"] .toggle-icon-light{opacity:1}
+
 </style>
 </head>
 <body>
+<script>
+// Restore theme from localStorage (syncs with index page toggle)
+(function(){var t=localStorage.getItem('theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})();
+</script>
 
 <div id="prog"></div>
 
 <nav>
   <a href="../" class="nav-logo">Kiran <span>R.</span></a>
   <a href="../#cases" class="nav-back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H3m0 0l4-4M3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> All Case Studies</a>
+
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><span class="toggle-icon-dark">&#9790;</span><span class="toggle-icon-light">&#9728;</span><div class="toggle-thumb"></div></button>
 </nav>
 
 <div class="case-hero">
@@ -306,6 +337,17 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
 // Progress bar
 const b=document.getElementById('prog');
 window.addEventListener('scroll',()=>{b.style.width=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100+'%'});
+
+// Theme toggle
+(function(){
+  var toggle=document.getElementById('themeToggle');
+  if(!toggle)return;
+  toggle.addEventListener('click',function(){
+    var current=document.documentElement.getAttribute('data-theme');
+    if(current==='light'){document.documentElement.removeAttribute('data-theme');localStorage.setItem('theme','dark')}
+    else{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('theme','light')}
+  });
+})();
 </script>
 </body>
 </html>
