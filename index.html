@@ -8,7 +8,7 @@
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ── RESET & VARIABLES ── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -32,6 +32,7 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
   --select-color:#fff;
   --sans:'Inter','Space Grotesk',system-ui,sans-serif;
   --display:'Space Grotesk','Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Fira Code',monospace;
   --max:1200px;--ease:cubic-bezier(.4,0,.2,1);
 }
 [data-theme="light"]{
@@ -133,7 +134,7 @@ section{padding:120px 5%;position:relative;z-index:1}
 .about-text p{font-size:16px;font-weight:400;line-height:1.85;color:var(--muted);margin-bottom:18px}
 .about-text p strong{color:var(--text);font-weight:600}
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
-.tag{padding:7px 18px;background:var(--tag-bg);border:1px solid var(--border);border-radius:100px;font-size:12px;font-weight:500;transition:all .3s var(--ease)}
+.tag{padding:7px 18px;background:var(--tag-bg);border:1px solid var(--border);border-radius:100px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.3px;transition:all .3s var(--ease)}
 .tag:hover{border-color:var(--accent);color:var(--accent);background:var(--glow2)}
 
 /* ── WHAT I DO ── */
@@ -142,11 +143,11 @@ section{padding:120px 5%;position:relative;z-index:1}
 .svc-c::before{content:'';position:absolute;inset:0;background:radial-gradient(600px circle at var(--mouse-x,50%) var(--mouse-y,50%),rgba(20,184,166,.06),transparent 40%);opacity:0;transition:opacity .3s}
 .svc-c:hover::before{opacity:1}
 .svc-c:hover{border-color:var(--border-h);transform:translateY(-2px)}
-.svc-n{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.svc-n{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
 .svc-t{font-family:var(--display);font-size:20px;font-weight:600;margin-bottom:10px;letter-spacing:-.3px}
 .svc-d{font-size:14px;color:var(--muted);line-height:1.7}
 .svc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
-.svc-tag{padding:3px 10px;background:var(--glow2);border-radius:100px;font-size:11px;font-weight:500;color:var(--accent)}
+.svc-tag{padding:3px 10px;background:var(--glow2);border-radius:100px;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--accent);letter-spacing:.3px}
 
 /* ── IMPACT / GLOW CARDS ── */
 .imp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
@@ -174,7 +175,7 @@ section{padding:120px 5%;position:relative;z-index:1}
 .j-chapter:nth-child(even) .j-aside{grid-column:1;grid-row:1;padding-right:60px;text-align:right}
 /* Node on the center line */
 .j-node{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center}
-.j-year{font-family:var(--display);font-size:13px;font-weight:700;color:#fff;background:var(--accent);padding:6px 16px;border-radius:100px;letter-spacing:.5px;white-space:nowrap}
+.j-year{font-family:var(--mono);font-size:12px;font-weight:600;color:#fff;background:var(--accent);padding:6px 16px;border-radius:100px;letter-spacing:.5px;white-space:nowrap}
 .j-pulse{width:16px;height:16px;border-radius:50%;background:var(--accent);margin-top:8px;position:relative}
 .j-pulse::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent);opacity:.3;animation:jPulse 2s ease-out infinite}
 @keyframes jPulse{0%{transform:scale(1);opacity:.3}100%{transform:scale(2.2);opacity:0}}
@@ -204,7 +205,7 @@ section{padding:120px 5%;position:relative;z-index:1}
 .case-c:hover .case-bg{transform:scale(1.05)}
 .case-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .6s var(--ease)}
 .case-content{position:relative;z-index:2}
-.case-tag{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.case-tag{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
 .case-t{font-family:var(--display);font-size:18px;font-weight:700;margin-bottom:6px;letter-spacing:-.2px;line-height:1.3}
 .case-d{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .case-m{display:flex;gap:20px;margin-top:12px}
@@ -233,7 +234,7 @@ section{padding:120px 5%;position:relative;z-index:1}
 .edu-tp{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
 .edu-dg{font-family:var(--display);font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-.2px}
 .edu-sc{font-size:14px;color:var(--muted);margin-bottom:4px}
-.edu-yr{font-size:12px;color:var(--dim)}
+.edu-yr{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.3px}
 
 /* ── BLOG ANIMATED TABS ── */
 .blog-tabs{display:flex;gap:6px;background:var(--tabs-bg);padding:6px;border-radius:14px;margin-bottom:24px;width:fit-content}
@@ -252,7 +253,7 @@ section{padding:120px 5%;position:relative;z-index:1}
 .blog-t{font-family:var(--display);font-size:20px;line-height:1.3;letter-spacing:-.2px;font-weight:700}
 .blog-d{font-size:13.5px;font-weight:400;color:var(--muted);line-height:1.7;flex:1}
 .blog-ft{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:4px}
-.blog-pill{padding:4px 12px;background:var(--glow2);border-radius:100px;font-size:11px;font-weight:500;color:var(--accent)}
+.blog-pill{padding:4px 12px;background:var(--glow2);border-radius:100px;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--accent);letter-spacing:.3px}
 .blog-more{margin-left:auto;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.3px}
 
 /* ── RESUME ── */
@@ -366,9 +367,96 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
   .j-chapter{padding-left:0;padding-bottom:40px}
   .j-role{font-size:20px}
 }
+
+/* ── LOGO WALL ── */
+.logo-wall{display:flex;align-items:center;justify-content:center;gap:56px;flex-wrap:wrap;margin-top:56px;padding:36px 0}
+.logo-item{display:flex;flex-direction:column;align-items:center;gap:10px;opacity:.45;transition:opacity .4s;filter:grayscale(1)}
+.logo-item:hover{opacity:.85;filter:grayscale(0)}
+.logo-item svg{width:48px;height:48px}
+.logo-item span{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+@media(max-width:768px){.logo-wall{gap:32px}.logo-item svg{width:36px;height:36px}}
+
+/* ── RADAR CHART ── */
+.radar-wrap{display:flex;align-items:center;justify-content:center;gap:60px;margin-top:56px;flex-wrap:wrap}
+.radar-svg{width:400px;height:400px;flex-shrink:0}
+.radar-legend{display:flex;flex-direction:column;gap:12px}
+.radar-leg-item{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;transition:all .3s}
+.radar-leg-item:hover{border-color:var(--border-h);transform:translateX(4px)}
+.radar-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.radar-leg-name{font-size:13px;font-weight:500}
+.radar-leg-val{font-family:var(--mono);font-size:12px;color:var(--accent);margin-left:auto}
+@media(max-width:768px){.radar-wrap{flex-direction:column}.radar-svg{width:300px;height:300px}}
+
+/* ── SLIDE-OVER DRAWER ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;opacity:0;pointer-events:none;transition:opacity .35s;backdrop-filter:blur(4px)}
+.drawer-overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(600px,90vw);background:var(--bg);z-index:2001;transform:translateX(100%);transition:transform .4s var(--ease);overflow-y:auto;border-left:1px solid var(--border);padding:0}
+.drawer.open{transform:translateX(0)}
+.drawer-close{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:1}
+.drawer-close-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);font-size:18px;transition:all .3s;font-family:var(--sans)}
+.drawer-close-btn:hover{border-color:var(--accent);color:var(--accent)}
+.drawer-title{font-family:var(--display);font-size:16px;font-weight:600;flex:1;margin-left:16px;letter-spacing:-.2px}
+.drawer-open-link{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;text-decoration:none}
+.drawer-open-link:hover{text-decoration:underline}
+.drawer-body{padding:32px 28px}
+.drawer-body .case-tag{font-size:11px;margin-bottom:12px;display:block}
+.drawer-body h2{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:16px}
+.drawer-body p{font-size:15px;color:var(--muted);line-height:1.85;margin-bottom:16px}
+.drawer-body .drawer-metrics{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+.drawer-metric{padding:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-align:center}
+.drawer-metric-n{font-family:var(--display);font-size:28px;font-weight:700;color:var(--accent)}
+.drawer-metric-l{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-top:4px}
+.drawer-full-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--accent);color:#fff;border-radius:100px;font-size:14px;font-weight:600;transition:all .3s;margin-top:16px}
+.drawer-full-btn:hover{box-shadow:0 4px 20px var(--glow);transform:translateY(-2px)}
+
+/* ── MOBILE BOTTOM BAR ── */
+.mobile-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;padding:12px 16px;background:var(--nav-bg);backdrop-filter:blur(20px);border-top:1px solid var(--border);gap:10px}
+.mobile-bar a{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--sans);transition:all .3s}
+.mb-primary{background:var(--accent);color:#fff}
+.mb-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+@media(max-width:768px){.mobile-bar{display:flex}footer{padding-bottom:80px}}
+
+/* ── AI CHATBOT ── */
+.chat-fab{position:fixed;bottom:24px;right:24px;z-index:1500;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px var(--glow);transition:all .3s;color:#fff}
+.chat-fab:hover{transform:scale(1.08);box-shadow:0 8px 32px var(--glow)}
+.chat-fab svg{width:24px;height:24px;transition:transform .3s}
+.chat-fab.open svg{transform:rotate(45deg)}
+@media(max-width:768px){.chat-fab{bottom:80px;right:16px;width:48px;height:48px}.chat-fab svg{width:20px;height:20px}}
+.chat-window{position:fixed;bottom:92px;right:24px;z-index:1501;width:380px;max-height:520px;background:var(--bg);border:1px solid var(--border);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;opacity:0;transform:translateY(16px) scale(.95);pointer-events:none;transition:all .3s var(--ease);box-shadow:0 16px 48px rgba(0,0,0,.3)}
+.chat-window.open{opacity:1;transform:none;pointer-events:auto}
+@media(max-width:768px){.chat-window{bottom:136px;right:12px;left:12px;width:auto;max-height:60vh}}
+.chat-header{padding:16px 20px;background:var(--nav-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.chat-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.chat-header-text{flex:1}
+.chat-header-name{font-size:14px;font-weight:600}
+.chat-header-status{font-family:var(--mono);font-size:10px;color:var(--accent);display:flex;align-items:center;gap:6px}
+.chat-header-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:200px;max-height:340px}
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:14px;font-size:13px;line-height:1.65;animation:chatIn .3s ease}
+@keyframes chatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chat-msg.bot{background:var(--card);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.chat-msg.user a{color:#fff}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px}
+.chat-sug{padding:6px 14px;border-radius:100px;font-family:var(--mono);font-size:10px;background:var(--glow2);color:var(--accent);border:1px solid rgba(20,184,166,.15);cursor:pointer;transition:all .3s;letter-spacing:.3px}
+.chat-sug:hover{background:rgba(20,184,166,.12);border-color:var(--accent)}
+.chat-input-wrap{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border);background:var(--nav-bg)}
+.chat-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:100px;padding:10px 16px;font-size:13px;color:var(--text);font-family:var(--sans);outline:none;transition:border-color .3s}
+.chat-input::placeholder{color:var(--dim)}
+.chat-input:focus{border-color:var(--accent)}
+.chat-send{width:36px;height:36px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:all .3s;flex-shrink:0}
+.chat-send:hover{box-shadow:0 2px 12px var(--glow)}
+.chat-send svg{width:16px;height:16px}
+.chat-typing{display:flex;gap:4px;padding:12px 16px;align-self:flex-start}
+.chat-typing span{width:6px;height:6px;border-radius:50%;background:var(--dim);animation:typeDot 1.2s infinite}
+.chat-typing span:nth-child(2){animation-delay:.2s}
+.chat-typing span:nth-child(3){animation-delay:.4s}
+@keyframes typeDot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
 </style>
 </head>
 <body>
+<script>(function(){var t=localStorage.getItem('theme');if(t==='light')document.documentElement.setAttribute('data-theme','light')})()</script>
 
 <!-- Infinite Grid BG -->
 <div class="grid-bg" id="gridBg">
@@ -461,12 +549,35 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
   <div class="sl rv">Enterprise Impact</div>
   <h2 class="st rv" data-d="1">Numbers that <em>moved the needle.</em></h2>
   <div class="imp-grid">
-    <div class="imp-c feat rv"><div class="imp-n">&#8377;3,000Cr+</div><div class="imp-l">Annual Revenue<br>Platform Influence</div></div>
-    <div class="imp-c rv" data-d="1"><div class="imp-n">+6%</div><div class="imp-l">Service Level<br>Improvement (82-88%)</div></div>
-    <div class="imp-c rv" data-d="2"><div class="imp-n">12%</div><div class="imp-l">Stock-Out Risk<br>Reduction</div></div>
-    <div class="imp-c rv" data-d="1"><div class="imp-n">&#8377;50L+</div><div class="imp-l">Monthly Digital<br>Revenue Growth</div></div>
-    <div class="imp-c rv" data-d="2"><div class="imp-n">45%</div><div class="imp-l">Digital Order<br>Penetration</div></div>
-    <div class="imp-c rv" data-d="3"><div class="imp-n">50%</div><div class="imp-l">Warehouse Workflow<br>Efficiency Gain</div></div>
+    <div class="imp-c feat rv"><div class="imp-n"><span data-count-prefix="&#8377;" data-count-val="3000" data-count-suffix="Cr+">&#8377;0</span></div><div class="imp-l">Annual Revenue<br>Platform Influence</div></div>
+    <div class="imp-c rv" data-d="1"><div class="imp-n"><span data-count-prefix="+" data-count-val="6" data-count-suffix="%">+0%</span></div><div class="imp-l">Service Level<br>Improvement (82-88%)</div></div>
+    <div class="imp-c rv" data-d="2"><div class="imp-n"><span data-count-val="12" data-count-suffix="%">0%</span></div><div class="imp-l">Stock-Out Risk<br>Reduction</div></div>
+    <div class="imp-c rv" data-d="1"><div class="imp-n"><span data-count-prefix="&#8377;" data-count-val="50" data-count-suffix="L+">&#8377;0</span></div><div class="imp-l">Monthly Digital<br>Revenue Growth</div></div>
+    <div class="imp-c rv" data-d="2"><div class="imp-n"><span data-count-val="45" data-count-suffix="%">0%</span></div><div class="imp-l">Digital Order<br>Penetration</div></div>
+    <div class="imp-c rv" data-d="3"><div class="imp-n"><span data-count-val="50" data-count-suffix="%">0%</span></div><div class="imp-l">Warehouse Workflow<br>Efficiency Gain</div></div>
+  </div>
+</div></section><div class="sdiv"></div>
+
+<!-- TRUSTED BY -->
+<section id="trusted" style="padding-top:48px;padding-bottom:48px"><div class="si" style="text-align:center">
+  <div class="sl rv" style="justify-content:center">Career Partners</div>
+  <div class="logo-wall rv" data-d="1">
+    <div class="logo-item">
+      <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="1.5"/><text x="24" y="20" text-anchor="middle" fill="currentColor" font-family="var(--display)" font-size="8" font-weight="700">TVS</text><text x="24" y="30" text-anchor="middle" fill="currentColor" font-family="var(--display)" font-size="6">MOTORS</text></svg>
+      <span>TVS Motors</span>
+    </div>
+    <div class="logo-item">
+      <svg viewBox="0 0 48 48" fill="none"><rect x="3" y="3" width="42" height="42" rx="4" stroke="currentColor" stroke-width="1.5"/><text x="24" y="21" text-anchor="middle" fill="currentColor" font-family="var(--display)" font-size="7" font-weight="700">Schneider</text><text x="24" y="31" text-anchor="middle" fill="currentColor" font-family="var(--display)" font-size="6">Electric</text></svg>
+      <span>Schneider Electric</span>
+    </div>
+    <div class="logo-item">
+      <svg viewBox="0 0 48 48" fill="none"><polygon points="24,3 45,42 3,42" stroke="currentColor" stroke-width="1.5" fill="none"/><text x="24" y="32" text-anchor="middle" fill="currentColor" font-family="var(--display)" font-size="7" font-weight="700">IIM</text><text x="24" y="40" text-anchor="middle" fill="currentColor" font-family="var(--display)" font-size="5">Kozhikode</text></svg>
+      <span>IIMK</span>
+    </div>
+    <div class="logo-item">
+      <svg viewBox="0 0 48 48" fill="none"><rect x="3" y="8" width="42" height="32" rx="6" stroke="currentColor" stroke-width="1.5"/><text x="24" y="28" text-anchor="middle" fill="currentColor" font-family="var(--display)" font-size="7" font-weight="700">Confio</text></svg>
+      <span>Confio Tech</span>
+    </div>
   </div>
 </div></section><div class="sdiv"></div>
 
@@ -547,10 +658,9 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
 <section id="skills"><div class="si">
   <div class="sl rv">Core Skills</div>
   <h2 class="st rv" data-d="1">The toolkit behind <em>the impact.</em></h2>
-  <div class="sk-grid">
-    <div class="sk-b rv"><div class="sk-bt">Product Leadership</div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Product Strategy & Roadmap</span><span class="sk-pc">95%</span></div><div class="sk-trk"><div class="sk-fl" data-w="95"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">KPI Governance & Analytics</span><span class="sk-pc">92%</span></div><div class="sk-trk"><div class="sk-fl" data-w="92"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Cross-Functional Leadership</span><span class="sk-pc">94%</span></div><div class="sk-trk"><div class="sk-fl" data-w="94"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Agile & Scrum Delivery</span><span class="sk-pc">90%</span></div><div class="sk-trk"><div class="sk-fl" data-w="90"></div></div></div></div>
-    <div class="sk-b rv" data-d="1"><div class="sk-bt">Supply Chain & Commerce</div><div class="sk-r"><div class="sk-top"><span class="sk-nm">SAP SD (Order-to-Cash)</span><span class="sk-pc">90%</span></div><div class="sk-trk"><div class="sk-fl" data-w="90"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Inventory Optimization</span><span class="sk-pc">93%</span></div><div class="sk-trk"><div class="sk-fl" data-w="93"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Warehouse Digitization</span><span class="sk-pc">88%</span></div><div class="sk-trk"><div class="sk-fl" data-w="88"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Digital Commerce Platforms</span><span class="sk-pc">91%</span></div><div class="sk-trk"><div class="sk-fl" data-w="91"></div></div></div></div>
-    <div class="sk-b rv" data-d="2"><div class="sk-bt">Data & AI</div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Demand Intelligence</span><span class="sk-pc">90%</span></div><div class="sk-trk"><div class="sk-fl" data-w="90"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Predictive Analytics</span><span class="sk-pc">87%</span></div><div class="sk-trk"><div class="sk-fl" data-w="87"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">LLM & RAG Systems</span><span class="sk-pc">85%</span></div><div class="sk-trk"><div class="sk-fl" data-w="85"></div></div></div><div class="sk-r"><div class="sk-top"><span class="sk-nm">Anomaly Detection</span><span class="sk-pc">86%</span></div><div class="sk-trk"><div class="sk-fl" data-w="86"></div></div></div></div>
+  <div class="radar-wrap rv" data-d="2">
+    <svg class="radar-svg" id="radarChart" viewBox="-60 -60 520 520"></svg>
+    <div class="radar-legend" id="radarLegend"></div>
   </div>
 </div></section><div class="sdiv"></div>
 
@@ -623,6 +733,50 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
 </section>
 
 <footer><p>&copy; 2026 Kiran R. All rights reserved.</p><p>Built with <span class="ft-a">&hearts;</span> and purpose.</p></footer>
+
+<!-- SLIDE-OVER DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-close">
+    <button class="drawer-close-btn" id="drawerCloseBtn">&times;</button>
+    <span class="drawer-title" id="drawerTitle"></span>
+    <a href="#" class="drawer-open-link" id="drawerFullLink" target="_blank">Full Case Study &rarr;</a>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- MOBILE BOTTOM BAR -->
+<div class="mobile-bar">
+  <a href="./Kiran-R-Resume.pdf" class="mb-primary" download><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Resume</a>
+  <a href="https://linkedin.com/in/kiranreddyr" class="mb-secondary" target="_blank"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.6 1H2.4C1.6 1 1 1.6 1 2.4v11.2c0 .8.6 1.4 1.4 1.4h11.2c.8 0 1.4-.6 1.4-1.4V2.4c0-.8-.6-1.4-1.4-1.4zM5.2 13H3V6.3h2.2V13zM4.1 5.4c-.7 0-1.3-.6-1.3-1.3 0-.7.6-1.3 1.3-1.3.7 0 1.3.6 1.3 1.3 0 .7-.6 1.3-1.3 1.3zM13 13h-2.2V9.7c0-.8 0-1.8-1.1-1.8s-1.3.9-1.3 1.7V13H6.2V6.3h2.1v.9c.3-.5 1-1.1 2-1.1 2.2 0 2.6 1.4 2.6 3.3V13z"/></svg>LinkedIn</a>
+</div>
+
+<!-- AI CHATBOT -->
+<button class="chat-fab" id="chatFab" aria-label="Ask about Kiran">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.76 1.47 5.22 3.77 6.82L5 22l4.34-2.17C10.22 19.94 11.09 20 12 20c5.52 0 10-4.03 10-9s-4.48-9-10-9z" fill="currentColor"/><circle cx="8" cy="11" r="1.5" fill="var(--bg)"/><circle cx="12" cy="11" r="1.5" fill="var(--bg)"/><circle cx="16" cy="11" r="1.5" fill="var(--bg)"/></svg>
+</button>
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div class="chat-av">KR</div>
+    <div class="chat-header-text">
+      <div class="chat-header-name">Ask about Kiran</div>
+      <div class="chat-header-status">AI-powered</div>
+    </div>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg bot">Hi! I'm an AI assistant trained on Kiran's portfolio. Ask me anything about his experience, skills, case studies, or career journey.</div>
+  </div>
+  <div class="chat-suggestions" id="chatSugs">
+    <button class="chat-sug">What does Kiran do?</button>
+    <button class="chat-sug">AI experience?</button>
+    <button class="chat-sug">Key achievements</button>
+    <button class="chat-sug">Contact Kiran</button>
+  </div>
+  <div class="chat-input-wrap">
+    <input class="chat-input" id="chatInput" type="text" placeholder="Ask anything about Kiran..." autocomplete="off">
+    <button class="chat-send" id="chatSend"><svg viewBox="0 0 24 24" fill="none"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" fill="currentColor"/></svg></button>
+  </div>
+</div>
 
 <script>
 // ── CASE STUDY DATA ──
@@ -727,10 +881,114 @@ CASES.forEach((c,i)=>{
   document.querySelectorAll('.rv').forEach(el=>o.observe(el));
 })();
 
-// ── SKILL BARS ──
+// ── IMPACT COUNTERS ──
 (function(){
-  const o=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.style.width=e.target.dataset.w+'%';o.unobserve(e.target)}})},{threshold:.3});
-  document.querySelectorAll('.sk-fl').forEach(el=>o.observe(el));
+  const o=new IntersectionObserver(es=>{es.forEach(e=>{
+    if(e.isIntersecting){
+      const el=e.target;const target=parseInt(el.dataset.countVal);
+      const prefix=el.dataset.countPrefix||'';const suffix=el.dataset.countSuffix||'';
+      let current=0;const duration=1500;const steps=50;
+      const step=target/steps;let frame=0;
+      const timer=setInterval(()=>{frame++;current=Math.min(Math.round(step*frame),target);
+        el.textContent=prefix+current.toLocaleString()+suffix;
+        if(frame>=steps){clearInterval(timer);el.textContent=prefix+target.toLocaleString()+suffix}},duration/steps);
+      o.unobserve(el);
+    }
+  })},{threshold:.4});
+  document.querySelectorAll('[data-count-val]').forEach(c=>o.observe(c));
+})();
+
+// ── RADAR CHART ──
+(function(){
+  const skills=[
+    {name:'Product Strategy',val:95,cat:'strategic'},
+    {name:'KPI Governance',val:92,cat:'strategic'},
+    {name:'Cross-Functional Leadership',val:94,cat:'strategic'},
+    {name:'SAP SD & Supply Chain',val:90,cat:'technical'},
+    {name:'Inventory Optimization',val:93,cat:'technical'},
+    {name:'LLM & RAG Systems',val:85,cat:'technical'},
+    {name:'Demand Intelligence',val:90,cat:'technical'},
+    {name:'Digital Commerce',val:91,cat:'strategic'},
+  ];
+  const svg=document.getElementById('radarChart');
+  const legend=document.getElementById('radarLegend');
+  if(!svg||!legend)return;
+  const cx=200,cy=200,maxR=130,levels=5;
+  const n=skills.length;const angleStep=(2*Math.PI)/n;const startAngle=-Math.PI/2;
+
+  // Grid circles and labels
+  for(let i=1;i<=levels;i++){
+    const r=maxR*(i/levels);
+    svg.innerHTML+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width=".8"/>`;
+  }
+  // Axis lines
+  for(let i=0;i<n;i++){
+    const angle=startAngle+i*angleStep;
+    const x=cx+maxR*Math.cos(angle);const y=cy+maxR*Math.sin(angle);
+    svg.innerHTML+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--border)" stroke-width=".5"/>`;
+    // Labels
+    const lx=cx+(maxR+35)*Math.cos(angle);const ly=cy+(maxR+35)*Math.sin(angle);
+    const anchor=Math.abs(Math.cos(angle))<.1?'middle':Math.cos(angle)>0?'start':'end';
+    const dy=Math.abs(Math.sin(angle))<.1?'.35em':Math.sin(angle)>0?'1em':'-.5em';
+    svg.innerHTML+=`<text x="${lx}" y="${ly}" text-anchor="${anchor}" dy="${dy}" fill="var(--muted)" font-family="var(--sans)" font-size="10" font-weight="500">${skills[i].name}</text>`;
+  }
+  // Data polygon
+  const points=skills.map((s,i)=>{
+    const angle=startAngle+i*angleStep;
+    const r=maxR*(s.val/100);
+    return `${cx+r*Math.cos(angle)},${cy+r*Math.sin(angle)}`;
+  }).join(' ');
+  svg.innerHTML+=`<polygon points="${points}" fill="rgba(20,184,166,.15)" stroke="var(--accent)" stroke-width="2"/>`;
+  // Data dots
+  skills.forEach((s,i)=>{
+    const angle=startAngle+i*angleStep;
+    const r=maxR*(s.val/100);
+    svg.innerHTML+=`<circle cx="${cx+r*Math.cos(angle)}" cy="${cy+r*Math.sin(angle)}" r="4" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/>`;
+  });
+
+  // Legend
+  skills.forEach(s=>{
+    const color=s.cat==='strategic'?'var(--accent)':'var(--accent2)';
+    legend.innerHTML+=`<div class="radar-leg-item"><span class="radar-leg-dot" style="background:${color}"></span><span class="radar-leg-name">${s.name}</span><span class="radar-leg-val">${s.val}%</span></div>`;
+  });
+})();
+
+// ── SLIDE-OVER DRAWER ──
+(function(){
+  const overlay=document.getElementById('drawerOverlay');
+  const drawer=document.getElementById('drawer');
+  const closeBtn=document.getElementById('drawerCloseBtn');
+  const title=document.getElementById('drawerTitle');
+  const body=document.getElementById('drawerBody');
+  const fullLink=document.getElementById('drawerFullLink');
+
+  function openDrawer(c){
+    title.textContent=c.title;
+    fullLink.href=c.url;
+    body.innerHTML=`<span class="case-tag">${c.tag}</span><h2>${c.title}</h2><p>${c.desc}</p>
+      <div class="drawer-metrics">${c.metrics.map(m=>`<div class="drawer-metric"><div class="drawer-metric-n">${m.n}</div><div class="drawer-metric-l">${m.l}</div></div>`).join('')}</div>
+      <a href="${c.url}" class="drawer-full-btn">Read Full Case Study &rarr;</a>`;
+    overlay.classList.add('open');drawer.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function closeDrawer(){
+    overlay.classList.remove('open');drawer.classList.remove('open');
+    document.body.style.overflow='';
+  }
+  overlay.addEventListener('click',closeDrawer);
+  closeBtn.addEventListener('click',closeDrawer);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+
+  // Intercept case card clicks
+  document.addEventListener('click',e=>{
+    const card=e.target.closest('.case-c');
+    if(!card)return;
+    // On mobile, go to full page. On desktop, open drawer.
+    if(window.innerWidth<=768)return;
+    e.preventDefault();
+    const idx=Array.from(document.querySelectorAll('.case-c')).indexOf(card);
+    if(idx>=0&&CASES[idx])openDrawer(CASES[idx]);
+  });
 })();
 
 // ── NAV SCROLL ──
@@ -795,8 +1053,83 @@ window.addEventListener('load',()=>{
   });
 })();
 
-// ── ESC KEY ──
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){}});
+// ── AI CHATBOT ──
+(function(){
+  const fab=document.getElementById('chatFab');
+  const win=document.getElementById('chatWindow');
+  const msgs=document.getElementById('chatMessages');
+  const inp=document.getElementById('chatInput');
+  const send=document.getElementById('chatSend');
+  const sugs=document.getElementById('chatSugs');
+  if(!fab)return;
+
+  fab.addEventListener('click',()=>{
+    fab.classList.toggle('open');win.classList.toggle('open');
+    if(win.classList.contains('open'))inp.focus();
+  });
+
+  // Knowledge base
+  const KB=[
+    {keys:['who','about','kiran','introduce','tell me','background'],answer:'Kiran R. is a Senior Product Manager with 9+ years of experience building AI-powered enterprise systems. He currently leads the supply chain platform at TVS Motors, serving 90+ distributors across India on a &#8377;3,000Cr+ annual revenue base. He holds an Executive MBA from IIM Kozhikode.'},
+    {keys:['experience','years','career','journey','work history'],answer:'Kiran has 9+ years of progressive experience: started as a Software Engineer building IoT apps at Confio Technologies (2016-2018), moved to Product Manager (2018-2022) partnering with Schneider Electric, then Digital PM at TVS Motors (2022-2025), and now Senior PM at TVS Motors leading AI-powered supply chain platforms.'},
+    {keys:['ai','artificial intelligence','machine learning','llm','rag','copilot'],answer:'Kiran has hands-on AI product experience including: AI-powered replenishment engines, an LLM analytics copilot architecture, RAG pipeline design, demand intelligence systems, anomaly detection, and a Pan-India inventory exchange marketplace. He\'s deployed 6+ AI use cases at enterprise scale.'},
+    {keys:['skill','tech','stack','tools','python','sql','sap'],answer:'Kiran\'s skills span Strategic (Product Strategy 95%, KPI Governance 92%, Cross-Functional Leadership 94%) and Technical (SAP SD 90%, Inventory Optimization 93%, LLM & RAG Systems 85%, Demand Intelligence 90%, Digital Commerce 91%). He bridges the gap between business strategy and technical execution.'},
+    {keys:['impact','achievement','number','result','metric','revenue'],answer:'Key impacts: &#8377;3,000Cr+ annual revenue platform influence, +6% service level improvement (82% to 88%), 12% stock-out risk reduction, &#8377;50L+ monthly digital revenue growth, 45% digital order penetration, and 50% warehouse workflow efficiency gain.'},
+    {keys:['case stud','project','portfolio','inventory','exchange','marketplace'],answer:'Kiran has 6 detailed case studies: AI-Powered Inventory Exchange Marketplace, Service Level AI improvements, WMS Automation, Distributor Benchmarking AI, Demand Matching, and a comprehensive DMS AI Suite with 8 use cases. You can explore them in the <a href="#cases">Case Studies section</a>.'},
+    {keys:['education','degree','mba','iimk','iim','college','university'],answer:'Kiran holds an Executive MBA from IIM Kozhikode (2025-2027, Strategy & Operations focus) and a B.E. in Electronics & Communication from Sri Sairam College of Engineering (2012-2016). He also has certifications in Generative AI for PMs and Agile Practices from University of Alberta.'},
+    {keys:['contact','email','phone','reach','hire','connect','linkedin'],answer:'You can reach Kiran at: <br>Email: <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a><br>Phone: +91-9036288730<br>LinkedIn: <a href="https://linkedin.com/in/kiranreddyr" target="_blank">linkedin.com/in/kiranreddyr</a>'},
+    {keys:['tvs','motor','current','now','present'],answer:'At TVS Motors, Kiran leads the enterprise DMS platform serving 90+ distributors nationwide. He\'s deployed AI replenishment engines, conceptualized a Pan-India inventory exchange marketplace, and defined the architecture for an LLM-powered analytics copilot. The platform influences &#8377;3,000Cr+ in annual revenue.'},
+    {keys:['schneider','confio','iot','wiser','previous'],answer:'At Confio Technologies, Kiran transitioned from Software Engineer to Product Manager. He owned strategy for IoT Hubs and Controller platforms, partnered with Schneider Electric on the Wiser India initiative, and cut delivery cycle times by 30% through structured Agile governance.'},
+    {keys:['supply chain','distributor','dms','warehouse','inventory'],answer:'Kiran specializes in AI-powered supply chain: demand forecasting, predictive replenishment, anomaly detection, warehouse digitization (QR-based GRN, smart pickslips), and distributor management systems. His work serves 90+ distributors handling &#8377;3,000Cr+ annually.'},
+    {keys:['blog','write','article','rag vs','vectorless'],answer:'Kiran writes about AI infrastructure and enterprise products. His latest blog post covers Traditional RAG vs Vectorless RAG, helping PMs choose the right retrieval architecture. Check it out in the <a href="#blog">Blog section</a>.'},
+    {keys:['resume','cv','download','pdf'],answer:'You can download Kiran\'s full resume from the <a href="#resume">Resume section</a>, or directly <a href="./Kiran-R-Resume.pdf" download>click here to download</a>.'},
+  ];
+
+  function findAnswer(q){
+    const ql=q.toLowerCase();
+    let best=null,bestScore=0;
+    KB.forEach(k=>{
+      let score=0;
+      k.keys.forEach(key=>{if(ql.includes(key))score+=key.length});
+      if(score>bestScore){bestScore=score;best=k.answer}
+    });
+    return best||'That\'s a great question! I don\'t have a specific answer for that, but you can reach out to Kiran directly at <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a> for more details. You can also explore the <a href="#cases">Case Studies</a> and <a href="#blog">Blog</a> sections for more context.';
+  }
+
+  function addMsg(text,type){
+    const d=document.createElement('div');
+    d.className='chat-msg '+type;
+    d.innerHTML=text;
+    msgs.appendChild(d);
+    msgs.scrollTop=msgs.scrollHeight;
+  }
+
+  function showTyping(){
+    const d=document.createElement('div');
+    d.className='chat-typing';d.id='chatTyping';
+    d.innerHTML='<span></span><span></span><span></span>';
+    msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+  }
+  function hideTyping(){const t=document.getElementById('chatTyping');if(t)t.remove()}
+
+  function handleSend(){
+    const q=inp.value.trim();if(!q)return;
+    addMsg(q,'user');inp.value='';
+    sugs.style.display='none';
+    showTyping();
+    setTimeout(()=>{hideTyping();addMsg(findAnswer(q),'bot')},600+Math.random()*600);
+  }
+
+  send.addEventListener('click',handleSend);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')handleSend()});
+
+  // Suggestion buttons
+  sugs.querySelectorAll('.chat-sug').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      inp.value=btn.textContent;handleSend();
+    });
+  });
+})();
 </script>
 </body>
 </html>
