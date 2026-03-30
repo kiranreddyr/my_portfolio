@@ -161,6 +161,18 @@ section{padding:120px 5%;position:relative;z-index:1}
 .imp-n{font-family:var(--display);font-size:clamp(36px,4vw,52px);font-weight:700;line-height:1;letter-spacing:-1.5px;margin-bottom:10px}
 .imp-l{font-size:12px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);line-height:1.6}
 
+/* ── SERVICE LEVEL GAUGE ── */
+.sl-gauge{margin-top:14px;width:100%}
+.sl-gauge-labels{display:flex;justify-content:space-between;margin-bottom:6px}
+.sl-gauge-label{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.5px}
+.sl-gauge-before{color:var(--dim)}
+.sl-gauge-after{color:var(--accent)}
+.sl-gauge-track{height:6px;border-radius:6px;background:var(--trk-bg);position:relative;overflow:hidden}
+.sl-gauge-fill-before{position:absolute;left:0;top:0;height:100%;width:0;border-radius:6px;background:var(--dim);transition:width 1.5s cubic-bezier(.16,1,.3,1)}
+.sl-gauge-fill-after{position:absolute;left:0;top:0;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--dim),var(--accent));transition:width 1.5s cubic-bezier(.16,1,.3,1) .3s}
+.sl-gauge-arrow{display:flex;align-items:center;justify-content:center;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:1px;gap:6px}
+.sl-gauge-arrow svg{width:14px;height:14px}
+
 /* ── JOURNEY ── */
 .journey{margin-top:56px;position:relative}
 /* Central path line */
@@ -199,9 +211,12 @@ section{padding:120px 5%;position:relative;z-index:1}
 
 /* ── CASE STUDIES BENTO GRID ── */
 .cases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:56px;grid-auto-rows:auto}
-.case-c{position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .4s var(--ease);cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;padding:24px}
-.case-c::before{content:'';position:absolute;inset:0;background:linear-gradient(to top,var(--case-grad1) 0%,var(--case-grad2) 50%,transparent 100%);z-index:1;transition:opacity .3s}
-.case-c:hover{transform:translateY(-4px);border-color:var(--border-h)}
+.case-c{position:relative;background:rgba(12,16,28,.7);border:1px solid var(--border);border-radius:16px;overflow:visible;transition:all .4s var(--ease);cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;padding:24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+[data-theme="light"] .case-c{background:rgba(255,255,255,.7)}
+.case-c::before{content:'';position:absolute;inset:0;border-radius:16px;background:linear-gradient(to top,var(--case-grad1) 0%,var(--case-grad2) 50%,transparent 100%);z-index:1;transition:opacity .3s}
+.case-glow{position:absolute;inset:-1px;border-radius:17px;background:linear-gradient(135deg,rgba(20,184,166,.3),rgba(34,211,238,.12),transparent 50%,rgba(20,184,166,.2));z-index:-1;opacity:0;transition:opacity .4s;filter:blur(1px)}
+.case-c:hover .case-glow{opacity:1}
+.case-c:hover{transform:translateY(-4px);border-color:rgba(20,184,166,.3);box-shadow:0 8px 40px rgba(20,184,166,.1),0 0 0 1px rgba(20,184,166,.15)}
 .case-c:hover .case-bg{transform:scale(1.05)}
 .case-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .6s var(--ease)}
 .case-content{position:relative;z-index:2}
@@ -550,7 +565,7 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
   <h2 class="st rv" data-d="1">Numbers that <em>moved the needle.</em></h2>
   <div class="imp-grid">
     <div class="imp-c feat rv"><div class="imp-n"><span data-count-prefix="&#8377;" data-count-val="3000" data-count-suffix="Cr+">&#8377;0</span></div><div class="imp-l">Annual Revenue<br>Platform Influence</div></div>
-    <div class="imp-c rv" data-d="1"><div class="imp-n"><span data-count-prefix="+" data-count-val="6" data-count-suffix="%">+0%</span></div><div class="imp-l">Service Level<br>Improvement (82-88%)</div></div>
+    <div class="imp-c rv" data-d="1"><div class="imp-n"><span data-count-prefix="+" data-count-val="6" data-count-suffix="%">+0%</span></div><div class="imp-l">Service Level Improvement</div><div class="sl-gauge" id="slGauge"><div class="sl-gauge-labels"><span class="sl-gauge-label sl-gauge-before">82%</span><span class="sl-gauge-label sl-gauge-after">88%</span></div><div class="sl-gauge-track"><div class="sl-gauge-fill-before" id="gaugeBefore"></div><div class="sl-gauge-fill-after" id="gaugeAfter"></div></div><div class="sl-gauge-arrow"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>+6% LIFT</div></div></div>
     <div class="imp-c rv" data-d="2"><div class="imp-n"><span data-count-val="12" data-count-suffix="%">0%</span></div><div class="imp-l">Stock-Out Risk<br>Reduction</div></div>
     <div class="imp-c rv" data-d="1"><div class="imp-n"><span data-count-prefix="&#8377;" data-count-val="50" data-count-suffix="L+">&#8377;0</span></div><div class="imp-l">Monthly Digital<br>Revenue Growth</div></div>
     <div class="imp-c rv" data-d="2"><div class="imp-n"><span data-count-val="45" data-count-suffix="%">0%</span></div><div class="imp-l">Digital Order<br>Penetration</div></div>
@@ -796,7 +811,7 @@ CASES.forEach((c,i)=>{
   a.className=`case-c rv ${c.span}`;
   a.dataset.d=String((i%4)+1);
   a.href=c.url;
-  a.innerHTML=`<div class="case-bg" style="background:var(--case-bg-grad)"></div><div class="case-content"><span class="case-tag">${c.tag}</span><h3 class="case-t">${c.title}</h3><p class="case-d">${c.desc}</p><div class="case-m">${c.metrics.map(m=>`<div><div class="case-mn">${m.n}</div><div class="case-ml">${m.l}</div></div>`).join('')}</div></div>`;
+  a.innerHTML=`<div class="case-glow"></div><div class="case-bg" style="background:var(--case-bg-grad)"></div><div class="case-content"><span class="case-tag">${c.tag}</span><h3 class="case-t">${c.title}</h3><p class="case-d">${c.desc}</p><div class="case-m">${c.metrics.map(m=>`<div><div class="case-mn">${m.n}</div><div class="case-ml">${m.l}</div></div>`).join('')}</div></div>`;
   cg.appendChild(a);
 });
 
@@ -896,6 +911,18 @@ CASES.forEach((c,i)=>{
     }
   })},{threshold:.4});
   document.querySelectorAll('[data-count-val]').forEach(c=>o.observe(c));
+})();
+
+// ── SERVICE LEVEL GAUGE ──
+(function(){
+  const gauge=document.getElementById('slGauge');
+  if(!gauge)return;
+  const gb=document.getElementById('gaugeBefore');
+  const ga=document.getElementById('gaugeAfter');
+  const o=new IntersectionObserver(es=>{es.forEach(e=>{
+    if(e.isIntersecting){gb.style.width='82%';ga.style.width='88%';o.unobserve(e.target)}
+  })},{threshold:.5});
+  o.observe(gauge);
 })();
 
 // ── RADAR CHART ──
