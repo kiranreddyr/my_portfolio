@@ -389,7 +389,7 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
 .logo-item:hover{opacity:.85;filter:grayscale(0)}
 .logo-item svg{width:48px;height:48px}
 .logo-item span{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
-@media(max-width:768px){.logo-wall{gap:32px}.logo-item svg{width:36px;height:36px}}
+@media(max-width:768px){.logo-wall{gap:28px;padding:24px 0}.logo-item svg{width:36px;height:36px}.logo-item span{font-size:9px;letter-spacing:1px}}
 
 /* ── RADAR CHART ── */
 .radar-wrap{display:flex;align-items:center;justify-content:center;gap:60px;margin-top:56px;flex-wrap:wrap}
@@ -400,7 +400,8 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
 .radar-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .radar-leg-name{font-size:13px;font-weight:500}
 .radar-leg-val{font-family:var(--mono);font-size:12px;color:var(--accent);margin-left:auto}
-@media(max-width:768px){.radar-wrap{flex-direction:column}.radar-svg{width:300px;height:300px}}
+@media(max-width:768px){.radar-wrap{flex-direction:column;gap:32px}.radar-svg{width:280px;height:280px}.radar-legend{width:100%}.radar-leg-item{padding:8px 12px}.radar-leg-name{font-size:12px}.sl-gauge{margin-top:10px}.drawer-body .drawer-metrics{grid-template-columns:1fr 1fr;gap:10px}.drawer-metric{padding:14px}.drawer-metric-n{font-size:22px}}
+@media(max-width:480px){.radar-svg{width:240px;height:240px}.logo-wall{gap:20px}.logo-item svg{width:30px;height:30px}.imp-c .sl-gauge{margin-top:8px}.chat-suggestions{gap:4px}.chat-sug{font-size:9px;padding:5px 10px}}
 
 /* ── SLIDE-OVER DRAWER ── */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;opacity:0;pointer-events:none;transition:opacity .35s;backdrop-filter:blur(4px)}
@@ -782,10 +783,14 @@ footer p{font-size:12px;color:var(--dim)}.ft-a{color:var(--accent)}
     <div class="chat-msg bot">Hi! I'm an AI assistant trained on Kiran's portfolio. Ask me anything about his experience, skills, case studies, or career journey.</div>
   </div>
   <div class="chat-suggestions" id="chatSugs">
-    <button class="chat-sug">What does Kiran do?</button>
-    <button class="chat-sug">AI experience?</button>
+    <button class="chat-sug">Who is Kiran?</button>
+    <button class="chat-sug">Where does he stay?</button>
+    <button class="chat-sug">Overall experience?</button>
+    <button class="chat-sug">Education</button>
+    <button class="chat-sug">AI projects</button>
     <button class="chat-sug">Key achievements</button>
-    <button class="chat-sug">Contact Kiran</button>
+    <button class="chat-sug">Skills</button>
+    <button class="chat-sug">Contact</button>
   </div>
   <div class="chat-input-wrap">
     <input class="chat-input" id="chatInput" type="text" placeholder="Ask anything about Kiran..." autocomplete="off">
@@ -927,15 +932,16 @@ CASES.forEach((c,i)=>{
 
 // ── RADAR CHART ──
 (function(){
+  const isMobile=window.innerWidth<=768;
   const skills=[
-    {name:'Product Strategy',val:95,cat:'strategic'},
-    {name:'KPI Governance',val:92,cat:'strategic'},
-    {name:'Cross-Functional Leadership',val:94,cat:'strategic'},
-    {name:'SAP SD & Supply Chain',val:90,cat:'technical'},
-    {name:'Inventory Optimization',val:93,cat:'technical'},
-    {name:'LLM & RAG Systems',val:85,cat:'technical'},
-    {name:'Demand Intelligence',val:90,cat:'technical'},
-    {name:'Digital Commerce',val:91,cat:'strategic'},
+    {name:'Product Strategy',short:'Strategy',val:95,cat:'strategic'},
+    {name:'KPI Governance',short:'KPI Gov.',val:92,cat:'strategic'},
+    {name:'Cross-Functional Leadership',short:'Leadership',val:94,cat:'strategic'},
+    {name:'SAP SD & Supply Chain',short:'SAP SD',val:90,cat:'technical'},
+    {name:'Inventory Optimization',short:'Inventory',val:93,cat:'technical'},
+    {name:'LLM & RAG Systems',short:'LLM/RAG',val:85,cat:'technical'},
+    {name:'Demand Intelligence',short:'Demand Intel',val:90,cat:'technical'},
+    {name:'Digital Commerce',short:'Commerce',val:91,cat:'strategic'},
   ];
   const svg=document.getElementById('radarChart');
   const legend=document.getElementById('radarLegend');
@@ -954,10 +960,13 @@ CASES.forEach((c,i)=>{
     const x=cx+maxR*Math.cos(angle);const y=cy+maxR*Math.sin(angle);
     svg.innerHTML+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--border)" stroke-width=".5"/>`;
     // Labels
-    const lx=cx+(maxR+35)*Math.cos(angle);const ly=cy+(maxR+35)*Math.sin(angle);
+    const labelOff=isMobile?25:35;
+    const lx=cx+(maxR+labelOff)*Math.cos(angle);const ly=cy+(maxR+labelOff)*Math.sin(angle);
     const anchor=Math.abs(Math.cos(angle))<.1?'middle':Math.cos(angle)>0?'start':'end';
     const dy=Math.abs(Math.sin(angle))<.1?'.35em':Math.sin(angle)>0?'1em':'-.5em';
-    svg.innerHTML+=`<text x="${lx}" y="${ly}" text-anchor="${anchor}" dy="${dy}" fill="var(--muted)" font-family="var(--sans)" font-size="10" font-weight="500">${skills[i].name}</text>`;
+    const labelText=isMobile?skills[i].short:skills[i].name;
+    const fontSize=isMobile?'9':'10';
+    svg.innerHTML+=`<text x="${lx}" y="${ly}" text-anchor="${anchor}" dy="${dy}" fill="var(--muted)" font-family="var(--sans)" font-size="${fontSize}" font-weight="500">${labelText}</text>`;
   }
   // Data polygon
   const points=skills.map((s,i)=>{
@@ -1095,32 +1104,189 @@ window.addEventListener('load',()=>{
     if(win.classList.contains('open'))inp.focus();
   });
 
-  // Knowledge base
+  // Spell correction map
+  const TYPOS={carrier:'career',carreer:'career',carrer:'career',carier:'career',experiance:'experience',experince:'experience',expirience:'experience',educaton:'education',eductaion:'education',qualificaton:'qualification',acheivement:'achievement',acheivment:'achievement',begaluru:'bengaluru',banglore:'bangalore',bangaluru:'bengaluru',managment:'management',managemnt:'management',leardership:'leadership',strenth:'strength',strenght:'strength',artifical:'artificial',certfication:'certification',certifcate:'certification',warehoue:'warehouse',warehous:'warehouse',distributer:'distributor',distribtor:'distributor',supplly:'supply',supplychain:'supply chain',anaytics:'analytics',analtics:'analytics',prevous:'previous',previuos:'previous',compny:'company',companie:'company'};
+
+  function fixTypos(s){
+    return s.split(/\s+/).map(w=>{const wl=w.toLowerCase();return TYPOS[wl]||w}).join(' ');
+  }
+
+  // Knowledge base - comprehensive from resume
   const KB=[
-    {keys:['who','about','kiran','introduce','tell me','background'],answer:'Kiran R. is a Senior Product Manager with 9+ years of experience building AI-powered enterprise systems. He currently leads the supply chain platform at TVS Motors, serving 90+ distributors across India on a &#8377;3,000Cr+ annual revenue base. He holds an Executive MBA from IIM Kozhikode.'},
-    {keys:['experience','years','career','journey','work history'],answer:'Kiran has 9+ years of progressive experience: started as a Software Engineer building IoT apps at Confio Technologies (2016-2018), moved to Product Manager (2018-2022) partnering with Schneider Electric, then Digital PM at TVS Motors (2022-2025), and now Senior PM at TVS Motors leading AI-powered supply chain platforms.'},
-    {keys:['ai','artificial intelligence','machine learning','llm','rag','copilot'],answer:'Kiran has hands-on AI product experience including: AI-powered replenishment engines, an LLM analytics copilot architecture, RAG pipeline design, demand intelligence systems, anomaly detection, and a Pan-India inventory exchange marketplace. He\'s deployed 6+ AI use cases at enterprise scale.'},
-    {keys:['skill','tech','stack','tools','python','sql','sap'],answer:'Kiran\'s skills span Strategic (Product Strategy 95%, KPI Governance 92%, Cross-Functional Leadership 94%) and Technical (SAP SD 90%, Inventory Optimization 93%, LLM & RAG Systems 85%, Demand Intelligence 90%, Digital Commerce 91%). He bridges the gap between business strategy and technical execution.'},
-    {keys:['impact','achievement','number','result','metric','revenue'],answer:'Key impacts: &#8377;3,000Cr+ annual revenue platform influence, +6% service level improvement (82% to 88%), 12% stock-out risk reduction, &#8377;50L+ monthly digital revenue growth, 45% digital order penetration, and 50% warehouse workflow efficiency gain.'},
-    {keys:['case stud','project','portfolio','inventory','exchange','marketplace'],answer:'Kiran has 6 detailed case studies: AI-Powered Inventory Exchange Marketplace, Service Level AI improvements, WMS Automation, Distributor Benchmarking AI, Demand Matching, and a comprehensive DMS AI Suite with 8 use cases. You can explore them in the <a href="#cases">Case Studies section</a>.'},
-    {keys:['education','degree','mba','iimk','iim','college','university'],answer:'Kiran holds an Executive MBA from IIM Kozhikode (2025-2027, Strategy & Operations focus) and a B.E. in Electronics & Communication from Sri Sairam College of Engineering (2012-2016). He also has certifications in Generative AI for PMs and Agile Practices from University of Alberta.'},
-    {keys:['contact','email','phone','reach','hire','connect','linkedin'],answer:'You can reach Kiran at: <br>Email: <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a><br>Phone: +91-9036288730<br>LinkedIn: <a href="https://linkedin.com/in/kiranreddyr" target="_blank">linkedin.com/in/kiranreddyr</a>'},
-    {keys:['tvs','motor','current','now','present'],answer:'At TVS Motors, Kiran leads the enterprise DMS platform serving 90+ distributors nationwide. He\'s deployed AI replenishment engines, conceptualized a Pan-India inventory exchange marketplace, and defined the architecture for an LLM-powered analytics copilot. The platform influences &#8377;3,000Cr+ in annual revenue.'},
-    {keys:['schneider','confio','iot','wiser','previous'],answer:'At Confio Technologies, Kiran transitioned from Software Engineer to Product Manager. He owned strategy for IoT Hubs and Controller platforms, partnered with Schneider Electric on the Wiser India initiative, and cut delivery cycle times by 30% through structured Agile governance.'},
-    {keys:['supply chain','distributor','dms','warehouse','inventory'],answer:'Kiran specializes in AI-powered supply chain: demand forecasting, predictive replenishment, anomaly detection, warehouse digitization (QR-based GRN, smart pickslips), and distributor management systems. His work serves 90+ distributors handling &#8377;3,000Cr+ annually.'},
-    {keys:['blog','write','article','rag vs','vectorless'],answer:'Kiran writes about AI infrastructure and enterprise products. His latest blog post covers Traditional RAG vs Vectorless RAG, helping PMs choose the right retrieval architecture. Check it out in the <a href="#blog">Blog section</a>.'},
-    {keys:['resume','cv','download','pdf'],answer:'You can download Kiran\'s full resume from the <a href="#resume">Resume section</a>, or directly <a href="./Kiran-R-Resume.pdf" download>click here to download</a>.'},
+    // Identity & Overview
+    {keys:['who','about','kiran','introduce','tell me','background','himself','yourself','summary','describe','overview','profile'],answer:'Kiran R. is a <strong>Senior Product Manager</strong> with <strong>9+ years</strong> of experience building and scaling data-driven platforms across supply chain and digital commerce ecosystems. He currently leads the enterprise POMS platform at <strong>TVS Motors</strong> in Bengaluru, serving 90+ distributors across India, influencing <strong>&#8377;3,000Cr+ annual revenue</strong>. He holds an Executive MBA from <strong>IIM Kozhikode</strong>. His focus areas include AI-powered decision systems, KPI-driven roadmapping, and scaling 0->1 and 1->N products.'},
+
+    // Location
+    {keys:['where live','where stay','which city','location','based','located','place','bengaluru','bangalore','where from','where is he','where does','hometown','reside'],answer:'Kiran is based in <strong>Bengaluru (Bangalore), India</strong>. He works at TVS Motors\' Bangalore office.'},
+
+    // When did career start / First job / Career beginning
+    {keys:['when start','when did','when begin','start career','started','first job','begin career','how did he start','career start','first role','started working','join','began','beginning','origin'],answer:'Kiran started his career in <strong>August 2016</strong> as a <strong>Software Engineer at Confio Technologies Pvt Ltd</strong> in Bangalore. He built Android applications for IoT-based home automation solutions. From there, he transitioned to Product Management in Feb 2018 and has been in product roles ever since, now with 9+ years of total experience.'},
+
+    // Overall Experience
+    {keys:['experience','years','how long','total','overall exp','many years','career span','how much exp'],answer:'Kiran has <strong>9+ years of professional experience</strong> (Aug 2016 to present). His career path:<br><br>&#8226; <strong>Software Engineer</strong> at Confio Technologies (Aug 2016 - Feb 2018)<br>&#8226; <strong>Product Manager</strong> at Confio Technologies (Feb 2018 - Sept 2022)<br>&#8226; <strong>Digital Product Manager</strong> at TVS Motors (Sept 2022 - Mar 2025)<br>&#8226; <strong>Senior Product Manager</strong> at TVS Motors (Apr 2025 - Present)'},
+
+    // Career Journey
+    {keys:['career','journey','timeline','work history','path','progression','growth','transition','switch','move'],answer:'Kiran started as a <strong>Software Engineer</strong> building Android IoT apps at Confio Technologies (Aug 2016), then transitioned to <strong>Product Manager</strong> at the same company where he partnered with Schneider Electric (Feb 2018 - Sept 2022). He then joined <strong>TVS Motors</strong> as Digital PM building e-commerce and loyalty platforms (Sept 2022 - Mar 2025), and was promoted to <strong>Senior PM</strong> leading AI-powered supply chain transformation (Apr 2025 - present).'},
+
+    // Current Role - TVS Senior PM
+    {keys:['current role','now','present','doing now','role today','senior product manager','what does he do','currently','designation','title','position'],answer:'Since April 2025, Kiran is <strong>Senior Product Manager at TVS Motors, Bangalore</strong>. He owns the enterprise POMS (Parts Order Management System) platform serving <strong>90+ distributors nationwide</strong>, influencing &#8377;3,000Cr+ annual spare parts revenue. Key achievements include deploying an AI replenishment engine (12% stock-out reduction, service levels 82% to 88%), warehouse digitization (50% efficiency gain), conceptualizing a Pan-India inventory exchange marketplace, and defining the architecture for an LLM analytics copilot.'},
+
+    // Which company / how many companies
+    {keys:['which company','company','companies','how many company','work at','employer','organization','firm','worked for','worked at'],answer:'Kiran has worked at <strong>2 companies</strong> across 4 roles:<br><br>&#8226; <strong>Confio Technologies Pvt Ltd</strong> (Aug 2016 - Sept 2022) as Software Engineer, then Product Manager<br>&#8226; <strong>TVS Motors</strong> (Sept 2022 - Present) as Digital Product Manager, then Senior Product Manager<br><br>He also collaborated with <strong>Schneider Electric</strong> on the Wiser India initiative during his time at Confio.'},
+
+    // TVS Motors overall
+    {keys:['tvs','motor'],answer:'Kiran has been at <strong>TVS Motors (Bangalore)</strong> since Sept 2022. First as Digital Product Manager (2022-2025) where he built a dealer e-commerce platform (&#8377;50L+ monthly revenue, 45% digital order penetration) and a mobile loyalty ecosystem (18% repeat purchase lift). Then promoted to Senior PM (Apr 2025) leading the enterprise POMS platform for 90+ distributors with &#8377;3,000Cr+ revenue influence.'},
+
+    // TVS Digital PM role
+    {keys:['digital product','ecommerce','e-commerce','loyalty','dealer','spare parts','online','ordering'],answer:'As <strong>Digital Product Manager at TVS Motors</strong> (Sept 2022 - Apr 2025), Kiran led two major initiatives:<br><br><strong>1. Spare Parts E-Commerce:</strong> Launched a dealer-facing platform generating &#8377;50L+ monthly revenue, 45% digital order penetration, 40% MAU increase, 20% better order accuracy, and 18% fewer checkout drop-offs.<br><br><strong>2. Loyalty Program:</strong> Built a mobile loyalty ecosystem for lubricants & spare parts with 18% repeat purchase lift, 60% active participation, 22% engagement improvement, and 25% fewer reward disputes.'},
+
+    // Confio / Schneider
+    {keys:['confio','schneider','iot','wiser','previous company','before tvs','home automation','first company'],answer:'At <strong>Confio Technologies Pvt Ltd</strong>, Kiran spent ~6 years:<br><br><strong>Software Engineer (Aug 2016 - Feb 2018):</strong> Built Android apps for IoT home automation, device-to-mobile communication, and firmware API integrations.<br><br><strong>Product Manager (Feb 2018 - Sept 2022):</strong> Owned IoT Hubs and Controller platforms. Partnered with <strong>Schneider Electric on the Wiser India initiative</strong> for enterprise smart automation. Cut delivery cycle times by 30% through Agile governance.'},
+
+    // Education
+    {keys:['education','study','studied','degree','qualification','college','university','school','academic','where did he study','where study','learning'],answer:'<strong>Education:</strong><br><br>&#8226; <strong>Executive MBA (EMBA)</strong> - IIM Kozhikode (IIMK), 2025-2027. Focus: Strategy & Operations.<br>&#8226; <strong>B.E. in Electronics & Communication</strong> - Sri Sairam College of Engineering, 2012-2016.<br><br>Plus 4 certifications including Generative AI for PMs and Agile Practices from University of Alberta.'},
+
+    // MBA specific
+    {keys:['mba','iimk','iim','kozhikode','post graduate','pg','masters'],answer:'Kiran is currently pursuing an <strong>Executive MBA (EMBA) from IIM Kozhikode (IIMK)</strong>, one of India\'s premier management institutes. Duration: 2025-2027. Focus area: <strong>Strategy & Operations</strong>.'},
+
+    // Undergraduate
+    {keys:['btech','b.e','bachelor','engineering','undergrad','sairam','electronics','ece'],answer:'Kiran completed his <strong>Bachelor of Engineering (B.E.) in Electronics & Communication</strong> from <strong>Sri Sairam College of Engineering</strong> (2012-2016).'},
+
+    // Certifications
+    {keys:['certification','certificate','course','training','alberta','generative ai cert','certified','courses done'],answer:'Kiran holds <strong>4 professional certifications</strong>:<br><br>&#8226; <strong>Generative AI for Product Managers</strong> - Applied AI use cases, LLM workflow integration & AI-assisted decision systems<br>&#8226; <strong>Software Process & Agile Practices</strong> - University of Alberta<br>&#8226; <strong>Introduction to Software Product Management</strong> - University of Alberta<br>&#8226; <strong>Product Management: Building a Product Strategy & Roadmap</strong> - KPI-driven development & business outcome mapping'},
+
+    // AI & LLM
+    {keys:['ai','artificial intelligence','machine learning','llm','rag','copilot','generative','gpt','ai project','ai work'],answer:'Kiran has deep AI product experience:<br><br>&#8226; <strong>AI Replenishment Engine</strong> - Demand velocity + lead-time intelligence, 12% stock-out reduction<br>&#8226; <strong>LLM Analytics Copilot</strong> - Defined use case, data architecture, and KPI framework for natural language queries over enterprise dashboards<br>&#8226; <strong>Anomaly Detection</strong> - Models to identify discount leakage and dealer claim risks<br>&#8226; <strong>Pan-India Inventory Exchange</strong> - AI-powered marketplace with dynamic discount optimization<br>&#8226; <strong>Predictive SLA Detection</strong> - Unserviceable line prediction for 5-8% service uplift<br>&#8226; Certified in <strong>Generative AI for Product Managers</strong>'},
+
+    // Skills
+    {keys:['skill','tech','stack','tools','competenc','capability','good at','expertise','know','what can he do','specializ','strong in','proficien'],answer:'<strong>Product Leadership:</strong> AI-Enabled Product Strategy, Enterprise SaaS Modernization, Roadmap & KPI Governance, Cross-Functional Leadership, Product Analytics & Experimentation, North-Star Metric Definition, Funnel Optimization<br><br><strong>Supply Chain & Commerce:</strong> SAP SD (Order-to-Cash), Inventory & Service Level Optimization, Warehouse Digitization, Digital Commerce Platforms<br><br><strong>Data & AI:</strong> Demand Intelligence, Predictive Analytics, Anomaly Detection, LLM-Based Decision Systems'},
+
+    // SAP specific
+    {keys:['sap','erp','order to cash','sd module'],answer:'Kiran has strong <strong>SAP SD (Order-to-Cash)</strong> expertise. He led legacy DMS to modern B2B SaaS migration involving vendor evaluation and <strong>SAP integration</strong>, and built real-time ERP/SAP inventory synchronization for the e-commerce platform, improving order accuracy by ~20%.'},
+
+    // Impact & Numbers
+    {keys:['impact','achievement','number','result','metric','revenue','kpi','accomplish','done','delivered','outcomes','contribute'],answer:'<strong>Enterprise Impact Snapshot:</strong><br><br>&#8226; <strong>&#8377;3,000Cr+</strong> annual revenue platform influence<br>&#8226; <strong>+6%</strong> service level improvement (82% to 88%)<br>&#8226; <strong>12%</strong> stock-out risk reduction<br>&#8226; <strong>&#8377;50L+</strong> monthly digital revenue growth<br>&#8226; <strong>45%</strong> digital order penetration in 12 months<br>&#8226; <strong>50%</strong> warehouse workflow efficiency gain<br>&#8226; <strong>18%</strong> repeat purchase lift (loyalty)<br>&#8226; <strong>60%</strong> active loyalty participation<br>&#8226; <strong>30%</strong> faster delivery cycles at Confio'},
+
+    // Contact
+    {keys:['contact','email','phone','reach','hire','connect','linkedin','talk','touch','call','message','get in touch','mail','number'],answer:'You can reach Kiran at:<br><br>&#8226; <strong>Email:</strong> <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a><br>&#8226; <strong>Phone:</strong> <a href="tel:+919036288730">+91-9036288730</a><br>&#8226; <strong>LinkedIn:</strong> <a href="https://linkedin.com/in/kiranreddyr" target="_blank">linkedin.com/in/kiranreddyr</a><br>&#8226; <strong>Location:</strong> Bengaluru, India'},
+
+    // Case Studies
+    {keys:['case stud','project','portfolio','use case','built what'],answer:'Kiran has <strong>6 detailed case studies</strong>:<br><br>&#8226; AI-Powered Inventory Exchange Marketplace (20% dead stock reduction)<br>&#8226; System-Driven Service Level Improvements (+6% uplift)<br>&#8226; WMS-Integrated Automation (50% time reduction)<br>&#8226; Distributor Benchmarking & Best-Practice AI<br>&#8226; Distributor-to-Distributor Demand Matching<br>&#8226; 8 AI Use Cases Transforming DMS<br><br>Explore them in the <a href="#cases">Case Studies section</a>.'},
+
+    // Inventory Exchange
+    {keys:['inventory exchange','marketplace','dead stock','non-moving','liquidat'],answer:'Kiran conceptualized a <strong>Pan-India AI-powered inventory exchange marketplace</strong> to liquidate non-moving spare parts. It uses dynamic discount optimization algorithms and is projected to achieve <strong>20% dead stock reduction</strong> across the distributor network. Read the full case study in the <a href="#cases">Case Studies section</a>.'},
+
+    // Service Level
+    {keys:['service level','sla','82','88','pickslip','pick slip','fulfillment'],answer:'Kiran led the rollout of an <strong>AI-driven replenishment engine</strong> that improved service levels from <strong>82% to 88% (+6%)</strong>. He also built SLA risk-based pick slip prioritization with predictive unserviceable line detection, targeting an additional <strong>5-8% uplift</strong> in service fulfillment.'},
+
+    // Warehouse / WMS
+    {keys:['warehouse','wms','qr','grn','picking','inbound','digitiz'],answer:'Kiran <strong>digitized warehouse inbound and picking operations</strong> at TVS Motors, improving processing efficiency by <strong>50%</strong> and increasing inventory accuracy across the APS network. This includes QR-based GRN scanning, service-level-driven pickslip automation, and picker scanning.'},
+
+    // Supply Chain
+    {keys:['supply chain','distributor','dms','poms','replenishment','demand','stock'],answer:'Kiran owns the enterprise <strong>POMS (Parts Order Management System)</strong> serving 90+ distributors across India. He specializes in AI-powered supply chain including demand forecasting, predictive replenishment, anomaly detection, warehouse digitization, and distributor management. The platform influences <strong>&#8377;3,000Cr+ in annual spare parts revenue</strong>.'},
+
+    // Loyalty
+    {keys:['loyalty','gamif','reward','incentive','lubricant','engagement','retention','repeat purchase'],answer:'Kiran built a <strong>mobile-based loyalty ecosystem</strong> for lubricants & spare parts at TVS Motors. Results: <strong>18% repeat purchase lift</strong>, 60% active participation in year one, 22% engagement improvement via gamified milestones, 15% better campaign conversions, and 25% fewer reward disputes through digitized tracking.'},
+
+    // Leadership & Management
+    {keys:['leadership','team','manage','cross-functional','squad','agile','scrum','how does he work','management style'],answer:'Kiran leads <strong>cross-functional squads</strong> across Supply Chain, SAP, Engineering, Digital, Data Science, Finance, Dealer Operations, and QA teams. He uses Agile delivery models, defines north-star metrics, conducts A/B-style rollouts across distributor cohorts, and presents roadmaps and ROI metrics to senior leadership and steering committees.'},
+
+    // Analytics & Experimentation
+    {keys:['analytics','experiment','a/b','test','data driven','north star','funnel','adoption'],answer:'Kiran is strong in <strong>product analytics and experimentation</strong>. He defines north-star metrics, conducts A/B-style rollouts across distributor cohorts, instruments platform usage analytics to monitor adoption and fulfillment velocity, and uses data-backed insights for roadmap prioritization. He also did iterative funnel analysis to reduce checkout drop-offs by 18%.'},
+
+    // Anomaly Detection
+    {keys:['anomaly','detection','discount','leakage','fraud','governance','claim'],answer:'Kiran implemented <strong>anomaly detection models</strong> to identify discount leakage and dealer claim risks at TVS Motors, improving governance and margin protection across the distributor network.'},
+
+    // Migration & Modernization
+    {keys:['migration','legacy','modern','saas','b2b','vendor'],answer:'Kiran led the <strong>legacy DMS to modern B2B SaaS migration</strong> at TVS Motors, driving vendor evaluation, SAP integration, and seamless rollout across the dealer network. He has experience scaling enterprise SaaS modernization initiatives.'},
+
+    // Logistics
+    {keys:['logistics','shipment','control tower','delivery','tracking'],answer:'Kiran designed a <strong>real-time logistics control tower</strong> solution at TVS Motors that enhanced shipment predictability, reduced SLA breach risk, and strengthened dealer experience across the APS network.'},
+
+    // Blog
+    {keys:['blog','write','article','rag vs','vectorless','read','post','written','publish'],answer:'Kiran writes about AI infrastructure and enterprise products. His latest blog post covers <strong>Traditional RAG vs Vectorless RAG</strong>, with an interactive quiz to help PMs choose the right retrieval architecture. Check it out in the <a href="#blog">Blog section</a>.'},
+
+    // Resume
+    {keys:['resume','cv','download','pdf'],answer:'You can download Kiran\'s full resume from the <a href="#resume">Resume section</a>, or directly <a href="./Kiran-R-Resume.pdf" download>click here to download the PDF</a>.'},
+
+    // Why hire / strengths
+    {keys:['why hire','strength','unique','stand out','different','what makes','special','value','why should','why pick','why choose','best thing'],answer:'Kiran brings a rare combination: <strong>engineering foundation + product leadership + AI expertise</strong>. He\'s shipped 0->1 and scaled 1->N products, led &#8377;3,000Cr+ revenue platforms, deployed 6+ AI use cases at enterprise scale, and is pursuing an MBA from IIM Kozhikode. He bridges the gap between technical architecture and business outcomes.'},
+
+    // Age / Personal
+    {keys:['age','old','born','birthday','dob','date of birth','personal','married','family','hobby','hobbies','interest'],answer:'I can share Kiran\'s professional details, but personal information like age or family isn\'t something I cover. For anything personal, feel free to <a href="mailto:kiranreddyr1993@gmail.com">reach out to Kiran directly</a>.'},
+
+    // Salary / Compensation
+    {keys:['salary','compensation','ctc','package','pay','earning','how much earn','lpa','offer'],answer:'Compensation details are confidential and not something I can share. For role-specific discussions, please <a href="mailto:kiranreddyr1993@gmail.com">contact Kiran directly</a>.'},
+
+    // Available / Open to work
+    {keys:['available','open to','looking for','seeking','relocat','opportunity','interview','open for','interested in','willing'],answer:'Kiran is always open to meaningful conversations about senior PM roles, advisory engagements, or AI/supply chain collaborations. Best way to reach him:<br><br>&#8226; <strong>Email:</strong> <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a><br>&#8226; <strong>LinkedIn:</strong> <a href="https://linkedin.com/in/kiranreddyr" target="_blank">linkedin.com/in/kiranreddyr</a>'},
+
+    // Industry / Domain
+    {keys:['industry','domain','sector','field','vertical','which industry','what industry','niche'],answer:'Kiran works at the intersection of <strong>AI, Supply Chain, and Enterprise SaaS</strong>. His domain expertise spans automotive aftermarket (TVS Motors spare parts), IoT/smart home (Confio/Schneider Electric), dealer/distributor ecosystems, digital commerce, and warehouse operations.'},
+
+    // Product Management approach
+    {keys:['approach','how does','methodology','framework','process','how he work','style','philosophy'],answer:'Kiran\'s PM approach centers on: <strong>Analytics-led prioritization</strong> (north-star metrics, A/B rollouts), <strong>KPI-driven roadmapping</strong> (tying every feature to measurable outcomes), <strong>cross-functional execution</strong> (Agile squads across engineering, data science, supply chain, finance), and <strong>experimentation</strong> (controlled rollouts across distributor cohorts before full launch).'},
+
+    // How many products / what products
+    {keys:['how many product','product built','products','what product','list product','all product'],answer:'Key products Kiran has built or led:<br><br>&#8226; <strong>POMS</strong> - Enterprise Parts Order Management System (90+ distributors)<br>&#8226; <strong>AI Replenishment Engine</strong> - Demand-driven stock optimization<br>&#8226; <strong>Inventory Exchange Marketplace</strong> - Pan-India dead stock liquidation<br>&#8226; <strong>E-Commerce Platform</strong> - Dealer spare parts ordering (&#8377;50L+/month)<br>&#8226; <strong>Loyalty Ecosystem</strong> - Mobile rewards for lubricants & parts<br>&#8226; <strong>WMS Automation</strong> - QR scanning, smart pickslips<br>&#8226; <strong>LLM Analytics Copilot</strong> - Natural language enterprise queries<br>&#8226; <strong>IoT Hub & Controller Platforms</strong> - Smart home automation'},
+
+    // Software Engineer background
+    {keys:['software engineer','developer','coding','code','programming','android','app','technical background','engineer'],answer:'Kiran started as a <strong>Software Engineer at Confio Technologies</strong> (Aug 2016 - Feb 2018). He built Android applications for IoT-based home automation, implemented secure device-to-mobile communication, worked with firmware and backend teams on API integrations, and handled UI enhancements and performance optimization. This engineering foundation shapes how he thinks about products today.'},
+
+    // Promotion / growth
+    {keys:['promotion','promoted','grow','raise','level up','moved up','progress'],answer:'Kiran has had strong career progression:<br><br>&#8226; <strong>Software Engineer to Product Manager</strong> at Confio Technologies (2018) - transitioned from coding to product ownership<br>&#8226; <strong>PM to Digital Product Manager</strong> at TVS Motors (2022) - joined to lead digital commerce<br>&#8226; <strong>Digital PM to Senior PM</strong> at TVS Motors (Apr 2025) - promoted to lead enterprise platform with &#8377;3,000Cr+ revenue influence'},
+
+    // NPS / User satisfaction
+    {keys:['nps','user satisfaction','customer satisfaction','user experience','ux','customer experience','feedback'],answer:'Kiran improved <strong>Net Promoter Score (NPS)</strong> on the e-commerce platform by enhancing real-time inventory visibility, transparent pricing, and streamlined checkout. He also increased monthly active users by ~40% and reduced checkout drop-offs by ~18% through iterative UX optimization.'},
+
+    // Greetings
+    {keys:['hi','hello','hey','good morning','good evening','howdy','sup','yo'],answer:'Hey there! I\'m an AI assistant trained on Kiran\'s portfolio. Ask me anything! Try: "When did he start his career?", "Where does he stay?", "What are his skills?", or "Tell me about his AI projects."'},
+
+    // Thank you
+    {keys:['thank','thanks','great','awesome','helpful','nice','cool','perfect','good'],answer:'Glad I could help! Feel free to ask more questions, or <a href="#contact">get in touch with Kiran directly</a> for a deeper conversation.'},
   ];
 
   function findAnswer(q){
-    const ql=q.toLowerCase();
+    // Fix common typos first
+    let ql=fixTypos(q).toLowerCase().replace(/[?!.,;:'"]/g,'').trim();
+
+    // Direct keyword matching
     let best=null,bestScore=0;
     KB.forEach(k=>{
       let score=0;
-      k.keys.forEach(key=>{if(ql.includes(key))score+=key.length});
+      k.keys.forEach(key=>{
+        if(ql.includes(key)){
+          score+=key.length+2;
+          // Bonus for longer key matches (more specific)
+          if(key.length>5)score+=3;
+        }
+      });
       if(score>bestScore){bestScore=score;best=k.answer}
     });
-    return best||'That\'s a great question! I don\'t have a specific answer for that, but you can reach out to Kiran directly at <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a> for more details. You can also explore the <a href="#cases">Case Studies</a> and <a href="#blog">Blog</a> sections for more context.';
+    if(best&&bestScore>=3)return best;
+
+    // Fuzzy fallback: word-level partial matching
+    let fuzzyBest=null,fuzzyScore=0;
+    const words=ql.split(/\s+/).filter(w=>w.length>2);
+    KB.forEach(k=>{
+      let score=0;
+      k.keys.forEach(key=>{
+        const keyWords=key.split(/\s+/);
+        words.forEach(w=>{
+          // Word appears inside a key phrase
+          if(key.includes(w))score+=2;
+          // Key word appears inside user word
+          keyWords.forEach(kw=>{if(kw.length>2&&w.includes(kw))score+=1});
+          // Stem matching (remove trailing s/ed/ing)
+          const stem=w.replace(/(ing|ed|s|tion|ment)$/,'');
+          if(stem.length>2&&key.includes(stem))score+=1;
+        });
+      });
+      if(score>fuzzyScore){fuzzyScore=score;fuzzyBest=k.answer}
+    });
+    if(fuzzyBest&&fuzzyScore>=3)return fuzzyBest;
+
+    return 'I don\'t have a specific answer for that, but Kiran would love to chat! Reach him at <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a> or <a href="tel:+919036288730">+91-9036288730</a>.<br><br>Try asking: "Where does he work?", "What are his skills?", or "Tell me about his AI projects."';
   }
 
   function addMsg(text,type){
