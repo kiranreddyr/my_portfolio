@@ -1105,7 +1105,7 @@ window.addEventListener('load',()=>{
   });
 
   // Spell correction map
-  const TYPOS={carrier:'career',carreer:'career',carrer:'career',carier:'career',experiance:'experience',experince:'experience',expirience:'experience',educaton:'education',eductaion:'education',qualificaton:'qualification',acheivement:'achievement',acheivment:'achievement',begaluru:'bengaluru',banglore:'bangalore',bangaluru:'bengaluru',managment:'management',managemnt:'management',leardership:'leadership',strenth:'strength',strenght:'strength',artifical:'artificial',certfication:'certification',certifcate:'certification',warehoue:'warehouse',warehous:'warehouse',distributer:'distributor',distribtor:'distributor',supplly:'supply',supplychain:'supply chain',anaytics:'analytics',analtics:'analytics',prevous:'previous',previuos:'previous',compny:'company',companie:'company'};
+  const TYPOS={carrier:'career',carreer:'career',carrer:'career',carier:'career',experiance:'experience',experince:'experience',expirience:'experience',expereince:'experience',expreience:'experience',experence:'experience',experiece:'experience',educaton:'education',eductaion:'education',qualificaton:'qualification',acheivement:'achievement',acheivment:'achievement',begaluru:'bengaluru',banglore:'bangalore',bangaluru:'bengaluru',managment:'management',managemnt:'management',leardership:'leadership',strenth:'strength',strenght:'strength',artifical:'artificial',certfication:'certification',certifcate:'certification',warehoue:'warehouse',warehous:'warehouse',distributer:'distributor',distribtor:'distributor',supplly:'supply',supplychain:'supply chain',anaytics:'analytics',analtics:'analytics',prevous:'previous',previuos:'previous',compny:'company',companie:'company'};
 
   function fixTypos(s){
     return s.split(/\s+/).map(w=>{const wl=w.toLowerCase();return TYPOS[wl]||w}).join(' ');
@@ -1246,18 +1246,159 @@ window.addEventListener('load',()=>{
     {keys:['thank','thanks','great','awesome','helpful','nice','cool','perfect','good'],answer:'Glad I could help! Feel free to ask more questions, or <a href="#contact">get in touch with Kiran directly</a> for a deeper conversation.'},
   ];
 
+  // Capability map: maps skills/tools/domains to evidence
+  const CAP={
+    'erp':['sap','erp','SAP SD (Order-to-Cash)','Led legacy DMS to modern B2B SaaS migration with SAP integration','real-time ERP/SAP inventory synchronization improving order accuracy by ~20%'],
+    'sap':['sap','SAP SD (Order-to-Cash)','SAP integration across dealer network','Led cross-functional squad across SAP, Engineering, Supply Chain teams'],
+    'supply chain':['supply chain','Owns enterprise POMS platform serving 90+ distributors','AI-driven replenishment engine','12% stock-out reduction','service levels 82% to 88%','&#8377;3,000Cr+ annual revenue influence'],
+    'ai':['ai','6+ AI use cases deployed','AI replenishment engine','LLM analytics copilot','anomaly detection models','AI-powered inventory exchange marketplace','predictive SLA detection','Certified in Generative AI for PMs'],
+    'machine learning':['ai','Demand velocity and lead-time intelligence models','anomaly detection for discount leakage','predictive unserviceable line detection'],
+    'llm':['ai','Defined use case, data architecture, and KPI framework for LLM-powered analytics copilot','natural language queries over enterprise dashboards','RAG pipeline design'],
+    'rag':['ai','RAG pipeline architecture','Blog post: Traditional RAG vs Vectorless RAG','LLM analytics copilot with retrieval-augmented generation'],
+    'python':['tech','Uses Python for data analysis and automation','analytics-led prioritization approach'],
+    'sql':['tech','Works with enterprise databases','SAP SD queries','KPI dashboards','product analytics'],
+    'product management':['pm','9+ years experience','Senior PM at TVS Motors','owned end-to-end product strategy','roadmap & KPI governance','north-star metric definition','funnel optimization','A/B experimentation'],
+    'product strategy':['pm','AI-Enabled Product Strategy','Roadmap & KPI Governance','North-Star Metric Definition','scaling 0->1 and 1->N products','analytics-led prioritization'],
+    'roadmap':['pm','KPI-driven roadmapping','presented roadmap and ROI metrics to senior leadership','data-backed roadmap prioritization'],
+    'agile':['pm','Agile delivery model','improved release predictability by 30%','structured sprint cadencing','cross-functional Agile squads','certified in Software Process & Agile Practices'],
+    'scrum':['pm','Agile and Scrum delivery','sprint planning','backlog prioritization frameworks'],
+    'stakeholder':['pm','Led cross-functional squads across Supply Chain, SAP, Engineering, Digital, Data Science, Finance, Dealer Operations, and QA','presented to senior leadership and steering committees'],
+    'analytics':['analytics','Product Analytics & Experimentation','instrumented platform usage analytics','funnel analysis','A/B-style rollouts','behavioral analytics for targeted campaigns'],
+    'data':['analytics','data-driven platforms','demand intelligence','predictive analytics','analytics-led prioritization','platform usage analytics'],
+    'ecommerce':['ecommerce','Launched dealer-facing spare parts e-commerce platform','&#8377;50L+ monthly revenue','45% digital order penetration','40% MAU increase','reduced checkout drop-offs by 18%'],
+    'e-commerce':['ecommerce','Same as ecommerce above'],
+    'digital commerce':['ecommerce','Digital Commerce Platforms','dealer-facing e-commerce','digital order penetration to 45%'],
+    'inventory':['supply chain','Inventory & Service Level Optimization','AI-driven replenishment engine','inventory exchange marketplace','20% dead stock reduction projected','warehouse inventory accuracy improvement'],
+    'warehouse':['warehouse','Digitized warehouse inbound and picking operations','50% processing efficiency improvement','QR-based GRN scanning','smart pickslip automation'],
+    'iot':['iot','Built Android apps for IoT home automation at Confio Technologies','IoT Hubs and Controller platforms','partnered with Schneider Electric on Wiser India'],
+    'android':['iot','Developed Android applications for IoT-based home automation','device-to-mobile communication workflows'],
+    'mobile':['mobile','Mobile-based loyalty ecosystem','Android development background','mobile-to-hardware orchestration with Schneider Electric'],
+    'b2b':['b2b','4+ years in Enterprise B2B SaaS (Sept 2022 - present at TVS Motors)','Legacy DMS to modern B2B SaaS migration','Dealer-facing e-commerce platform serving 90+ distributors','Digital order penetration driven to 45% in 12 months','Prior B2B IoT platform experience at Confio Technologies (2016-2018)'],
+    'saas':['b2b','Enterprise SaaS Modernization','B2B SaaS migration','scalable platform architecture'],
+    'leadership':['leadership','Cross-Functional Leadership','led squads across 7+ departments','presented to senior leadership','9+ years progressive growth from engineer to senior PM'],
+    'team':['leadership','Led cross-functional product and engineering teams','squads across Supply Chain, SAP, Engineering, Digital, Data Science, Finance, Dealer Operations, QA'],
+    'automation':['automation','Warehouse automation (50% efficiency gain)','QR-based GRN automation','pickslip automation','IoT automation platforms'],
+    'logistics':['logistics','Real-time logistics control tower','enhanced shipment predictability','reduced SLA breach risk'],
+    'nps':['ux','Improved Net Promoter Score through real-time inventory visibility and transparent pricing','streamlined checkout experience'],
+    'ux':['ux','UX optimization driving 40% MAU increase','reduced checkout drop-offs by 18%','improved NPS','pricing transparency improvements'],
+    'pricing':['pricing','transparent pricing on e-commerce platform','dynamic discount optimization for inventory exchange','margin protection through anomaly detection'],
+    'forecasting':['ai','Demand Intelligence','demand velocity analysis','predictive replenishment','lead-time intelligence'],
+    'demand':['ai','Demand Intelligence','demand-supply matching across distributor nodes','demand velocity and lead-time intelligence'],
+    'anomaly':['ai','Anomaly detection models','discount leakage identification','dealer claim risk detection','governance and margin protection'],
+    'experimentation':['pm','A/B-style rollouts across distributor cohorts','controlled experiments to validate replenishment logic','iterative funnel analysis','campaign experimentation'],
+    'kpi':['pm','KPI Governance','KPI-driven roadmapping','service-level KPIs','north-star metrics','automation ROI metrics'],
+    'certification':['cert','Generative AI for PMs','Software Process & Agile Practices (U of Alberta)','Intro to Software Product Management (U of Alberta)','Product Strategy & Roadmap certification'],
+    'enterprise':['enterprise','9+ years in enterprise products','90+ distributors','&#8377;3,000Cr+ revenue','enterprise-grade automation','enterprise SaaS modernization'],
+    'automotive':['domain','TVS Motors (automotive aftermarket)','spare parts supply chain','dealer/distributor ecosystem','lubricants and spare parts programs'],
+    'manufacturing':['domain','TVS Motors automotive manufacturing ecosystem','spare parts supply chain','warehouse operations','distributor management'],
+    'retail':['domain','Dealer/distributor retail operations','e-commerce platform for dealer ordering','loyalty program across retail network'],
+    'fintech':['adjacent','While not directly fintech, Kiran has built payment/transaction systems in the e-commerce platform, pricing algorithms, and financial governance through anomaly detection'],
+    'healthcare':['adjacent','Kiran\'s core domain is supply chain and automotive, not healthcare specifically. However, his skills in AI, data platforms, and enterprise SaaS are highly transferable.'],
+    'growth':['growth','45% digital order penetration in 12 months','40% MAU increase','60% loyalty participation','18% repeat purchase lift','scaling 0->1 and 1->N products'],
+    'metrics':['pm','North-star metric definition','KPI governance','service-level metrics','fulfillment velocity','adoption analytics','ROI metrics'],
+    'vendor':['pm','Led vendor evaluation for DMS migration','SAP vendor integration','multi-vendor coordination'],
+    'integration':['tech','SAP integration','ERP synchronization','API integrations','hardware-software integration architecture','firmware integration'],
+    'api':['tech','API integrations','ERP/SAP inventory synchronization','device-to-mobile communication','firmware and backend API integrations'],
+    'dashboard':['analytics','LLM-powered analytics copilot for enterprise sales dashboards','natural language queries over dashboards','KPI dashboards'],
+    'reporting':['analytics','Platform usage analytics','KPI reporting to senior leadership','service-level reporting','automation ROI metrics'],
+    'tools':['tools','<strong>Languages/Data:</strong> Python, SQL, R, Pandas, NumPy','<strong>AI/ML:</strong> LangChain, RAG pipelines, LLM prompt engineering, vector databases, anomaly detection models','<strong>Product:</strong> Jira, Confluence, Figma, Miro, Mixpanel, Google Analytics','<strong>Platforms:</strong> SAP SD, Salesforce, Android (Java/Kotlin), IoT hubs, AWS/GCP basics','<strong>Data Viz:</strong> Tableau, Power BI, Metabase','<strong>Other:</strong> Git, REST APIs, Agile/Scrum, A/B testing frameworks'],
+    'technology':['tools','Python, SQL, R for data analysis','LangChain and RAG for AI pipelines','Jira, Confluence, Figma for product management','SAP SD, Salesforce for enterprise systems','Tableau, Power BI for analytics'],
+    'tech stack':['tools','Python, SQL, LangChain, RAG, SAP SD, Jira, Confluence, Figma, Tableau, Power BI, Android, REST APIs'],
+  };
+
+  // Detect "does he have X" / "experience in X" / "fit for X" patterns
+  const FIT_PATTERNS=[
+    /(?:does|do)\s+(?:he|kiran)\s+(?:have|has|know|possess)\s+(.+)/i,
+    /(?:has|have)\s+(?:he|kiran)\s+(?:worked|done|built|experience|expertise)\s+(?:in|with|on)?\s*(.+)/i,
+    /(?:experience|expertise|knowledge|skill|background)\s+(?:in|with|of|on|for)\s+(.+)/i,
+    /(?:is|does)\s+(?:he|kiran)\s+(?:experienced|skilled|good|proficient|strong|expert|familiar|capable)\s+(?:in|with|at|of)?\s*(.+)/i,
+    /(?:can|could)\s+(?:he|kiran)\s+(?:do|handle|manage|work|build|lead|deliver)\s+(.+)/i,
+    /(?:fit|suitable|right|good match|qualified)\s+(?:for|as)?\s*(.+)/i,
+    /(?:looking for|need|require|want)\s+(?:someone|a pm|a product manager|person)\s+(?:with|who|for)\s+(.+)/i,
+    /(?:worked with|familiar with|know about|knowledge of)\s+(.+)/i,
+  ];
+
+  function findCapabilityAnswer(ql){
+    // Check if it's a capability/fit question
+    let topic=null;
+    for(const pat of FIT_PATTERNS){
+      const m=ql.match(pat);
+      if(m){topic=m[1].trim().replace(/[?!.,]/g,'');break}
+    }
+    if(!topic)return null;
+
+    const tl=topic.toLowerCase();
+    const matched=[];
+    const matchedCats=new Set();
+
+    // Search capability map
+    for(const[skill,evidence]of Object.entries(CAP)){
+      if(tl.includes(skill)||skill.includes(tl)||(tl.split(/\s+/).some(w=>w.length>2&&skill.includes(w)))){
+        matched.push({skill,evidence});
+        matchedCats.add(evidence[0]);
+      }
+    }
+
+    // Also try stemmed/partial
+    if(matched.length===0){
+      const tWords=tl.split(/\s+/).filter(w=>w.length>2);
+      for(const[skill,evidence]of Object.entries(CAP)){
+        const sWords=skill.split(/\s+/);
+        let hit=false;
+        tWords.forEach(tw=>{
+          const stem=tw.replace(/(ing|ed|s|tion|ment|ence|ance)$/,'');
+          if(stem.length>2&&(skill.includes(stem)||sWords.some(sw=>sw.includes(stem))))hit=true;
+        });
+        if(hit){matched.push({skill,evidence});matchedCats.add(evidence[0])}
+      }
+    }
+
+    if(matched.length===0)return null;
+
+    // Build a rich answer
+    let ans='<strong>Yes!</strong> Kiran has relevant experience in <strong>'+topic+'</strong>. Here\'s the evidence:<br><br>';
+    const seen=new Set();
+    matched.forEach(m=>{
+      m.evidence.slice(1).forEach(e=>{// skip category tag at [0]
+        if(!seen.has(e)){seen.add(e);ans+='&#8226; '+e+'<br>'}
+      });
+    });
+    ans+='<br>Want more details? <a href="#cases">Explore case studies</a> or <a href="mailto:kiranreddyr1993@gmail.com">reach out to discuss fit</a>.';
+    return ans;
+  }
+
   function findAnswer(q){
     // Fix common typos first
     let ql=fixTypos(q).toLowerCase().replace(/[?!.,;:'"]/g,'').trim();
+    const qOrig=fixTypos(q);
 
-    // Direct keyword matching
+    // 1. Check capability/fit questions FIRST (highest priority)
+    const capAnswer=findCapabilityAnswer(qOrig);
+    if(capAnswer)return capAnswer;
+
+    // 1b. If query mentions a specific domain/skill alongside generic words, route to capability
+    const genericWords=['overall','experience','expertise','background','work','tell','about','what','how','much'];
+    const qWords=ql.split(/\s+/).filter(w=>w.length>2&&!genericWords.includes(w));
+    for(const w of qWords){
+      const stem=w.replace(/(ing|ed|s|tion|ment|ence|ance)$/,'');
+      for(const[skill,evidence]of Object.entries(CAP)){
+        if(stem.length>2&&(skill.includes(stem)||stem.includes(skill))){
+          let ans='Kiran has relevant experience in <strong>'+skill+'</strong>:<br><br>';
+          const seen=new Set();
+          evidence.slice(1).forEach(e=>{if(!seen.has(e)){seen.add(e);ans+='&#8226; '+e+'<br>'}});
+          ans+='<br>Want more details? <a href="#cases">Explore case studies</a> or <a href="mailto:kiranreddyr1993@gmail.com">reach out to discuss fit</a>.';
+          return ans;
+        }
+      }
+    }
+
+    // 2. Direct keyword matching against KB
     let best=null,bestScore=0;
     KB.forEach(k=>{
       let score=0;
       k.keys.forEach(key=>{
         if(ql.includes(key)){
           score+=key.length+2;
-          // Bonus for longer key matches (more specific)
           if(key.length>5)score+=3;
         }
       });
@@ -1265,7 +1406,7 @@ window.addEventListener('load',()=>{
     });
     if(best&&bestScore>=3)return best;
 
-    // Fuzzy fallback: word-level partial matching
+    // 3. Fuzzy KB matching
     let fuzzyBest=null,fuzzyScore=0;
     const words=ql.split(/\s+/).filter(w=>w.length>2);
     KB.forEach(k=>{
@@ -1273,12 +1414,9 @@ window.addEventListener('load',()=>{
       k.keys.forEach(key=>{
         const keyWords=key.split(/\s+/);
         words.forEach(w=>{
-          // Word appears inside a key phrase
           if(key.includes(w))score+=2;
-          // Key word appears inside user word
           keyWords.forEach(kw=>{if(kw.length>2&&w.includes(kw))score+=1});
-          // Stem matching (remove trailing s/ed/ing)
-          const stem=w.replace(/(ing|ed|s|tion|ment)$/,'');
+          const stem=w.replace(/(ing|ed|s|tion|ment|ence|ance)$/,'');
           if(stem.length>2&&key.includes(stem))score+=1;
         });
       });
@@ -1286,7 +1424,22 @@ window.addEventListener('load',()=>{
     });
     if(fuzzyBest&&fuzzyScore>=3)return fuzzyBest;
 
-    return 'I don\'t have a specific answer for that, but Kiran would love to chat! Reach him at <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a> or <a href="tel:+919036288730">+91-9036288730</a>.<br><br>Try asking: "Where does he work?", "What are his skills?", or "Tell me about his AI projects."';
+    // 4. Last resort: try capability map even without a fit-pattern
+    const capWords=ql.split(/\s+/).filter(w=>w.length>3);
+    for(const w of capWords){
+      const stem=w.replace(/(ing|ed|s|tion|ment|ence|ance)$/,'');
+      for(const[skill,evidence]of Object.entries(CAP)){
+        if(skill.includes(stem)||stem.includes(skill)){
+          let ans='Kiran has experience with <strong>'+skill+'</strong>:<br><br>';
+          const seen=new Set();
+          evidence.slice(1).forEach(e=>{if(!seen.has(e)){seen.add(e);ans+='&#8226; '+e+'<br>'}});
+          ans+='<br><a href="mailto:kiranreddyr1993@gmail.com">Get in touch</a> to discuss further.';
+          return ans;
+        }
+      }
+    }
+
+    return 'I don\'t have a specific answer for that, but Kiran would love to chat! Reach him at <a href="mailto:kiranreddyr1993@gmail.com">kiranreddyr1993@gmail.com</a> or <a href="tel:+919036288730">+91-9036288730</a>.<br><br>Try asking: "Does Kiran have ERP experience?", "What are his skills?", or "Is he a fit for a supply chain PM role?"';
   }
 
   function addMsg(text,type){
@@ -1305,12 +1458,21 @@ window.addEventListener('load',()=>{
   }
   function hideTyping(){const t=document.getElementById('chatTyping');if(t)t.remove()}
 
+  /* ── Chatbot Question Logger (Google Sheets) ── */
+  const SHEET_HOOK='https://script.google.com/macros/s/AKfycbwo2VGi2ibpOWmPq5tgUl_FPomu4bl70VfFzq84enZ4qUihihW4IKdRXgFXwsEKc5nq/exec';
+  function logQ(question,answer){
+    if(!SHEET_HOOK||SHEET_HOOK.includes('%%'))return;
+    const matched=!answer.startsWith("I don't have a specific answer");
+    try{fetch(SHEET_HOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ts:new Date().toISOString(),q:question,a:answer.replace(/<[^>]*>/g,'').substring(0,500),matched:matched})})}catch(e){}
+  }
+
   function handleSend(){
     const q=inp.value.trim();if(!q)return;
     addMsg(q,'user');inp.value='';
     sugs.style.display='none';
     showTyping();
-    setTimeout(()=>{hideTyping();addMsg(findAnswer(q),'bot')},600+Math.random()*600);
+    setTimeout(()=>{hideTyping();const ans=findAnswer(q);addMsg(ans,'bot');logQ(q,ans)},600+Math.random()*600);
   }
 
   send.addEventListener('click',handleSend);
