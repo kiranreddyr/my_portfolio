@@ -1,0 +1,4 @@
+Initiative,Problem Solved,User Impact (1-5),Business Impact (1-5),Strategic Fit (1-5),Confidence (1-5),Urgency (1-5),Effort (1-5),Weighted Score,Recommendation,Notes
+Example Feature A,Improves onboarding conversion,5,4,5,4,3,2,,
+Example Feature B,Reduces support tickets,4,3,4,3,4,3,,
+Example Feature C,Unlocks enterprise account needs,5,5,5,3,5,4,,

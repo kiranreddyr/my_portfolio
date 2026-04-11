@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Toolkit | Kiran R</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TJ0M15YBYT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TJ0M15YBYT');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* === EXACT PORTFOLIO DESIGN SYSTEM === */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#06080f;--bg2:#0a0e18;
+  --card:rgba(12,16,28,.85);--card-h:rgba(18,24,44,.92);
+  --accent:#14b8a6;--accent2:#22d3ee;--accent-dim:#0d9488;
+  --glow:rgba(20,184,166,.15);--glow2:rgba(20,184,166,.08);
+  --text:#f0edf2;--muted:#94a3b8;--dim:#64748b;
+  --border:rgba(255,255,255,.06);--border-h:rgba(20,184,166,.35);
+  --nav-bg:rgba(6,8,15,.88);--nav-shadow:none;
+  --tag-bg:rgba(255,255,255,.02);
+  --footer-bg:#040610;
+  --grid-opacity:.04;--orb1:rgba(20,184,166,.12);--orb2:rgba(34,211,238,.08);--orb3:rgba(20,184,166,.06);
+  --select-color:#fff;
+  --sans:'Inter','Space Grotesk',system-ui,sans-serif;
+  --display:'Space Grotesk','Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Fira Code',monospace;
+  --max:1200px;--ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"]{
+  --bg:#f8fafb;--bg2:#eef2f5;
+  --card:rgba(255,255,255,.9);--card-h:rgba(255,255,255,.98);
+  --accent:#0d9488;--accent2:#0891b2;--accent-dim:#14b8a6;
+  --glow:rgba(13,148,136,.12);--glow2:rgba(13,148,136,.06);
+  --text:#1a1a2e;--muted:#4a5568;--dim:#94a3b8;
+  --border:rgba(0,0,0,.08);--border-h:rgba(13,148,136,.35);
+  --nav-bg:rgba(248,250,251,.92);--nav-shadow:0 1px 8px rgba(0,0,0,.04);
+  --tag-bg:rgba(13,148,136,.04);
+  --footer-bg:#eef2f5;
+  --grid-opacity:.06;--orb1:rgba(13,148,136,.08);--orb2:rgba(8,145,178,.06);--orb3:rgba(13,148,136,.04);
+  --select-color:#1a1a2e;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6}
+a{text-decoration:none;color:inherit}
+::selection{background:rgba(20,184,166,.3);color:var(--select-color)}
+
+/* Grid Background */
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.grid-bg svg{width:100%;height:100%;opacity:var(--grid-opacity)}
+.grid-spotlight{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .3s}
+.grid-spotlight svg{width:100%;height:100%;opacity:.25}
+
+/* Ambient Orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0}
+.orb-1{width:40vw;height:40vw;top:-15%;right:-10%;background:var(--orb1)}
+.orb-2{width:35vw;height:35vw;bottom:-20%;left:-10%;background:var(--orb2)}
+.orb-3{width:25vw;height:25vw;top:40%;left:50%;background:var(--orb3)}
+
+/* Progress Bar */
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:10001;width:0;box-shadow:0 0 12px var(--glow)}
+
+/* Nav - exact match */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:transparent;backdrop-filter:blur(0px);border-bottom:1px solid transparent;transition:all .5s var(--ease)}
+nav.scrolled{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom-color:var(--border);box-shadow:var(--nav-shadow)}
+.nav-logo{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:-.5px}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;gap:24px;list-style:none;align-items:center}
+.nav-links a{font-size:13px;font-weight:500;color:var(--muted);letter-spacing:.3px;transition:color .25s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:var(--accent);transition:width .3s}
+.nav-links a:hover{color:var(--text)}.nav-links a:hover::after{width:100%}
+.nav-cta{padding:9px 24px;background:var(--accent);color:#fff;border-radius:100px;font-size:13px;font-weight:600;transition:all .3s var(--ease)}
+.nav-cta:hover{background:var(--accent2);box-shadow:0 0 24px var(--glow);transform:translateY(-1px)}
+.nav-right{display:flex;align-items:center;gap:16px}
+
+/* Theme Toggle */
+.theme-toggle{width:44px;height:24px;border-radius:100px;background:var(--border);border:1px solid var(--border);cursor:pointer;position:relative;transition:all .3s var(--ease);flex-shrink:0;display:flex;align-items:center;padding:0 3px}
+.theme-toggle:hover{border-color:var(--accent)}
+.theme-toggle .toggle-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);transition:transform .3s var(--ease);display:flex;align-items:center;justify-content:center;font-size:10px}
+[data-theme="light"] .theme-toggle .toggle-thumb{transform:translateX(20px)}
+.toggle-icon-dark,.toggle-icon-light{position:absolute;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;transition:opacity .3s}
+.toggle-icon-dark{left:5px;opacity:1}
+.toggle-icon-light{right:5px;opacity:.4}
+[data-theme="light"] .toggle-icon-dark{opacity:.4}
+[data-theme="light"] .toggle-icon-light{opacity:1}
+
+/* Content wrapper */
+.page-wrap{position:relative;z-index:1;padding-top:80px}
+.container{width:min(var(--max),calc(100% - 40px));margin:0 auto}
+
+/* Scroll reveal */
+.rv{opacity:0;transform:translateY(25px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.rv.vis{opacity:1;transform:none}
+
+/* Section styles */
+.section{padding:48px 0}
+.section-eyebrow{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+.section-title{font-family:var(--display);font-size:clamp(28px,4vw,42px);line-height:1.1;letter-spacing:-1.5px;margin-bottom:16px}
+.section-sub{color:var(--muted);font-size:15px;max-width:600px;line-height:1.7}
+
+/* Cards - glassmorphism matching portfolio */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;backdrop-filter:blur(16px);transition:border-color .3s,box-shadow .3s}
+.card:hover{border-color:var(--border-h);box-shadow:0 0 32px var(--glow2)}
+
+/* Tags */
+.tag{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:6px;background:var(--tag-bg);border:1px solid var(--border);color:var(--accent);letter-spacing:.5px}
+
+/* Buttons */
+.btn-p{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--accent);color:#fff;border-radius:100px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);transition:all .3s var(--ease)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 32px var(--glow);background:var(--accent2)}
+.btn-o{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;background:transparent;color:var(--text);border-radius:100px;font-size:13px;font-weight:500;border:1.5px solid var(--border-h);cursor:pointer;font-family:var(--sans);transition:all .3s var(--ease)}
+.btn-o:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+
+/* Footer */
+footer{padding:28px 0;border-top:1px solid var(--border);margin-top:60px;background:var(--footer-bg)}
+footer .container{display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--dim);font-size:13px}
+
+/* Hint text */
+.hint{color:var(--dim);font-size:12px;font-style:italic;margin-top:6px}
+
+/* Print */
+@media print{
+  body{background:#fff!important;color:#1a1a2e!important}
+  .grid-bg,.grid-spotlight,.orb,.orb-1,.orb-2,.orb-3,#prog,nav,.theme-toggle,.nav-right,.btn-p,.btn-o{display:none!important}
+  .card{background:#fff!important;border-color:#ddd!important;box-shadow:none!important;backdrop-filter:none!important}
+  .page-wrap{padding-top:0!important}
+  .section-eyebrow{color:#0d9488!important}
+}
+
+/* Responsive */
+@media(max-width:1024px){.nav-links{gap:16px}.nav-links a{font-size:12px}}
+@media(max-width:768px){nav{padding:0 16px;height:56px}.nav-logo{font-size:18px}.nav-links{display:none}.nav-cta{display:none}.container{width:min(var(--max),calc(100% - 28px))}}
+@media(max-width:480px){}
+
+/* ==================== PAGE-SPECIFIC STYLES ==================== */
+
+/* Hero section */
+.hero{padding:120px 0 80px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hero-eyebrow{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.hero-title{font-family:var(--display);font-size:clamp(36px,5vw,56px);line-height:1.1;letter-spacing:-2px;margin-bottom:20px;color:var(--text)}
+.hero-subtitle{font-size:16px;color:var(--muted);line-height:1.7;max-width:680px;margin-bottom:48px}
+
+.hero-stats{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-top:48px}
+.stat{text-align:center}
+.stat-value{font-family:var(--display);font-size:clamp(32px,4vw,48px);font-weight:700;color:var(--text);letter-spacing:-1px}
+.stat-label{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-top:8px}
+
+/* Category pills */
+.how-section{padding:60px 0}
+.category-intro{margin-bottom:40px}
+.pills{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px;justify-content:center}
+.pill{padding:10px 20px;background:var(--tag-bg);border:1px solid var(--border);border-radius:100px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .3s var(--ease)}
+.pill:hover{border-color:var(--border-h);color:var(--text);background:rgba(255,255,255,.04)}
+.pill.active{border-color:var(--accent);color:var(--accent);background:rgba(20,184,166,.06)}
+
+/* Resource grid */
+.library-section{padding:60px 0}
+.template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px}
+.template-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all .3s var(--ease);display:flex;flex-direction:column;gap:16px}
+.template-card:hover{border-color:var(--border-h);transform:translateY(-2px);box-shadow:0 0 32px var(--glow2)}
+.template-category{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent)}
+.template-title{font-family:var(--display);font-size:18px;font-weight:700;line-height:1.3;color:var(--text)}
+.template-description{font-size:13px;color:var(--muted);line-height:1.6;flex:1}
+.template-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:transparent;border:1.5px solid var(--border-h);border-radius:100px;color:var(--accent);font-size:12px;font-weight:600;transition:all .3s var(--ease);align-self:flex-start}
+.template-btn:hover{border-color:var(--accent);background:rgba(20,184,166,.06);transform:translateX(3px)}
+
+/* Workflow section */
+.workflow-section{padding:60px 0}
+.workflow-intro{margin-bottom:40px}
+.workflow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:40px;align-items:center}
+.step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;transition:all .3s var(--ease);position:relative}
+.step:hover{border-color:var(--border-h);transform:translateY(-2px)}
+.step-icon{font-size:32px;margin-bottom:12px}
+.step-name{font-family:var(--display);font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.step-desc{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+.step-arrow{position:absolute;right:-24px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--accent);opacity:.4}
+.step:last-child .step-arrow{display:none}
+
+/* CTA section */
+.cta-section{padding:60px 0}
+.cta-content{max-width:640px;margin:0 auto;text-align:center}
+.cta-title{font-family:var(--display);font-size:clamp(32px,5vw,48px);line-height:1.1;letter-spacing:-1.5px;margin-bottom:16px;color:var(--text)}
+.cta-subtitle{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px}
+.contact-links{display:flex;flex-direction:column;gap:12px;max-width:400px;margin:0 auto}
+.contact-link{display:flex;align-items:center;gap:12px;padding:16px 20px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;font-size:13px;font-weight:500;transition:all .3s var(--ease);text-align:left}
+.contact-link:hover{border-color:var(--accent);background:rgba(20,184,166,.06);transform:translateX(4px);color:var(--accent)}
+.contact-label{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent);width:60px;flex-shrink:0}
+.contact-value{flex:1}
+
+/* Responsive overrides */
+@media(max-width:1024px){
+  .template-grid{grid-template-columns:repeat(2,1fr)}
+  .workflow-steps{grid-template-columns:repeat(3,1fr);gap:20px}
+  .step-arrow{right:-28px;font-size:18px}
+}
+
+@media(max-width:768px){
+  .section{padding:48px 0}
+  .hero{padding:80px 0 60px}
+  .hero-title{font-size:clamp(28px,7vw,40px)}
+  .hero-subtitle{font-size:14px}
+  .hero-stats{gap:24px}
+  .how-section{padding:48px 0}
+  .pills{justify-content:center}
+  .library-section{padding:48px 0}
+  .template-grid{grid-template-columns:1fr;gap:16px}
+  .workflow-section{padding:48px 0}
+  .workflow-steps{grid-template-columns:repeat(2,1fr);gap:16px}
+  .step-arrow{right:-32px;bottom:-20px;top:auto;transform:translateX(-50%) rotate(90deg)}
+  .step:last-child .step-arrow{display:block}
+  .cta-section{padding:48px 0}
+  .cta-title{font-size:clamp(28px,6vw,40px)}
+  .contact-links{gap:10px}
+  .contact-link{padding:12px 16px;flex-direction:column;text-align:center}
+  .contact-label{width:auto}
+}
+
+@media(max-width:480px){
+  .section{padding:40px 0}
+  .hero{padding:60px 0 40px}
+  .hero-title{font-size:clamp(24px,6vw,32px)}
+  .hero-stats{gap:20px;flex-direction:column;align-items:center}
+  .stat-value{font-size:clamp(28px,5vw,36px)}
+  .how-section{padding:40px 0}
+  .pills{flex-direction:column}
+  .pill{width:100%}
+  .library-section{padding:40px 0}
+  .template-card{padding:20px}
+  .workflow-section{padding:40px 0}
+  .workflow-steps{grid-template-columns:1fr}
+  .step-arrow{bottom:-16px}
+  .cta-section{padding:40px 0}
+  .cta-title{font-size:clamp(24px,6vw,32px)}
+  .contact-links{gap:10px}
+  .contact-link{padding:12px}
+}
+</style>
+</head>
+<body>
+<script>(function(){var t=localStorage.getItem('theme');if(t==='light')document.documentElement.setAttribute('data-theme','light')})()</script>
+
+<!-- Infinite Grid BG -->
+<div class="grid-bg" id="gridBg">
+  <svg><defs><pattern id="grid-pat" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="none" stroke="currentColor" stroke-width=".5"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid-pat)"/></svg>
+</div>
+<div class="grid-spotlight" id="gridSpot">
+  <svg><defs><pattern id="grid-pat2" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="none" stroke="currentColor" stroke-width=".5"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid-pat2)"/></svg>
+</div>
+
+<!-- Ambient Orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Progress Bar -->
+<div id="prog"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="../index.html" class="nav-logo">Kiran <span>R.</span></a>
+  <ul class="nav-links">
+    <li><a href="./pm-toolkit.html">PM Toolkit</a></li>
+    <li><a href="../index.html">Portfolio</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span class="toggle-icon-dark">&#9790;</span>
+      <span class="toggle-icon-light">&#9728;</span>
+      <div class="toggle-thumb"></div>
+    </button>
+    <button class="btn-o" onclick="window.print()">Print / PDF</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+<div class="container">
+
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="hero-eyebrow rv">PM Toolkit</div>
+  <h1 class="hero-title rv">Templates PMs can actually use.</h1>
+  <p class="hero-subtitle rv">Practical frameworks and templates for every stage of product development. From discovery through launch, everything you need to move ideas forward with confidence.</p>
+
+  <div class="hero-stats rv">
+    <div class="stat">
+      <div class="stat-value">8</div>
+      <div class="stat-label">Templates</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">5</div>
+      <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">100%</div>
+      <div class="stat-label">Editable</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO USE SECTION -->
+<section class="how-section">
+  <div class="category-intro rv">
+    <h2 class="section-title">Choose by phase</h2>
+    <p class="section-sub">Each template is designed for a specific stage of product development. Pick the ones that match your current needs.</p>
+
+    <div class="pills rv">
+      <div class="pill active" data-category="all">All Templates</div>
+      <div class="pill" data-category="Discovery">Discovery</div>
+      <div class="pill" data-category="Strategy">Strategy</div>
+      <div class="pill" data-category="Prioritization">Prioritization</div>
+      <div class="pill" data-category="Execution">Execution</div>
+      <div class="pill" data-category="Communication">Communication</div>
+    </div>
+  </div>
+</section>
+
+<!-- TEMPLATE LIBRARY SECTION -->
+<section class="library-section">
+  <div class="rv">
+    <h2 class="section-title">Template Library</h2>
+    <p class="section-sub">Your PM playbook. All templates are fully editable and ready to customize for your product.</p>
+  </div>
+
+  <div class="template-grid" id="templateGrid">
+    <!-- Populated by JavaScript -->
+  </div>
+</section>
+
+<!-- WORKFLOW SECTION -->
+<section class="workflow-section">
+  <div class="workflow-intro rv">
+    <h2 class="section-title">From concept to launch</h2>
+    <p class="section-sub">A suggested workflow for taking a product from discovery through launch, with the right template for each phase.</p>
+  </div>
+
+  <div class="workflow-steps rv">
+    <div class="step">
+      <div class="step-icon">🔍</div>
+      <div class="step-name">Discover</div>
+      <div class="step-desc">Customer research</div>
+      <div class="step-arrow">→</div>
+    </div>
+    <div class="step">
+      <div class="step-icon">📋</div>
+      <div class="step-name">Frame</div>
+      <div class="step-desc">Strategy & positioning</div>
+      <div class="step-arrow">→</div>
+    </div>
+    <div class="step">
+      <div class="step-icon">⚖️</div>
+      <div class="step-name">Prioritize</div>
+      <div class="step-desc">Feature ranking</div>
+      <div class="step-arrow">→</div>
+    </div>
+    <div class="step">
+      <div class="step-icon">📝</div>
+      <div class="step-name">Define</div>
+      <div class="step-desc">Specs & requirements</div>
+      <div class="step-arrow">→</div>
+    </div>
+    <div class="step">
+      <div class="step-icon">🚀</div>
+      <div class="step-name">Launch</div>
+      <div class="step-desc">Execution & go-live</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA SECTION -->
+<section class="cta-section">
+  <div class="cta-content rv">
+    <h2 class="cta-title">Let's build together</h2>
+    <p class="cta-subtitle">Got a product challenge? Questions about templates? I'd love to help.</p>
+
+    <div class="contact-links">
+      <div class="contact-link">
+        <span class="contact-label">Email</span>
+        <span class="contact-value">kiran@example.com</span>
+      </div>
+      <div class="contact-link">
+        <span class="contact-label">Call</span>
+        <span class="contact-value">+1 (234) 567-890</span>
+      </div>
+      <div class="contact-link">
+        <span class="contact-label">Connect</span>
+        <span class="contact-value">LinkedIn Profile</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /container -->
+</div><!-- /page-wrap -->
+
+<footer>
+  <div class="container">
+    <span>&copy; 2026 Kiran R.</span>
+    <span>PM templates for practical product work.</span>
+  </div>
+</footer>
+
+<script>
+// Nav scroll effect
+const nav=document.getElementById('nav');
+const prog=document.getElementById('prog');
+document.addEventListener('scroll',()=>{
+  const y=window.scrollY;
+  const max=document.documentElement.scrollHeight-window.innerHeight;
+  prog.style.width=(max>0?(y/max)*100:0)+'%';
+  nav.classList.toggle('scrolled',y>12);
+},{passive:true});
+
+// Grid spotlight
+const spot=document.getElementById('gridSpot');
+document.addEventListener('pointermove',e=>{
+  spot.style.opacity='1';
+  spot.style.clipPath='circle(180px at '+e.clientX+'px '+e.clientY+'px)';
+});
+
+// Theme toggle
+(function(){
+  const toggle=document.getElementById('themeToggle');
+  const html=document.documentElement;
+  const saved=localStorage.getItem('theme');
+  if(saved)html.setAttribute('data-theme',saved);
+  toggle.addEventListener('click',()=>{
+    const current=html.getAttribute('data-theme');
+    const next=current==='light'?'dark':'light';
+    if(next==='dark'){html.removeAttribute('data-theme');localStorage.setItem('theme','dark')}
+    else{html.setAttribute('data-theme','light');localStorage.setItem('theme','light')}
+  });
+})();
+
+// Scroll reveal
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target)}});
+},{threshold:.15});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+
+// Template data
+const templates = [
+  {
+    title: 'Product Strategy One-Pager',
+    category: 'Strategy',
+    description: 'Distill your product vision into a single compelling page. Perfect for alignment and stakeholder buy-in.',
+    url: './pm-template-pages/product-strategy-one-pager.html'
+  },
+  {
+    title: 'Product Requirements Document',
+    category: 'Execution',
+    description: 'The blueprint for engineering and design. Comprehensive specs that prevent scope creep and misalignment.',
+    url: './pm-template-pages/product-requirements-document-template.html'
+  },
+  {
+    title: 'Customer Interview Guide',
+    category: 'Discovery',
+    description: 'Structure your user research to uncover real problems. Questions, framework, and analysis approach.',
+    url: './pm-template-pages/discovery-interview-template.html'
+  },
+  {
+    title: 'Feature Prioritization Matrix',
+    category: 'Prioritization',
+    description: 'Move beyond gut feel. A framework to score and rank features by impact, effort, and strategic value.',
+    url: './pm-template-pages/feature-prioritization-matrix.html'
+  },
+  {
+    title: 'Experiment Brief',
+    category: 'Execution',
+    description: 'Run rigorous product experiments. Define hypothesis, success metrics, and decision criteria upfront.',
+    url: './pm-template-pages/experiment-brief-template.html'
+  },
+  {
+    title: 'Stakeholder Update',
+    category: 'Communication',
+    description: 'Keep executives and partners aligned. Template for regular updates that drive decisions and action.',
+    url: './pm-template-pages/stakeholder-update-template.html'
+  },
+  {
+    title: 'Roadmap Planning',
+    category: 'Strategy',
+    description: 'Build a roadmap that balances vision, capacity, and execution. Template for quarterly and annual plans.',
+    url: './pm-template-pages/roadmap-planning-template.html'
+  },
+  {
+    title: 'Launch Readiness Checklist',
+    category: 'Execution',
+    description: 'Launch with confidence. Comprehensive checklist covering product, marketing, support, and operations.',
+    url: './pm-template-pages/launch-readiness-checklist.html'
+  }
+];
+
+// Render templates
+const templateGrid = document.getElementById('templateGrid');
+
+function renderTemplates(filterCategory = 'all') {
+  templateGrid.innerHTML = '';
+
+  const filtered = filterCategory === 'all'
+    ? templates
+    : templates.filter(t => t.category === filterCategory);
+
+  filtered.forEach((template, index) => {
+    const card = document.createElement('div');
+    card.className = 'template-card rv';
+    card.setAttribute('data-d', (index % 8) + 1);
+
+    card.innerHTML = `
+      <div class="template-category">${template.category}</div>
+      <h3 class="template-title">${template.title}</h3>
+      <p class="template-description">${template.description}</p>
+      <a href="${template.url}" class="template-btn">
+        Open Template →
+      </a>
+    `;
+
+    templateGrid.appendChild(card);
+    obs.observe(card);
+  });
+}
+
+renderTemplates();
+
+// Category filter
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    const category = pill.getAttribute('data-category');
+    renderTemplates(category);
+  });
+});
+</script>
+</body>
+</html>
