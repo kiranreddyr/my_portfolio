@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Level AI — A PM Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;background:#0a0b0f}
+:root{
+  --bg:#0a0b0f; --bg-2:#0e1015;
+  --ink:#f4f1ea; --ink-dim:#9a9588; --ink-faint:#5a5a55;
+  --line:rgba(244,241,234,.08); --line-strong:rgba(244,241,234,.16);
+  --accent:oklch(78% 0.14 75); --accent-2:oklch(68% 0.12 165);
+  --warn:oklch(68% 0.18 28);
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);overflow-x:hidden;line-height:1.6;font-weight:400}
+::selection{background:var(--accent);color:#0a0b0f}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#prog{position:fixed;top:0;left:0;height:1px;background:var(--accent);z-index:1000;width:0;transition:width .1s linear;box-shadow:0 0 8px var(--accent)}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:900;display:flex;justify-content:space-between;align-items:center;padding:24px 5%;mix-blend-mode:difference}
+.brand{font-family:var(--serif);font-size:18px;color:#fff;letter-spacing:-.5px;font-weight:500}
+.brand em{font-style:italic;color:var(--accent)}
+.nav-meta{font-family:var(--mono);font-size:11px;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+.nav-meta .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:8px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 5%}
+.s{padding:140px 0;position:relative}
+.eyebrow{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:14px;margin-bottom:32px}
+.eyebrow::before{content:'';width:32px;height:1px;background:var(--accent)}
+.eyebrow .num{color:var(--ink-faint)}
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.025em;line-height:1.05}
+h1 em,h2 em,h3 em{font-style:italic;font-weight:400;color:var(--accent)}
+.lead{font-size:19px;color:var(--ink-dim);max-width:640px;line-height:1.65;font-weight:300;margin-top:24px}
+.s-h{font-family:var(--serif);font-size:clamp(40px,5.5vw,72px);font-weight:400;letter-spacing:-.03em;line-height:1.02;margin-bottom:24px;max-width:18ch}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px 5% 80px;position:relative;overflow:hidden}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%);pointer-events:none}
+.hero-content{position:relative;z-index:2;max-width:1240px;margin:0 auto;width:100%}
+.hero-tag{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:40px;display:flex;align-items:center;gap:14px}
+.hero-tag::before{content:'';width:32px;height:1px;background:var(--accent)}
+.h-title{font-family:var(--serif);font-size:clamp(54px,9vw,140px);font-weight:400;letter-spacing:-.04em;line-height:.95;margin-bottom:48px}
+.h-title .word{display:inline-block;overflow:hidden;vertical-align:bottom;margin-right:.15em}
+.h-title .word>span{display:inline-block;animation:rise 1.2s var(--ease) backwards}
+.h-title .word:nth-child(1)>span{animation-delay:.1s}
+.h-title .word:nth-child(2)>span{animation-delay:.2s}
+.h-title .word:nth-child(3)>span{animation-delay:.3s}
+.h-title .word:nth-child(4)>span{animation-delay:.4s}
+.h-title em{font-style:italic;color:var(--accent)}
+@keyframes rise{from{transform:translateY(110%)}to{transform:translateY(0)}}
+.hero-bottom{display:grid;grid-template-columns:1.2fr 1fr;gap:80px;align-items:end;margin-top:60px;animation:fade 1s 1s backwards}
+@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.h-deck{font-size:20px;line-height:1.55;color:var(--ink);font-weight:300;max-width:540px}
+.h-deck b{font-weight:500;color:var(--accent)}
+.h-meta{display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--line-strong);padding-left:32px}
+.h-meta-row{display:flex;justify-content:space-between;align-items:baseline;gap:24px}
+.h-meta-row .k{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint)}
+.h-meta-row .v{font-size:14px;color:var(--ink)}
+.hero-chart{margin-top:80px;height:200px;animation:fade 1s 1.4s backwards}
+.hero-chart svg{width:100%;height:100%}
+.hp-flat{stroke-dasharray:700;stroke-dashoffset:700;animation:draw 1.8s var(--ease) 1.6s forwards}
+.hp-rise{stroke-dasharray:600;stroke-dashoffset:600;animation:draw 2s var(--ease) 2.6s forwards}
+.hp-area{opacity:0;animation:fade 1.5s var(--ease) 3s forwards}
+.hp-dot{opacity:0;animation:fade .5s var(--ease) 4.5s forwards;transform-origin:center}
+@keyframes draw{to{stroke-dashoffset:0}}
+.scroll-cue{position:absolute;bottom:32px;left:5%;display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase}
+.scroll-cue .line{width:60px;height:1px;background:var(--ink-faint);position:relative;overflow:hidden}
+.scroll-cue .line::after{content:'';position:absolute;inset:0;background:var(--accent);transform:translateX(-100%);animation:slide 2.4s var(--ease) infinite}
+@keyframes slide{0%{transform:translateX(-100%)}50%{transform:translateX(0)}100%{transform:translateX(100%)}}
+
+/* KPI BANNER */
+.kpi-banner{padding:60px 5%;border-block:1px solid var(--line-strong);background:var(--bg-2)}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0;max-width:1240px;margin:0 auto}
+.kpi{padding:0 32px;border-left:1px solid var(--line)}
+.kpi:first-child{border-left:none;padding-left:0}
+.kpi-num{font-family:var(--serif);font-size:72px;font-weight:400;letter-spacing:-.04em;line-height:1;color:var(--ink);margin-bottom:8px}
+.kpi-num em{font-style:italic;color:var(--accent)}
+.kpi-num .small{font-size:32px;color:var(--ink-dim);margin-left:2px}
+.kpi-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.kpi-sub{font-size:13px;color:var(--ink-dim);font-weight:300}
+
+/* PROBLEM */
+.problem{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.problem-h{font-family:var(--serif);font-size:clamp(34px,4.5vw,56px);font-weight:400;letter-spacing:-.03em;line-height:1.05;margin-bottom:24px}
+.problem-h em{font-style:italic;color:var(--accent)}
+.problem-stage{position:relative;height:480px;border:1px solid var(--line-strong);border-radius:4px;background:linear-gradient(180deg,var(--bg-2),var(--bg));overflow:hidden}
+.stage-label{position:absolute;top:16px;left:16px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);z-index:3}
+.stage-label .live{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-right:8px;animation:pulse 1.4s infinite}
+.queue-orders{position:absolute;inset:50px 24px 24px 24px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.q-row{display:grid;grid-template-columns:60px 1fr 80px;gap:12px;padding:9px 12px;background:rgba(244,241,234,.02);border:1px solid var(--line);border-radius:3px;font-family:var(--mono);font-size:11px;align-items:center;opacity:0;transform:translateX(-12px);animation:slideIn .5s var(--ease) forwards;transition:all .8s var(--ease)}
+.q-row .id{color:var(--ink-faint)}
+.q-row .desc{color:var(--ink-dim)}
+.q-row .stat{text-align:right;color:var(--ink-faint)}
+.q-row.danger{border-color:rgba(220,100,80,.4);background:rgba(220,100,80,.06)}
+.q-row.danger .stat{color:var(--warn)}
+.q-row.danger .desc{color:var(--ink)}
+@keyframes slideIn{to{opacity:1;transform:none}}
+.causes{margin-top:80px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line)}
+.cause{padding:48px 32px 0 0;border-right:1px solid var(--line)}
+.cause:last-child{border-right:none}
+.cause:not(:first-child){padding-left:32px}
+.cause-num{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--accent);margin-bottom:16px}
+.cause-h{font-family:var(--serif);font-size:24px;font-weight:500;letter-spacing:-.01em;line-height:1.2;margin-bottom:14px}
+.cause-p{font-size:14px;color:var(--ink-dim);line-height:1.65;font-weight:300}
+
+/* QUOTE BLOCK */
+.quote-block{padding:140px 0;background:var(--bg-2);border-block:1px solid var(--line)}
+.big-quote{font-family:var(--serif);font-size:clamp(32px,4.5vw,56px);font-weight:300;letter-spacing:-.025em;line-height:1.15;margin:24px 0;max-width:18ch}
+.big-quote em{font-style:italic;color:var(--accent);font-weight:400}
+.big-quote::before{content:'"';font-size:1.4em;line-height:0;color:var(--accent);opacity:.5;margin-right:.05em;vertical-align:-.2em}
+.quote-attrib{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:60px}
+.insight-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;border-top:1px solid var(--line);padding-top:48px}
+.ins-num{font-family:var(--serif);font-size:88px;font-weight:400;letter-spacing:-.04em;color:var(--accent);line-height:1}
+.ins-num span{font-size:32px;color:var(--ink-dim);margin-left:2px}
+.ins-l{font-size:14px;color:var(--ink-dim);line-height:1.6;margin-top:12px;max-width:280px}
+.ins-l b{color:var(--ink);font-weight:500}
+
+/* JOURNEY */
+.journey{padding:140px 0 100px;border-block:1px solid var(--line)}
+.journey-track{margin-top:60px;position:relative;padding:40px 0 0}
+.journey-line{position:absolute;left:5%;right:5%;top:120px;height:1px;background:linear-gradient(90deg,transparent,var(--line-strong) 8%,var(--line-strong) 92%,transparent)}
+.journey-stages{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:0 5%;position:relative}
+.stage{text-align:left}
+.stage-dot{width:14px;height:14px;border-radius:50%;background:var(--bg);border:1px solid var(--ink-faint);position:relative;margin-bottom:24px;transition:all .3s;z-index:2}
+.stage.bad .stage-dot{border-color:var(--warn);background:var(--warn)}
+.stage.good .stage-dot{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 6px rgba(232,180,90,.15)}
+.stage-num{font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:2px;margin-bottom:6px}
+.stage-title{font-family:var(--serif);font-size:16px;font-weight:500;line-height:1.25;margin-bottom:8px;letter-spacing:-.01em}
+.stage-mood{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--ink-faint);margin-bottom:12px}
+.stage.bad .stage-mood{color:var(--warn)}
+.stage.good .stage-mood{color:var(--accent)}
+.stage-quote{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-dim);line-height:1.5;font-weight:300}
+
+/* WHY AI */
+.why-grid{margin-top:60px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.why-side{display:flex;flex-direction:column}
+.why-row{display:grid;grid-template-columns:160px 1fr 24px;gap:20px;padding:20px 0;border-bottom:1px solid var(--line);align-items:center}
+.why-row:first-child{border-top:1px solid var(--line)}
+.why-q{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:1.5px;text-transform:uppercase}
+.why-a{font-size:14px;color:var(--ink)}
+.why-mark{font-family:var(--serif);font-size:20px;color:var(--accent);text-align:center}
+.why-mark.no{color:var(--warn)}
+.justify-card{padding:36px;border:1px solid var(--line-strong);border-radius:4px;background:linear-gradient(180deg,rgba(232,180,90,.04),transparent)}
+.jc-tag{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+.jc-h{font-family:var(--serif);font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:1.15;margin-bottom:24px}
+.jc-h em{font-style:italic;color:var(--accent)}
+.jc-list{list-style:none;display:flex;flex-direction:column;gap:14px}
+.jc-list li{display:flex;gap:14px;font-size:14px;color:var(--ink-dim);line-height:1.55;font-weight:300}
+.jc-list li::before{content:'✓';color:var(--accent);font-family:var(--serif);font-weight:600;flex-shrink:0;width:14px}
+.jc-list li.x::before{content:'×';color:var(--warn)}
+.jc-list b{color:var(--ink);font-weight:500}
+
+/* PILLARS */
+.pillars-row{margin-top:60px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.pillar{background:var(--bg);padding:48px 36px;transition:background .4s}
+.pillar:hover{background:var(--bg-2)}
+.pillar-n{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--accent);margin-bottom:24px}
+.pillar-glyph{font-family:var(--serif);font-size:84px;font-weight:300;line-height:1;color:var(--ink);letter-spacing:-.04em;margin-bottom:24px}
+.pillar-glyph em{font-style:italic;color:var(--accent)}
+.pillar h3{font-family:var(--serif);font-size:22px;font-weight:500;letter-spacing:-.01em;margin-bottom:12px}
+.pillar p{font-size:14px;color:var(--ink-dim);line-height:1.65;font-weight:300}
+
+/* ROADMAP */
+.roadmap{margin-top:60px}
+.rm-bar{display:grid;grid-template-columns:1fr 1fr 1fr;height:52px;border:1px solid var(--line-strong);border-radius:3px;overflow:hidden;margin-bottom:24px;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--ink)}
+.rm-bar div{display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line)}
+.rm-bar div:last-child{border-right:none}
+.rm-1{background:rgba(232,180,90,.18);color:var(--accent)}
+.rm-2{background:rgba(232,180,90,.10)}
+.rm-3{background:rgba(232,180,90,.04)}
+.rm-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.rm-col{background:var(--bg);padding:32px}
+.rm-meta{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:24px}
+.rm-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+.rm-list li{font-size:14px;color:var(--ink-dim);padding-left:18px;position:relative;line-height:1.45}
+.rm-list li::before{content:'›';position:absolute;left:0;color:var(--accent);font-family:var(--serif);font-weight:600}
+.rm-goal{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--accent);padding-top:20px;border-top:1px solid var(--line)}
+
+/* SOLUTION DEMO */
+.solution{padding-bottom:140px}
+.demo-shell{margin-top:60px;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;background:var(--bg-2);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.demo-bar{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#070809}
+.demo-bar .dots{display:flex;gap:6px}
+.demo-bar .dots span{width:11px;height:11px;border-radius:50%;background:var(--line-strong)}
+.demo-bar .url{flex:1;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.5px}
+.demo-bar .live-tag{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--accent);display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite;box-shadow:0 0 8px var(--accent)}
+.demo-grid{display:grid;grid-template-columns:240px 1fr 280px;min-height:520px}
+.demo-side{padding:24px 20px;border-right:1px solid var(--line);background:#0a0c10}
+.demo-side h5{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px}
+.demo-side ul{list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.demo-side li{padding:9px 12px;color:var(--ink-dim);border-radius:3px;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent}
+.demo-side li.act{background:rgba(232,180,90,.08);border-color:rgba(232,180,90,.2);color:var(--ink)}
+.demo-side li .ct{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.demo-main{padding:28px 32px;display:flex;flex-direction:column}
+.demo-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:24px}
+.demo-h h4{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.01em}
+.demo-h .stat{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.5px}
+.demo-h .stat b{color:var(--accent)}
+.queue{display:flex;flex-direction:column;gap:8px}
+.qe-row{display:grid;grid-template-columns:60px 1fr 90px 110px 80px;align-items:center;gap:14px;padding:14px 18px;background:#0e1014;border:1px solid var(--line);border-radius:4px;position:relative;overflow:hidden;transition:all .8s var(--ease);font-size:12px}
+.qe-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ink-faint)}
+.qe-row.high::before{background:var(--warn)}
+.qe-row.med::before{background:var(--accent)}
+.qe-row.low::before{background:var(--accent-2)}
+.qe-row.sel{border-color:var(--accent);background:rgba(232,180,90,.05)}
+.qe-row .risk{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.02em}
+.qe-row.high .risk{color:var(--warn)}
+.qe-row.med .risk{color:var(--accent)}
+.qe-row.low .risk{color:var(--accent-2)}
+.qe-row .id{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.qe-row .desc{font-size:13px;color:var(--ink)}
+.qe-row .desc small{display:block;font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:2px}
+.qe-row .eta{font-family:var(--mono);font-size:11px;color:var(--ink-dim)}
+.qe-row .eta b{color:var(--ink)}
+.qe-row .action{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);text-align:right}
+.demo-detail{padding:28px 24px;border-left:1px solid var(--line);background:#0a0c10}
+.dd-tag{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--accent);margin-bottom:24px}
+.dd-score{font-family:var(--serif);font-size:84px;font-weight:400;color:var(--warn);letter-spacing:-.04em;line-height:1}
+.dd-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:24px}
+.dd-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-dim)}
+.dd-row b{color:var(--ink);font-weight:500}
+.dd-row .warn-c{color:var(--warn)}
+.dd-action{margin-top:24px;padding:16px;background:rgba(232,180,90,.08);border:1px solid rgba(232,180,90,.2);border-radius:4px;font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--accent);line-height:1.6}
+.dd-action span{color:var(--ink-dim);text-transform:none;font-size:11px;letter-spacing:.5px}
+
+/* METRICS ORBIT */
+.metrics-orbit{position:relative;margin-top:60px;height:600px;display:flex;align-items:center;justify-content:center}
+.orbit-ring{position:absolute;border:1px dashed var(--line-strong);border-radius:50%;animation:spin 60s linear infinite}
+.orbit-ring.r1{width:380px;height:380px}
+.orbit-ring.r2{width:600px;height:600px;animation-direction:reverse;animation-duration:90s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orbit-center{width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(232,180,90,.15),transparent 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;z-index:5}
+.orbit-center::before{content:'';position:absolute;inset:30px;border-radius:50%;border:1px solid var(--accent);box-shadow:0 0 30px rgba(232,180,90,.3)}
+.oc-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--accent);margin-bottom:8px;position:relative;z-index:2}
+.oc-num{font-family:var(--serif);font-size:64px;font-weight:400;color:var(--ink);letter-spacing:-.04em;line-height:1;position:relative;z-index:2}
+.oc-num span{font-size:28px;color:var(--accent)}
+.oc-label{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--ink);margin-top:6px;position:relative;z-index:2}
+.oc-sub{font-size:11px;color:var(--ink-faint);margin-top:4px;position:relative;z-index:2}
+.orbit-node{position:absolute;width:160px;padding:14px;background:var(--bg-2);border:1px solid var(--line-strong);border-radius:6px;z-index:6}
+.orbit-node.n1{top:10%;left:10%}
+.orbit-node.n2{top:5%;right:10%}
+.orbit-node.n3{top:50%;left:0;transform:translateY(-50%)}
+.orbit-node.n4{top:50%;right:0;transform:translateY(-50%)}
+.orbit-node.n5{bottom:10%;left:15%}
+.orbit-node.n6{bottom:5%;right:18%}
+.orbit-node.n7{bottom:30%;right:35%}
+.on-tier{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;margin-bottom:8px;display:inline-block;padding:2px 6px;border-radius:2px}
+.on-tier.in{background:rgba(124,196,184,.12);color:var(--accent-2)}
+.on-tier.ld{background:rgba(232,180,90,.12);color:var(--accent)}
+.on-tier.gr{background:rgba(220,100,80,.12);color:var(--warn)}
+.on-h{font-family:var(--serif);font-size:14px;font-weight:500;line-height:1.2;margin-bottom:4px}
+.on-t{font-size:11px;color:var(--ink-faint);font-family:var(--mono);letter-spacing:.5px}
+
+/* TRADEOFFS */
+.trade-grid{margin-top:60px;display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.trade{background:var(--bg);padding:32px}
+.trade:hover{background:var(--bg-2)}
+.t-q{font-family:var(--serif);font-size:20px;font-weight:500;letter-spacing:-.01em;line-height:1.25;margin-bottom:14px}
+.trade p{font-size:14px;color:var(--ink-dim);line-height:1.65;font-weight:300}
+
+/* IMPACT */
+.impact .ba{margin-top:60px;display:grid;grid-template-columns:1fr 80px 1fr;gap:0;align-items:stretch}
+.ba-col{padding:40px 36px;border:1px solid var(--line-strong);border-radius:4px}
+.ba-col.before{background:rgba(220,100,80,.04)}
+.ba-col.after{background:rgba(232,180,90,.05)}
+.ba-tag{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px}
+.ba-col.before .ba-tag{color:var(--warn)}
+.ba-col.after .ba-tag{color:var(--accent)}
+.ba-col ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+.ba-col ul li{font-size:14px;color:var(--ink-dim);padding-left:18px;position:relative;line-height:1.5}
+.ba-col.before ul li::before{content:'×';position:absolute;left:0;color:var(--warn);font-family:var(--serif);font-weight:600}
+.ba-col.after ul li::before{content:'✓';position:absolute;left:0;color:var(--accent);font-family:var(--serif);font-weight:600}
+.ba-arrow{display:flex;align-items:center;justify-content:center}
+.ba-arrow svg{width:60px;height:auto}
+.ba-arrow path{stroke-dasharray:120;stroke-dashoffset:120;animation:draw 1.6s var(--ease) forwards}
+.callout{margin-top:48px;padding:32px 40px;border-left:2px solid var(--accent);background:linear-gradient(90deg,rgba(232,180,90,.04),transparent)}
+.c-tag{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.callout p{font-size:16px;color:var(--ink);line-height:1.65;font-weight:300;font-family:var(--serif)}
+.callout p em{font-style:italic;color:var(--accent)}
+.callout p b{font-weight:500;color:var(--accent)}
+
+/* REFLECT */
+.reflect .ref-grid{margin-top:60px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.ref{background:var(--bg);padding:36px 32px}
+.ref:hover{background:var(--bg-2)}
+.r-tag{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+.ref p{font-family:var(--serif);font-size:17px;line-height:1.45;color:var(--ink);font-weight:300}
+.ref p em{font-style:italic;color:var(--accent)}
+
+footer{padding:48px 5%;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line)}
+.f-mark{font-family:var(--serif);font-size:18px;font-weight:500}
+.f-mark em{font-style:italic;color:var(--accent)}
+.f-meta{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:1px}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.rv.on{opacity:1;transform:none}
+
+/* responsive */
+@media (max-width:980px){
+  .hero-bottom{grid-template-columns:1fr}
+  .h-meta{border-left:none;padding-left:0;border-top:1px solid var(--line);padding-top:24px}
+  .kpi-row{grid-template-columns:1fr 1fr;gap:32px 0}
+  .kpi{padding:0;border-left:none}
+  .problem,.why-grid,.metrics-orbit{grid-template-columns:1fr!important}
+  .causes,.pillars-row,.rm-grid,.trade-grid{grid-template-columns:1fr}
+  .cause,.rm-col{border-right:none!important;border-bottom:1px solid var(--line);padding:32px 0!important}
+  .reflect .ref-grid{grid-template-columns:1fr}
+  .impact .ba{grid-template-columns:1fr;gap:24px}
+  .ba-arrow{transform:rotate(90deg)}
+  .journey-stages{grid-template-columns:repeat(7,minmax(180px,1fr));overflow-x:auto;padding:0 5%}
+  .insight-strip{grid-template-columns:1fr;gap:24px}
+  .metrics-orbit{height:auto;flex-direction:column;gap:16px}
+  .orbit-ring{display:none}
+  .orbit-node{position:relative;width:100%;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important}
+}
+
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div id="prog"></div>
+
+<nav>
+  <div class="brand">Kiran <em>R.</em></div>
+  <div class="nav-meta"><span><span class="dot"></span>Case Study · 2024</span></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-tag">PM Interview · Deep Dive</div>
+    <h1 class="h-title">
+      <span class="word"><span>Service</span></span>
+      <span class="word"><span>level</span></span>
+      <span class="word"><span><em>was</em></span></span>
+      <span class="word"><span><em>stuck.</em></span></span>
+    </h1>
+    <div class="hero-bottom">
+      <p class="h-deck">Twelve months at <b>82%</b>. Not for lack of effort — for lack of intelligence. We built an AI risk-scoring engine that turned reactive warehouse firefighting into proactive SLA management.</p>
+      <div class="h-meta">
+        <div class="h-meta-row"><span class="k">Role</span><span class="v">Senior Product Manager</span></div>
+        <div class="h-meta-row"><span class="k">Company</span><span class="v">TVS Motors</span></div>
+        <div class="h-meta-row"><span class="k">Timeline</span><span class="v">2024 · 6 months</span></div>
+        <div class="h-meta-row"><span class="k">Team</span><span class="v">1 PM · 3 Eng · 1 DS</span></div>
+        <div class="h-meta-row"><span class="k">Scope</span><span class="v">Pan-India distributor network</span></div>
+      </div>
+    </div>
+    <div class="hero-chart">
+      <svg viewBox="0 0 1200 200" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="hg" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="oklch(78% 0.14 75)" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="oklch(78% 0.14 75)" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="100" x2="1200" y2="100" stroke="rgba(244,241,234,.08)" stroke-dasharray="2 4"/>
+        <text x="0" y="20" font-family="JetBrains Mono" font-size="10" fill="#5a5a55" letter-spacing="2">82% — BASELINE</text>
+        <text x="1200" y="20" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="oklch(78% 0.14 75)" letter-spacing="2">88%+ — ACHIEVED</text>
+        <path class="hp-flat" d="M 0 100 L 700 100" stroke="rgba(244,241,234,.4)" stroke-width="1.5" fill="none"/>
+        <path class="hp-rise" d="M 700 100 Q 850 90, 950 60 T 1200 30" stroke="oklch(78% 0.14 75)" stroke-width="2" fill="none"/>
+        <path class="hp-area" d="M 700 100 Q 850 90, 950 60 T 1200 30 L 1200 200 L 700 200 Z" fill="url(#hg)"/>
+        <circle class="hp-dot" cx="1200" cy="30" r="4" fill="oklch(78% 0.14 75)"/>
+      </svg>
+    </div>
+  </div>
+  <div class="scroll-cue"><span class="line"></span>SCROLL</div>
+</section>
+
+<!-- KPI BANNER -->
+<section class="kpi-banner">
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Service Level</div><div class="kpi-num">+6<span class="small">%</span></div><div class="kpi-sub">82% → 88%+ in 6 months</div></div>
+    <div class="kpi"><div class="kpi-label">Coverage</div><div class="kpi-num">24<em>/7</em></div><div class="kpi-sub">Continuous SLA scoring</div></div>
+    <div class="kpi"><div class="kpi-label">Manual Overhead</div><div class="kpi-num">−40<span class="small">%</span></div><div class="kpi-sub">Auto pickslip generation</div></div>
+    <div class="kpi"><div class="kpi-label">Phase 2 target</div><div class="kpi-num">+8<span class="small">%</span></div><div class="kpi-sub">Network-wide uplift</div></div>
+  </div>
+</section>
+
+<!-- 01 PROBLEM -->
+<section class="s wrap">
+  <div class="eyebrow"><span class="num">01 ·</span> The Problem</div>
+  <div class="problem">
+    <div>
+      <h2 class="problem-h">Five hundred orders.<br><em>One queue.</em><br>No idea which were burning.</h2>
+      <p class="lead">Warehouse managers were picking 500+ concurrent orders with no signal on which were SLA-at-risk. They defaulted to first-in-first-out — operationally tidy, SLA-blind.</p>
+    </div>
+    <div class="problem-stage" id="stage-queue">
+      <div class="stage-label"><span class="live"></span>Live · Warehouse Queue</div>
+      <div class="queue-orders" id="queue-orders"></div>
+    </div>
+  </div>
+
+  <div class="causes">
+    <div class="cause"><div class="cause-num">i.</div><h3 class="cause-h">No risk visibility</h3><p class="cause-p">An order with 48h cushion looked identical to one with 4h. Triage was gut-feel and shift-dependent.</p></div>
+    <div class="cause"><div class="cause-num">ii.</div><h3 class="cause-h">Reactive discovery</h3><p class="cause-p">Unserviceable lines surfaced after GRN — too late to substitute, split, or notify.</p></div>
+    <div class="cause"><div class="cause-num">iii.</div><h3 class="cause-h">Manual dispatch</h3><p class="cause-p">2+ hours per shift on pickslip creation. Cognitive overhead crowded out actual SLA management.</p></div>
+  </div>
+</section>
+
+<!-- 02 INSIGHT QUOTE -->
+<section class="quote-block">
+  <div class="wrap">
+    <div class="eyebrow"><span class="num">02 ·</span> The Field Insight</div>
+    <blockquote class="big-quote">
+      Experienced managers had an <em>informal mental model</em> for predicting risk — they just couldn't articulate it or scale it.
+    </blockquote>
+    <div class="quote-attrib">— 8 days of shift-floor shadowing across 4 distributors</div>
+    <div class="insight-strip">
+      <div class="ins"><div class="ins-num">67<span>%</span></div><div class="ins-l">of failures occurred on orders <b>18+ hours</b> in queue — well within intervention window.</div></div>
+      <div class="ins"><div class="ins-num">74<span>%</span></div><div class="ins-l">of unserviceable lines had <b>predictable precursors</b> in supplier and GRN data.</div></div>
+      <div class="ins"><div class="ins-num">12<span>mo</span></div><div class="ins-l">of failure data analyzed — pattern was statistical, not random.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 USER JOURNEY -->
+<section class="journey">
+  <div class="wrap">
+    <div class="eyebrow"><span class="num">03 ·</span> Journey · Before & After</div>
+    <h2 class="s-h">From firefighting to <em>foresight.</em></h2>
+  </div>
+  <div class="journey-track">
+    <div class="journey-line"></div>
+    <div class="journey-stages">
+      <div class="stage bad"><div class="stage-dot"></div><div class="stage-num">01</div><div class="stage-title">Order intake</div><div class="stage-mood">UNCERTAIN</div><div class="stage-quote">"620 orders. All look the same."</div></div>
+      <div class="stage bad"><div class="stage-dot"></div><div class="stage-num">02</div><div class="stage-title">Manual triage</div><div class="stage-mood">FRUSTRATED</div><div class="stage-quote">"45 min every morning. Still miss things."</div></div>
+      <div class="stage bad"><div class="stage-dot"></div><div class="stage-num">03</div><div class="stage-title">Pickslip dispatch</div><div class="stage-mood">RESIGNED</div><div class="stage-quote">"There's no right answer."</div></div>
+      <div class="stage bad"><div class="stage-dot"></div><div class="stage-num">04</div><div class="stage-title">GRN failure</div><div class="stage-mood">HELPLESS</div><div class="stage-quote">"3 lines unserviceable. Breach in 6h."</div></div>
+      <div class="stage good"><div class="stage-dot"></div><div class="stage-num">05</div><div class="stage-title">AI ranks risk</div><div class="stage-mood">RELIEVED</div><div class="stage-quote">"It's already done the triage."</div></div>
+      <div class="stage good"><div class="stage-dot"></div><div class="stage-num">06</div><div class="stage-title">Proactive action</div><div class="stage-mood">IN CONTROL</div><div class="stage-quote">"Managing, not reacting."</div></div>
+      <div class="stage good"><div class="stage-dot"></div><div class="stage-num">07</div><div class="stage-title">SLA review</div><div class="stage-mood">CONFIDENT</div><div class="stage-quote">"Trend line moved. First time in a year."</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 WHY AI -->
+<section class="s wrap">
+  <div class="eyebrow"><span class="num">04 ·</span> Why AI?</div>
+  <h2 class="s-h">An <em>AI fitness test</em> — not a hammer in search of a nail.</h2>
+  <p class="lead">The question was never <i>can AI do this?</i> It was <b>is AI the right tool</b> given data, error tolerance, and scale.</p>
+  <div class="why-grid">
+    <div class="why-side">
+      <div class="why-row"><div class="why-q">Too complex for rules?</div><div class="why-a">Queue depth × velocity × deadline × capacity. Yes.</div><div class="why-mark">✓</div></div>
+      <div class="why-row"><div class="why-q">Enough training data?</div><div class="why-a">12 months of order, GRN, breach history.</div><div class="why-mark">✓</div></div>
+      <div class="why-row"><div class="why-q">Improves with use?</div><div class="why-a">Every override is a labelled signal.</div><div class="why-mark">✓</div></div>
+      <div class="why-row"><div class="why-q">Cost of error?</div><div class="why-a">Acceptable vs 18% baseline failure.</div><div class="why-mark">✓</div></div>
+      <div class="why-row"><div class="why-q">Scale required?</div><div class="why-a">500+ concurrent orders × N warehouses.</div><div class="why-mark">✓</div></div>
+      <div class="why-row"><div class="why-q">SLA deadline calc?</div><div class="why-a">Deterministic. Kept as hard rule.</div><div class="why-mark no">×</div></div>
+    </div>
+    <div class="justify-card">
+      <div class="jc-tag">What earned ML · 3 engines</div>
+      <h3 class="jc-h">Not <em>everything</em> should be AI.</h3>
+      <ul class="jc-list">
+        <li><b>SLA Risk Scorer</b> — multi-variable, weights vary by site, learns over time.</li>
+        <li><b>Unserviceable Predictor</b> — supplier + part + batch patterns, dynamic.</li>
+        <li><b>Pickslip Optimizer</b> — multi-objective combinatorial at 500+ depth.</li>
+        <li class="x"><b>Deadline math</b> — order time + SLA hours. Pure rule.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 05 STRATEGY -->
+<section class="s wrap">
+  <div class="eyebrow"><span class="num">05 ·</span> Product Strategy</div>
+  <h2 class="s-h">Augment the manager.<br><em>Don't replace them.</em></h2>
+  <p class="lead">A data scientist on every manager's shoulder — surfacing the right risks at the right time, so they act instead of react.</p>
+  <div class="pillars-row">
+    <div class="pillar">
+      <div class="pillar-n">Pillar i.</div>
+      <div class="pillar-glyph"><em>Predict</em></div>
+      <h3>Prediction over detection</h3>
+      <p>Every feature must create intervention opportunity. If it can't give 4h of lead time, it's a report, not a product.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-n">Pillar ii.</div>
+      <div class="pillar-glyph"><em>Augment</em></div>
+      <h3>Reduce friction, not control</h3>
+      <p>Automation must feel like the system is working <i>for</i> them. Override stays one tap away — always.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-n">Pillar iii.</div>
+      <div class="pillar-glyph"><em>Compound</em></div>
+      <h3>Every action trains the model</h3>
+      <p>Accept, override, flag — each is a labelled signal. The flywheel is the long-term moat.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 06 ROADMAP -->
+<section class="s wrap">
+  <div class="eyebrow"><span class="num">06 ·</span> Roadmap</div>
+  <h2 class="s-h">Three phases.<br>Each one <em>earned</em> the next.</h2>
+  <div class="roadmap">
+    <div class="rm-bar">
+      <div class="rm-1">PHASE 1 · M1–M2 · FOUNDATION</div>
+      <div class="rm-2">PHASE 2 · M3–M4 · PREDICTION</div>
+      <div class="rm-3">PHASE 3 · M5–M6+ · NETWORK SCALE</div>
+    </div>
+    <div class="rm-grid">
+      <div class="rm-col">
+        <div class="rm-meta">3 pilot distributors</div>
+        <ul class="rm-list">
+          <li>SLA risk scoring engine v1</li>
+          <li>Risk-ranked queue view</li>
+          <li>Auto pickslip generation</li>
+          <li>DMS real-time integration</li>
+        </ul>
+        <div class="rm-goal">→ Measurable lift across all 3 sites</div>
+      </div>
+      <div class="rm-col">
+        <div class="rm-meta">Scale to 15 distributors</div>
+        <ul class="rm-list">
+          <li>GRN-time unserviceable prediction</li>
+          <li>Supplier quality risk profiles</li>
+          <li>Override capture + retraining</li>
+          <li>Ops Head dashboard</li>
+        </ul>
+        <div class="rm-goal">→ 88%+ sustained service level</div>
+      </div>
+      <div class="rm-col">
+        <div class="rm-meta">Full network rollout</div>
+        <ul class="rm-list">
+          <li>Cross-warehouse risk pooling</li>
+          <li>Shift-level capacity prediction</li>
+          <li>Network-wide benchmarking</li>
+        </ul>
+        <div class="rm-goal">→ Target 93%+; +8% over Phase 1</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 SOLUTION DEMO -->
+<section class="s wrap solution">
+  <div class="eyebrow"><span class="num">07 ·</span> The Solution</div>
+  <h2 class="s-h">Three engines.<br><em>One queue.</em></h2>
+  <div class="demo-shell">
+    <div class="demo-bar">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="url">warehouse · pune-01 · risk-ranked queue</div>
+      <div class="live-tag"><span class="live-dot"></span>LIVE</div>
+    </div>
+    <div class="demo-grid">
+      <aside class="demo-side">
+        <h5>Engines</h5>
+        <ul>
+          <li class="act">Risk Scorer<span class="ct">624</span></li>
+          <li>Unserviceable<span class="ct">12</span></li>
+          <li>Pickslip Opt.<span class="ct">38</span></li>
+        </ul>
+        <h5 style="margin-top:32px">Filters</h5>
+        <ul>
+          <li>Critical (75+)<span class="ct">9</span></li>
+          <li>Watch (50–74)<span class="ct">47</span></li>
+          <li>Calm (&lt;50)<span class="ct">568</span></li>
+        </ul>
+      </aside>
+      <main class="demo-main">
+        <div class="demo-h">
+          <h4>Risk-ranked queue</h4>
+          <div class="stat">refresh · <b>4h</b> · 1h escalated for 75+</div>
+        </div>
+        <div class="queue" id="liveQueue"></div>
+      </main>
+      <aside class="demo-detail">
+        <div class="dd-tag">SELECTED · #4421</div>
+        <div class="dd-score">94</div>
+        <div class="dd-label">RISK SCORE</div>
+        <div class="dd-row"><span>Time to SLA</span><b>4h 12m</b></div>
+        <div class="dd-row"><span>Queue depth</span><b>624</b></div>
+        <div class="dd-row"><span>Velocity</span><b>0.6× normal</b></div>
+        <div class="dd-row"><span>Part avail.</span><b class="warn-c">⚠ Predicted unserv.</b></div>
+        <div class="dd-action">SUGGESTED · Substitute SKU-77B<br><span>Expedite pick · notify dist.</span></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- 08 METRICS CONSTELLATION -->
+<section class="s wrap">
+  <div class="eyebrow"><span class="num">08 ·</span> Metrics</div>
+  <h2 class="s-h">One <em>North Star.</em><br>Layered indicators around it.</h2>
+  <div class="metrics-orbit">
+    <div class="orbit-center">
+      <div class="oc-tag">NORTH STAR</div>
+      <div class="oc-num">88<span>%+</span></div>
+      <div class="oc-label">Network Service Level</div>
+      <div class="oc-sub">Orders fulfilled within SLA</div>
+    </div>
+    <div class="orbit-ring r1"></div>
+    <div class="orbit-ring r2"></div>
+    <div class="orbit-node n1"><div class="on-tier in">INPUT</div><div class="on-h">Risk score acceptance</div><div class="on-t">70%+ within M2</div></div>
+    <div class="orbit-node n2"><div class="on-tier in">INPUT</div><div class="on-h">Auto pickslip adoption</div><div class="on-t">85%+ by M3</div></div>
+    <div class="orbit-node n3"><div class="on-tier in">INPUT</div><div class="on-h">GRN alert action rate</div><div class="on-t">60%+</div></div>
+    <div class="orbit-node n4"><div class="on-tier ld">LEADING</div><div class="on-h">High-risk volume</div><div class="on-t">Alert &gt; 15 in queue</div></div>
+    <div class="orbit-node n5"><div class="on-tier ld">LEADING</div><div class="on-h">Override rate</div><div class="on-t">Alert &gt; 35% / site</div></div>
+    <div class="orbit-node n6"><div class="on-tier gr">GUARDRAIL</div><div class="on-h">False positives</div><div class="on-t">&lt; 20% on 75+</div></div>
+    <div class="orbit-node n7"><div class="on-tier gr">GUARDRAIL</div><div class="on-h">Pickslip errors</div><div class="on-t">&lt; 2%</div></div>
+  </div>
+</section>
+
+<!-- 09 TRADEOFFS -->
+<section class="s wrap">
+  <div class="eyebrow"><span class="num">09 ·</span> Tradeoffs</div>
+  <h2 class="s-h">The calls that <em>defined</em> the product.</h2>
+  <div class="trade-grid">
+    <div class="trade"><div class="t-q">4h refresh, not real-time?</div><p>Streaming infra was 5× cost. 4h still gave 8–20h lead on 75+ scores. Reserved 1h cadence for top risks only.</p></div>
+    <div class="trade"><div class="t-q">Opt-out auto pickslip?</div><p>Opt-in plateaus at 30%. Default = better behavior. 85%+ adoption was the dividend.</p></div>
+    <div class="trade"><div class="t-q">No per-manager override data to leadership?</div><p>Surveillance kills overrides. Overrides are the training signal. Trade visibility for data quality.</p></div>
+    <div class="trade"><div class="t-q">Pilot in worst sites, not average?</div><p>Needed signal strong enough to be undeniable. Average sites = invisible improvement.</p></div>
+    <div class="trade"><div class="t-q">Embed in existing screens?</div><p>New apps require new habits. Embedded = unavoidable. Constraint forced the right design.</p></div>
+    <div class="trade"><div class="t-q">Defer cross-warehouse to P3?</div><p>Marketplace problem on top of fulfillment. Phase 1–2 already justified the build.</p></div>
+  </div>
+</section>
+
+<!-- 10 IMPACT -->
+<section class="s wrap impact">
+  <div class="eyebrow"><span class="num">10 ·</span> Impact</div>
+  <h2 class="s-h">Reactive firefighting<br>became <em>proactive management.</em></h2>
+  <div class="ba">
+    <div class="ba-col before">
+      <div class="ba-tag">Before</div>
+      <ul>
+        <li>82% service level — flat for 12+ months</li>
+        <li>No order-level risk visibility</li>
+        <li>Unserviceable lines found post-GRN</li>
+        <li>2+ hrs/shift on manual dispatch</li>
+        <li>Triage quality varied by manager</li>
+        <li>Only lagging breach data</li>
+      </ul>
+    </div>
+    <div class="ba-arrow">
+      <svg viewBox="0 0 80 200"><path d="M 10 100 L 70 100 M 50 80 L 70 100 L 50 120" stroke="oklch(78% 0.14 75)" stroke-width="1.5" fill="none"/></svg>
+    </div>
+    <div class="ba-col after">
+      <div class="ba-tag">After · 6 months</div>
+      <ul>
+        <li>88%+ — six points in six months</li>
+        <li>Live risk score on every order</li>
+        <li>74% of unserv. flagged pre-GRN</li>
+        <li>−40% supervisor dispatch time</li>
+        <li>Consistent triage, every shift</li>
+        <li>Leading indicator dashboard</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout">
+    <div class="c-tag">Second-order effect</div>
+    <p>Manager overrides revealed two blind spots — shift-change disruption and route delays — folded into model v2. Accuracy <b>+12 points</b>. <em>The product improved the AI, not just the warehouse.</em></p>
+  </div>
+</section>
+
+<!-- 11 REFLECTIONS -->
+<section class="s wrap reflect">
+  <div class="eyebrow"><span class="num">11 ·</span> Reflections</div>
+  <h2 class="s-h">What I'd tell my <em>past self.</em></h2>
+  <div class="ref-grid">
+    <div class="ref"><div class="r-tag">What worked</div><p>Framing AI as <em>amplification</em>, not replacement. Removed the biggest adoption barrier in one decision.</p></div>
+    <div class="ref"><div class="r-tag">What I'd change</div><p>Build override capture in the MVP. Phase 1 training signals were lost forever — the richest data we had.</p></div>
+    <div class="ref"><div class="r-tag">AI PM lesson</div><p>Trust is fragile and non-linear. <em>One bad week undoes three good months.</em> Guardrails matter more than you think.</p></div>
+    <div class="ref"><div class="r-tag">Stakeholder lesson</div><p>The Ops Head was the critical path. Should have shipped their dashboard earlier — would have saved 4–6 weeks.</p></div>
+    <div class="ref"><div class="r-tag">Open question</div><p>Will the unserviceable model generalize across new supplier networks? <em>That's the test for scale.</em></p></div>
+    <div class="ref"><div class="r-tag">Final takeaway</div><p>By Month 4, managers stopped saying "the AI." They said "the queue." <em>Invisibility is the highest form of product success.</em></p></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-mark">Kiran <em>R.</em></div>
+  <div class="f-meta">© 2026 · Service Level AI · TVS Motors · 2024</div>
+</footer>
+
+<script>
+// Progress bar
+const prog=document.getElementById('prog');
+window.addEventListener('scroll',()=>{
+  const h=document.body.scrollHeight-window.innerHeight;
+  prog.style.width=(window.scrollY/h*100)+'%';
+},{passive:true});
+
+// Reveal on scroll
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}});
+},{threshold:.12});
+document.querySelectorAll('.rv,.s,section').forEach(el=>io.observe(el));
+
+// Build problem queue (chaos — first-in-first-out, urgent buried)
+const qSeed=[
+  {id:'#4421',d:'SKU-77B · 240 units',s:'2h ago',danger:true},
+  {id:'#4422',d:'SKU-12A · 80 units',s:'2h ago'},
+  {id:'#4423',d:'SKU-44C · 120 units',s:'2h ago'},
+  {id:'#4424',d:'SKU-09K · 50 units',s:'3h ago',danger:true},
+  {id:'#4425',d:'SKU-31D · 200 units',s:'3h ago'},
+  {id:'#4426',d:'SKU-88E · 60 units',s:'4h ago'},
+  {id:'#4427',d:'SKU-15F · 90 units',s:'5h ago',danger:true},
+  {id:'#4428',d:'SKU-22G · 30 units',s:'5h ago'},
+  {id:'#4429',d:'SKU-67H · 150 units',s:'6h ago'},
+  {id:'#4430',d:'SKU-91J · 40 units',s:'6h ago',danger:true},
+  {id:'#4431',d:'SKU-18M · 110 units',s:'7h ago'},
+  {id:'#4432',d:'SKU-55N · 70 units',s:'8h ago'},
+];
+const qBox=document.getElementById('queue-orders');
+qSeed.forEach((r,i)=>{
+  const el=document.createElement('div');
+  el.className='q-row'+(r.danger?' danger':'');
+  el.style.animationDelay=(i*0.06)+'s';
+  el.innerHTML=`<span class="id">${r.id}</span><span class="desc">${r.d}</span><span class="stat">${r.s}</span>`;
+  qBox.appendChild(el);
+});
+
+// Live demo queue (risk-ranked)
+const lqSeed=[
+  {risk:94,id:'#4421',d:'SKU-77B',sub:'240u · Pune Dist.',eta:'4h 12m',cls:'high sel',a:'EXPEDITE'},
+  {risk:87,id:'#4430',d:'SKU-91J',sub:'40u · Chennai',eta:'5h 38m',cls:'high',a:'EXPEDITE'},
+  {risk:78,id:'#4427',d:'SKU-15F',sub:'90u · Hyderabad',eta:'8h 02m',cls:'high',a:'EXPEDITE'},
+  {risk:72,id:'#4424',d:'SKU-09K',sub:'50u · Bengaluru',eta:'12h',cls:'med',a:'WATCH'},
+  {risk:64,id:'#4438',d:'SKU-44C',sub:'120u · Mumbai',eta:'16h',cls:'med',a:'WATCH'},
+  {risk:42,id:'#4425',d:'SKU-31D',sub:'200u · Indore',eta:'22h',cls:'low',a:'OK'},
+  {risk:28,id:'#4422',d:'SKU-12A',sub:'80u · Jaipur',eta:'34h',cls:'low',a:'OK'},
+];
+const lq=document.getElementById('liveQueue');
+lqSeed.forEach((r,i)=>{
+  const el=document.createElement('div');
+  el.className='qe-row '+r.cls;
+  el.innerHTML=`<span class="risk">${r.risk}</span><span class="desc">${r.d}<small>${r.sub}</small></span><span class="id">${r.id}</span><span class="eta"><b>${r.eta}</b><br>to SLA</span><span class="action">${r.a}</span>`;
+  lq.appendChild(el);
+});
+
+// Subtle pulse on the top selected row every few seconds
+setInterval(()=>{
+  const sel=document.querySelector('.qe-row.sel');
+  if(!sel)return;
+  sel.style.boxShadow='0 0 0 1px oklch(78% 0.14 75)';
+  setTimeout(()=>{sel.style.boxShadow=''},900);
+},3500);
+
+</script>
+</body>
+</html>
