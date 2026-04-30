@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Functional Architecture — Incentive Disbursement System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap');
+  :root {
+    --ink:#1a1614; --ink2:#3c3530; --ink3:#6b625b; --ink4:#9a9087; --ink5:#c5bbaf;
+    --bg:#f5f1ea; --surface:#faf6ee; --panel:#fff; --line:#e8e0d1;
+    --primary:#b41e2a; --navy:#1d3b6e; --sage:#4f7a3a; --amber:#b8721a;
+    --plum:#6e3a78; --rust:#a1432b;
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink); }
+  .page { max-width:1200px; margin:0 auto; padding:40px 40px 80px; }
+
+  .cover { background:var(--ink); color:#faf6ee; border-radius:12px; padding:32px 40px; margin-bottom:40px; display:flex; align-items:center; justify-content:space-between; }
+  .cover-left h1 { font-size:24px; font-weight:800; letter-spacing:-0.3px; margin-bottom:6px; }
+  .cover-left p { font-size:13px; color:#9a9087; }
+  .cover-right { text-align:right; font-size:12px; color:#6b625b; }
+
+  .legend { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px 20px; margin-bottom:32px; display:flex; flex-wrap:wrap; gap:20px; align-items:center; }
+  .legend h3 { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink4); margin-right:8px; }
+  .leg-item { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--ink3); }
+  .leg-box { width:14px; height:14px; border-radius:3px; }
+  .leg-line { width:24px; height:3px; border-radius:2px; }
+  .leg-dash { width:24px; height:0; border-top:2px dashed; }
+
+  /* ── DIAGRAM ──────────────────────────────────────────────── */
+  .diagram { position:relative; }
+  svg.arch { width:100%; height:auto; display:block; }
+
+  /* ── Section labels ───────────────────────────────────────── */
+  .sec-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; }
+
+  /* ── Notes below ──────────────────────────────────────────── */
+  .notes-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:32px; }
+  .note-card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; }
+  .note-card h3 { font-size:12px; font-weight:700; margin-bottom:8px; }
+  .note-card ul { padding-left:16px; font-size:11.5px; color:var(--ink3); }
+  .note-card li { margin-bottom:3px; }
+
+  @media print { body { background:#fff; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="cover">
+  <div class="cover-left">
+    <h1>Functional Architecture Diagram</h1>
+    <p>Incentive Disbursement System · TVSM Commercial Operations</p>
+  </div>
+  <div class="cover-right">
+    Version 1.0<br/>April 2026<br/>Confidential
+  </div>
+</div>
+
+<div class="legend">
+  <h3>Legend</h3>
+  <div class="leg-item"><div class="leg-box" style="background:#e1e7f1;border:1.5px solid #1d3b6e;"></div> Frontend / UI Layer</div>
+  <div class="leg-item"><div class="leg-box" style="background:#faf6ee;border:1.5px solid #b41e2a;"></div> API / Business Logic Layer</div>
+  <div class="leg-item"><div class="leg-box" style="background:#e7eedc;border:1.5px solid #4f7a3a;"></div> Data Layer</div>
+  <div class="leg-item"><div class="leg-box" style="background:#ede2ef;border:1.5px solid #6e3a78;"></div> External Services</div>
+  <div class="leg-item"><div class="leg-box" style="background:#f6ecdb;border:1.5px solid #b8721a;"></div> User Roles</div>
+  <div class="leg-item"><div class="leg-line" style="background:#b41e2a;"></div> API Call (REST/JSON)</div>
+  <div class="leg-item"><div class="leg-line" style="background:#1d3b6e;"></div> Data Flow</div>
+  <div class="leg-item"><div class="leg-dash" style="border-color:#9a9087;"></div> External Integration</div>
+</div>
+
+<div class="diagram">
+<svg class="arch" viewBox="0 0 1120 840" xmlns="http://www.w3.org/2000/svg" font-family="Inter,system-ui,sans-serif">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BACKGROUND BANDS
+═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Users band -->
+<rect x="0" y="0" width="1120" height="140" rx="12" fill="#fdf9f0" stroke="#f0dfc4" stroke-width="1"/>
+<text x="16" y="20" class="sec-label" fill="#b8721a" font-size="10" font-weight="700" letter-spacing="1.5">USER LAYER</text>
+
+<!-- Frontend band -->
+<rect x="0" y="152" width="1120" height="188" rx="12" fill="#edf1f8" stroke="#cdd6e8" stroke-width="1"/>
+<text x="16" y="172" class="sec-label" fill="#1d3b6e" font-size="10" font-weight="700" letter-spacing="1.5">FRONTEND — React 18 SPA (Vite + Tailwind CSS) · http://localhost:5173</text>
+
+<!-- API band -->
+<rect x="0" y="352" width="1120" height="230" rx="12" fill="#faf6ee" stroke="#ddd2bd" stroke-width="1"/>
+<text x="16" y="372" class="sec-label" fill="#b41e2a" font-size="10" font-weight="700" letter-spacing="1.5">API &amp; BUSINESS LOGIC — FastAPI (Python) · /api/* · Port 8002</text>
+
+<!-- Data band -->
+<rect x="0" y="594" width="720" height="130" rx="12" fill="#edf3e7" stroke="#d4e3c6" stroke-width="1"/>
+<text x="16" y="614" class="sec-label" fill="#4f7a3a" font-size="10" font-weight="700" letter-spacing="1.5">DATA LAYER — SQLAlchemy ORM · SQLite (dev) / PostgreSQL (prod)</text>
+
+<!-- External band -->
+<rect x="736" y="594" width="384" height="130" rx="12" fill="#ede2ef" stroke="#c4a8cb" stroke-width="1"/>
+<text x="752" y="614" class="sec-label" fill="#6e3a78" font-size="10" font-weight="700" letter-spacing="1.5">EXTERNAL SERVICES</text>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     USER ROLE BOXES
+═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Admin -->
+<rect x="28" y="28" width="130" height="96" rx="8" fill="#fff8ee" stroke="#b8721a" stroke-width="1.5"/>
+<text x="93" y="52" text-anchor="middle" font-size="20">🔧</text>
+<text x="93" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1614">IT Admin</text>
+<text x="93" y="88" text-anchor="middle" font-size="10" fill="#9a9087">Full system access</text>
+<text x="93" y="104" text-anchor="middle" font-size="10" fill="#9a9087">User management</text>
+
+<!-- Planner -->
+<rect x="178" y="28" width="130" height="96" rx="8" fill="#fff8ee" stroke="#b8721a" stroke-width="1.5"/>
+<text x="243" y="52" text-anchor="middle" font-size="20">📋</text>
+<text x="243" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1614">Planner</text>
+<text x="243" y="88" text-anchor="middle" font-size="10" fill="#9a9087">Plans, actuals, schemes</text>
+<text x="243" y="104" text-anchor="middle" font-size="10" fill="#9a9087">Corrections review</text>
+
+<!-- HOD -->
+<rect x="328" y="28" width="130" height="96" rx="8" fill="#fff8ee" stroke="#b8721a" stroke-width="1.5"/>
+<text x="393" y="52" text-anchor="middle" font-size="20">👔</text>
+<text x="393" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1614">HOD</text>
+<text x="393" y="88" text-anchor="middle" font-size="10" fill="#9a9087">Final approver</text>
+<text x="393" y="104" text-anchor="middle" font-size="10" fill="#9a9087">Scheme &amp; VCS access</text>
+
+<!-- Zonal Manager -->
+<rect x="478" y="28" width="130" height="96" rx="8" fill="#fff8ee" stroke="#b8721a" stroke-width="1.5"/>
+<text x="543" y="52" text-anchor="middle" font-size="20">🗺</text>
+<text x="543" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1614">Zonal Manager</text>
+<text x="543" y="88" text-anchor="middle" font-size="10" fill="#9a9087">Zone-scoped data</text>
+<text x="543" y="104" text-anchor="middle" font-size="10" fill="#9a9087">Google SSO login</text>
+
+<!-- Area Manager -->
+<rect x="628" y="28" width="130" height="96" rx="8" fill="#fff8ee" stroke="#b8721a" stroke-width="1.5"/>
+<text x="693" y="52" text-anchor="middle" font-size="20">🏪</text>
+<text x="693" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1614">Area Manager</text>
+<text x="693" y="88" text-anchor="middle" font-size="10" fill="#9a9087">Assigned distributors</text>
+<text x="693" y="104" text-anchor="middle" font-size="10" fill="#9a9087">Request corrections</text>
+
+<!-- Audit -->
+<rect x="778" y="28" width="130" height="96" rx="8" fill="#fff8ee" stroke="#b8721a" stroke-width="1.5"/>
+<text x="843" y="52" text-anchor="middle" font-size="20">🔍</text>
+<text x="843" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1614">Audit Team</text>
+<text x="843" y="88" text-anchor="middle" font-size="10" fill="#9a9087">Read-only access</text>
+<text x="843" y="104" text-anchor="middle" font-size="10" fill="#9a9087">Audit log viewer</text>
+
+<!-- Email recipient box -->
+<rect x="958" y="28" width="140" height="96" rx="8" fill="#ede2ef" stroke="#6e3a78" stroke-width="1.5" stroke-dasharray="5,3"/>
+<text x="1028" y="52" text-anchor="middle" font-size="18">📧</text>
+<text x="1028" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#6e3a78">Email Recipient</text>
+<text x="1028" y="88" text-anchor="middle" font-size="10" fill="#9a9087">Approve / Reject</text>
+<text x="1028" y="104" text-anchor="middle" font-size="10" fill="#9a9087">via email link</text>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FRONTEND PAGE BOXES
+═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Row of pages -->
+<!-- Login -->
+<rect x="28" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="80" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">Login</text>
+<text x="80" y="212" text-anchor="middle" font-size="9" fill="#6b625b">JWT + Google SSO</text>
+<text x="80" y="224" text-anchor="middle" font-size="9" fill="#6b625b">/login</text>
+
+<!-- Dashboard -->
+<rect x="143" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="196" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">Dashboard</text>
+<text x="196" y="212" text-anchor="middle" font-size="9" fill="#6b625b">Pending items</text>
+<text x="196" y="224" text-anchor="middle" font-size="9" fill="#6b625b">/</text>
+
+<!-- Distributors -->
+<rect x="258" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="311" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">Distributors</text>
+<text x="311" y="212" text-anchor="middle" font-size="9" fill="#6b625b">Master data</text>
+<text x="311" y="224" text-anchor="middle" font-size="9" fill="#6b625b">/distributors</text>
+
+<!-- Month Cycles -->
+<rect x="373" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="426" y="193" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">Month Cycles</text>
+<text x="426" y="207" text-anchor="middle" font-size="9" fill="#6b625b">Upload, Results</text>
+<text x="426" y="219" text-anchor="middle" font-size="9" fill="#6b625b">Slabs, VCS tab</text>
+<text x="426" y="229" text-anchor="middle" font-size="9" fill="#6b625b">/months/:id</text>
+
+<!-- Annual Plans -->
+<rect x="488" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="541" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">Annual Plans</text>
+<text x="541" y="212" text-anchor="middle" font-size="9" fill="#6b625b">FY plan targets</text>
+<text x="541" y="224" text-anchor="middle" font-size="9" fill="#6b625b">/annual-plans</text>
+
+<!-- Schemes -->
+<rect x="603" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="656" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">Schemes</text>
+<text x="656" y="212" text-anchor="middle" font-size="9" fill="#6b625b">Standard + BSC</text>
+<text x="656" y="224" text-anchor="middle" font-size="9" fill="#6b625b">/schemes</text>
+
+<!-- Corrections -->
+<rect x="718" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="771" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">Corrections</text>
+<text x="771" y="212" text-anchor="middle" font-size="9" fill="#6b625b">Actuals + Plan Rev.</text>
+<text x="771" y="224" text-anchor="middle" font-size="9" fill="#6b625b">/corrections</text>
+
+<!-- VCS -->
+<rect x="833" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="886" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">VCS Charts</text>
+<text x="886" y="212" text-anchor="middle" font-size="9" fill="#6b625b">Recharts visual</text>
+<text x="886" y="224" text-anchor="middle" font-size="9" fill="#6b625b">/vcs</text>
+
+<!-- Admin -->
+<rect x="948" y="174" width="105" height="56" rx="6" fill="#fff" stroke="#1d3b6e" stroke-width="1.5"/>
+<text x="1001" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#1d3b6e">Admin Panel</text>
+<text x="1001" y="212" text-anchor="middle" font-size="9" fill="#6b625b">Users + Audit log</text>
+<text x="1001" y="224" text-anchor="middle" font-size="9" fill="#6b625b">/admin</text>
+
+<!-- Shared layout bar -->
+<rect x="28" y="244" width="1025" height="30" rx="6" fill="#e1e7f1" stroke="#cdd6e8" stroke-width="1"/>
+<text x="540" y="264" text-anchor="middle" font-size="11" font-weight="600" fill="#1d3b6e">Shared: Layout.jsx (Sidebar + Topbar) · AuthContext (JWT store) · ProtectedRoute (role guard) · react-hot-toast · @react-oauth/google</text>
+
+<!-- HTTP arrows from browser to API layer - single collective arrow -->
+<line x1="540" y1="276" x2="540" y2="350" stroke="#b41e2a" stroke-width="2" marker-end="url(#arr-red)"/>
+<text x="556" y="318" font-size="10" fill="#b41e2a" font-weight="600">REST / JSON</text>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     API ROUTER BOXES
+═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Auth router -->
+<rect x="28" y="385" width="138" height="80" rx="6" fill="#fff" stroke="#b41e2a" stroke-width="1.5"/>
+<text x="97" y="403" text-anchor="middle" font-size="10" font-weight="700" fill="#b41e2a">auth_router.py</text>
+<text x="97" y="418" text-anchor="middle" font-size="9" fill="#6b625b">POST /auth/login</text>
+<text x="97" y="430" text-anchor="middle" font-size="9" fill="#6b625b">POST /auth/google</text>
+<text x="97" y="442" text-anchor="middle" font-size="9" fill="#6b625b">GET  /auth/me</text>
+<text x="97" y="455" text-anchor="middle" font-size="9" fill="#6b625b">bcrypt + JWT</text>
+
+<!-- Distributors router -->
+<rect x="176" y="385" width="138" height="80" rx="6" fill="#fff" stroke="#b41e2a" stroke-width="1.5"/>
+<text x="245" y="403" text-anchor="middle" font-size="10" font-weight="700" fill="#b41e2a">distributors.py</text>
+<text x="245" y="418" text-anchor="middle" font-size="9" fill="#6b625b">GET  /distributors</text>
+<text x="245" y="430" text-anchor="middle" font-size="9" fill="#6b625b">POST /distributors</text>
+<text x="245" y="442" text-anchor="middle" font-size="9" fill="#6b625b">PUT  /distributors/:id</text>
+<text x="245" y="455" text-anchor="middle" font-size="9" fill="#6b625b">POST /bulk-upload</text>
+
+<!-- Months router -->
+<rect x="324" y="385" width="138" height="80" rx="6" fill="#fff" stroke="#b41e2a" stroke-width="1.5"/>
+<text x="393" y="403" text-anchor="middle" font-size="10" font-weight="700" fill="#b41e2a">months.py</text>
+<text x="393" y="418" text-anchor="middle" font-size="9" fill="#6b625b">GET/POST /months</text>
+<text x="393" y="430" text-anchor="middle" font-size="9" fill="#6b625b">/months/:id/weightages</text>
+<text x="393" y="442" text-anchor="middle" font-size="9" fill="#6b625b">/months/:id/slabs</text>
+<text x="393" y="455" text-anchor="middle" font-size="9" fill="#6b625b">Status transitions</text>
+
+<!-- Data router -->
+<rect x="472" y="385" width="138" height="80" rx="6" fill="#fff" stroke="#b41e2a" stroke-width="1.5"/>
+<text x="541" y="403" text-anchor="middle" font-size="10" font-weight="700" fill="#b41e2a">data.py</text>
+<text x="541" y="418" text-anchor="middle" font-size="9" fill="#6b625b">GET  /template?metric=X</text>
+<text x="541" y="430" text-anchor="middle" font-size="9" fill="#6b625b">POST /upload?metric=X</text>
+<text x="541" y="442" text-anchor="middle" font-size="9" fill="#6b625b">/uploaded-actuals</text>
+<text x="541" y="455" text-anchor="middle" font-size="9" fill="#6b625b">openpyxl · Excel I/O</text>
+
+<!-- Schemes router -->
+<rect x="620" y="385" width="138" height="80" rx="6" fill="#fff" stroke="#b41e2a" stroke-width="1.5"/>
+<text x="689" y="403" text-anchor="middle" font-size="10" font-weight="700" fill="#b41e2a">schemes.py</text>
+<text x="689" y="418" text-anchor="middle" font-size="9" fill="#6b625b">CRUD /schemes</text>
+<text x="689" y="430" text-anchor="middle" font-size="9" fill="#6b625b">POST /schemes/:id/submit</text>
+<text x="689" y="442" text-anchor="middle" font-size="9" fill="#6b625b">POST /schemes/:id/approve</text>
+<text x="689" y="455" text-anchor="middle" font-size="9" fill="#6b625b">GET  /:id/results</text>
+
+<!-- Corrections router -->
+<rect x="768" y="385" width="148" height="80" rx="6" fill="#fff" stroke="#b41e2a" stroke-width="1.5"/>
+<text x="842" y="403" text-anchor="middle" font-size="10" font-weight="700" fill="#b41e2a">corrections.py</text>
+<text x="842" y="418" text-anchor="middle" font-size="9" fill="#6b625b">POST /months/:id/corrections</text>
+<text x="842" y="430" text-anchor="middle" font-size="9" fill="#6b625b">POST /corrections/:id/approve</text>
+<text x="842" y="442" text-anchor="middle" font-size="9" fill="#6b625b">POST /plan-revisions</text>
+<text x="842" y="455" text-anchor="middle" font-size="9" fill="#6b625b">Multi-step workflow</text>
+
+<!-- VCS + Reports router -->
+<rect x="926" y="385" width="152" height="80" rx="6" fill="#fff" stroke="#b41e2a" stroke-width="1.5"/>
+<text x="1002" y="403" text-anchor="middle" font-size="10" font-weight="700" fill="#b41e2a">vcs.py / reports.py</text>
+<text x="1002" y="418" text-anchor="middle" font-size="9" fill="#6b625b">GET /vcs?fy=X (zone-scoped)</text>
+<text x="1002" y="430" text-anchor="middle" font-size="9" fill="#6b625b">GET /months/:id/export</text>
+<text x="1002" y="442" text-anchor="middle" font-size="9" fill="#6b625b">GET /annual-plans</text>
+<text x="1002" y="455" text-anchor="middle" font-size="9" fill="#6b625b">POST/PUT annual-plans</text>
+
+<!-- Middleware bar -->
+<rect x="28" y="474" width="1050" height="26" rx="5" fill="#f5e0e2" stroke="#d44e57" stroke-width="1"/>
+<text x="553" y="491" text-anchor="middle" font-size="10.5" font-weight="600" fill="#b41e2a">Middleware: JWT Auth (get_current_user) · Role Guard (require_roles) · CORS · Zone Scoping · AuditLog Writer · Email Trigger</text>
+
+<!-- Models bar -->
+<rect x="28" y="508" width="1050" height="26" rx="5" fill="#faf6ee" stroke="#ddd2bd" stroke-width="1"/>
+<text x="553" y="525" text-anchor="middle" font-size="10.5" font-weight="600" fill="#6b625b">SQLAlchemy Models: User · Distributor · MonthCycle · DistributorPlan · DistributorActual · CorrectionRequest · PlanRevisionRequest · Scheme · BscParameter · AnnualPlan · AuditLog</text>
+
+<!-- Arrow from API to DB -->
+<line x1="300" y1="538" x2="300" y2="592" stroke="#4f7a3a" stroke-width="2" marker-end="url(#arr-green)"/>
+<line x1="560" y1="538" x2="560" y2="592" stroke="#4f7a3a" stroke-width="2" marker-end="url(#arr-green)"/>
+<text x="340" y="570" font-size="10" fill="#4f7a3a" font-weight="600">ORM Queries</text>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     DATA LAYER
+═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Users table -->
+<rect x="28" y="622" width="120" height="88" rx="6" fill="#fff" stroke="#4f7a3a" stroke-width="1.5"/>
+<text x="88" y="640" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4f7a3a">users</text>
+<line x1="28" y1="646" x2="148" y2="646" stroke="#e8e0d1" stroke-width="1"/>
+<text x="88" y="660" text-anchor="middle" font-size="9" fill="#6b625b">id, username, role</text>
+<text x="88" y="672" text-anchor="middle" font-size="9" fill="#6b625b">email, assigned_zone</text>
+<text x="88" y="684" text-anchor="middle" font-size="9" fill="#6b625b">hashed_password</text>
+<text x="88" y="696" text-anchor="middle" font-size="9" fill="#6b625b">distributor_access →</text>
+
+<!-- Distributor table -->
+<rect x="158" y="622" width="120" height="88" rx="6" fill="#fff" stroke="#4f7a3a" stroke-width="1.5"/>
+<text x="218" y="640" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4f7a3a">distributors</text>
+<line x1="158" y1="646" x2="278" y2="646" stroke="#e8e0d1" stroke-width="1"/>
+<text x="218" y="660" text-anchor="middle" font-size="9" fill="#6b625b">id, code, name</text>
+<text x="218" y="672" text-anchor="middle" font-size="9" fill="#6b625b">zone, state</text>
+<text x="218" y="684" text-anchor="middle" font-size="9" fill="#6b625b">is_active</text>
+<text x="218" y="696" text-anchor="middle" font-size="9" fill="#9a9087">91 records</text>
+
+<!-- Month cycles table -->
+<rect x="288" y="622" width="120" height="88" rx="6" fill="#fff" stroke="#4f7a3a" stroke-width="1.5"/>
+<text x="348" y="640" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4f7a3a">month_cycles</text>
+<line x1="288" y1="646" x2="408" y2="646" stroke="#e8e0d1" stroke-width="1"/>
+<text x="348" y="660" text-anchor="middle" font-size="9" fill="#6b625b">year, month, status</text>
+<text x="348" y="672" text-anchor="middle" font-size="9" fill="#6b625b">plan_locked</text>
+<text x="348" y="684" text-anchor="middle" font-size="9" fill="#6b625b">actual_locked</text>
+<text x="348" y="696" text-anchor="middle" font-size="9" fill="#6b625b">→ plans, actuals</text>
+
+<!-- Plans/Actuals tables -->
+<rect x="418" y="622" width="120" height="88" rx="6" fill="#fff" stroke="#4f7a3a" stroke-width="1.5"/>
+<text x="478" y="638" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4f7a3a">dist_plans /</text>
+<text x="478" y="650" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4f7a3a">dist_actuals</text>
+<line x1="418" y1="656" x2="538" y2="656" stroke="#e8e0d1" stroke-width="1"/>
+<text x="478" y="669" text-anchor="middle" font-size="9" fill="#6b625b">12 metric cols each</text>
+<text x="478" y="681" text-anchor="middle" font-size="9" fill="#6b625b">month_id FK</text>
+<text x="478" y="693" text-anchor="middle" font-size="9" fill="#6b625b">distributor_id FK</text>
+
+<!-- Correction/Revision requests -->
+<rect x="548" y="622" width="152" height="88" rx="6" fill="#fff" stroke="#4f7a3a" stroke-width="1.5"/>
+<text x="624" y="638" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4f7a3a">correction_requests /</text>
+<text x="624" y="650" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4f7a3a">plan_revision_requests</text>
+<line x1="548" y1="656" x2="700" y2="656" stroke="#e8e0d1" stroke-width="1"/>
+<text x="624" y="669" text-anchor="middle" font-size="9" fill="#6b625b">multi-step approval cols</text>
+<text x="624" y="681" text-anchor="middle" font-size="9" fill="#6b625b">zm/planner/hod FKs</text>
+<text x="624" y="693" text-anchor="middle" font-size="9" fill="#6b625b">status, current_step</text>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     EXTERNAL SERVICES
+═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Google OAuth -->
+<rect x="752" y="622" width="156" height="88" rx="6" fill="#fff" stroke="#6e3a78" stroke-width="1.5"/>
+<text x="830" y="643" text-anchor="middle" font-size="11" font-weight="700" fill="#6e3a78">Google OAuth 2.0</text>
+<text x="830" y="659" text-anchor="middle" font-size="9" fill="#6b625b">accounts.google.com</text>
+<text x="830" y="671" text-anchor="middle" font-size="9" fill="#6b625b">ID token verification</text>
+<text x="830" y="683" text-anchor="middle" font-size="9" fill="#6b625b">google-auth library</text>
+<text x="830" y="695" text-anchor="middle" font-size="9" fill="#9a9087">GOOGLE_CLIENT_ID env</text>
+
+<!-- SMTP Email -->
+<rect x="918" y="622" width="170" height="88" rx="6" fill="#fff" stroke="#6e3a78" stroke-width="1.5"/>
+<text x="1003" y="643" text-anchor="middle" font-size="11" font-weight="700" fill="#6e3a78">SMTP Email Server</text>
+<text x="1003" y="659" text-anchor="middle" font-size="9" fill="#6b625b">Approval notifications</text>
+<text x="1003" y="671" text-anchor="middle" font-size="9" fill="#6b625b">Approve / Reject links</text>
+<text x="1003" y="683" text-anchor="middle" font-size="9" fill="#6b625b">email_service.py</text>
+<text x="1003" y="695" text-anchor="middle" font-size="9" fill="#9a9087">SMTP_HOST/PORT env</text>
+
+<!-- External arrows -->
+<line x1="97" y1="538" x2="830" y2="620" stroke="#6e3a78" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-plum)"/>
+<line x1="842" y1="538" x2="1003" y2="620" stroke="#6e3a78" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-plum)"/>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VERTICAL CONNECTING ARROWS (User → Browser)
+═══════════════════════════════════════════════════════════════════════════ -->
+<line x1="93" y1="124" x2="93" y2="172" stroke="#b8721a" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+<line x1="243" y1="124" x2="243" y2="172" stroke="#b8721a" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+<line x1="393" y1="124" x2="393" y2="172" stroke="#b8721a" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+<line x1="543" y1="124" x2="543" y2="172" stroke="#b8721a" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+<line x1="693" y1="124" x2="693" y2="172" stroke="#b8721a" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+<line x1="843" y1="124" x2="843" y2="172" stroke="#b8721a" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     ARROWHEAD MARKERS
+═══════════════════════════════════════════════════════════════════════════ -->
+<defs>
+  <marker id="arr-red"   markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#b41e2a"/></marker>
+  <marker id="arr-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4f7a3a"/></marker>
+  <marker id="arr-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#b8721a"/></marker>
+  <marker id="arr-plum"  markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6e3a78"/></marker>
+  <marker id="arr-navy"  markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#1d3b6e"/></marker>
+</defs>
+
+</svg>
+</div><!-- end .diagram -->
+
+
+<!-- ══ NOTES SECTION ═══════════════════════════════════════════════════════════ -->
+<div class="notes-grid">
+  <div class="note-card">
+    <h3 style="color:#1d3b6e">Frontend Module Summary</h3>
+    <ul>
+      <li><strong>Login</strong> — JWT + Google OAuth</li>
+      <li><strong>Dashboard</strong> — Pending queue, stats, recent cycles</li>
+      <li><strong>Distributors</strong> — CRUD + bulk Excel upload</li>
+      <li><strong>Month Cycles</strong> — Tabs: Upload, Results, Corrections, VCS</li>
+      <li><strong>Annual Plans</strong> — FY metric plans + Excel upload</li>
+      <li><strong>Schemes</strong> — Standard &amp; BSC scheme builder</li>
+      <li><strong>Corrections</strong> — Corrections + Plan Revision approval</li>
+      <li><strong>VCS</strong> — Recharts ComposedChart, zone-scoped</li>
+      <li><strong>Admin</strong> — User management + Audit log</li>
+    </ul>
+  </div>
+  <div class="note-card">
+    <h3 style="color:#b41e2a">API Router Summary</h3>
+    <ul>
+      <li><strong>auth_router</strong> — Login, Google SSO, /me</li>
+      <li><strong>distributors</strong> — CRUD, bulk upload, template</li>
+      <li><strong>months</strong> — Lifecycle, weightages, slabs</li>
+      <li><strong>data</strong> — 12-metric actuals upload/template</li>
+      <li><strong>schemes</strong> — CRUD, submit, approve, results</li>
+      <li><strong>corrections</strong> — Create, review, approve/reject</li>
+      <li><strong>plan revisions</strong> — Request, review, apply</li>
+      <li><strong>annual_plans</strong> — Create, upload, sync</li>
+      <li><strong>vcs</strong> — Zone-scoped metric time-series</li>
+      <li><strong>reports</strong> — Excel disbursement export</li>
+      <li><strong>users</strong> — User CRUD (admin only)</li>
+    </ul>
+  </div>
+  <div class="note-card">
+    <h3 style="color:#4f7a3a">Key Data Flows</h3>
+    <ul>
+      <li><strong>Auth flow</strong>: Login → JWT → all subsequent API calls carry Bearer token</li>
+      <li><strong>Upload flow</strong>: Excel → openpyxl parse → upsert DistributorPlan / DistributorActual</li>
+      <li><strong>Calc flow</strong>: GET /schemes/:id/results → reads plans + actuals → computes per-distributor → returns JSON</li>
+      <li><strong>Correction flow</strong>: Request created → email sent → reviewer approves via UI or email link → DB updated on HOD approval</li>
+      <li><strong>VCS flow</strong>: GET /vcs?fy=X → aggregates monthly cumulative sums → returns per-metric time-series with hist N-2/N-1</li>
+      <li><strong>Zone scope</strong>: ZM token → role=zonal_manager → all queries filter WHERE distributor.zone = user.assigned_zone</li>
+    </ul>
+  </div>
+</div>
+
+<div style="text-align:center;padding:24px 0;color:#9a9087;font-size:11px;border-top:1px solid #e8e0d1;margin-top:24px;">
+  TVSM Incentive Disbursement System · Functional Architecture v1.0 · April 2026
+</div>
+
+</div>
+</body>
+</html>
