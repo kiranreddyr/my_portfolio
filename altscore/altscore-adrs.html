@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Architecture Decision Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0f0e0c;--paper:#f5f0e8;--cream:#ede7d9;--accent:#c94b1f;--accent2:#2b5e3f;--accent3:#1a3a5c;--muted:#7a7065;--rule:#ccc4b4;--tag-bg:#e8e0cf;--gold:#c4890d;--adr:#3d1a5c;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.75;}
+  .cover{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+  .cover-left{background:var(--ink);padding:80px 60px;display:flex;flex-direction:column;justify-content:space-between;position:relative;}
+  .cover-left::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px);pointer-events:none;}
+  .cover-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--adr);text-transform:uppercase;}
+  .cover-title{font-family:'Syne',sans-serif;font-size:clamp(38px,5vw,68px);font-weight:800;line-height:.95;color:var(--paper);letter-spacing:-.02em;}
+  .cover-title span{color:var(--adr);}
+  .cover-sub{font-family:'DM Mono',monospace;font-size:13px;color:rgba(245,240,232,.5);line-height:1.8;border-top:1px solid rgba(255,255,255,.1);padding-top:24px;}
+  .cover-right{background:var(--cream);padding:80px 60px;display:flex;flex-direction:column;justify-content:center;gap:28px;border-left:4px solid var(--adr);}
+  .cover-stat{border-bottom:1px solid var(--rule);padding-bottom:22px;}
+  .cover-stat:last-child{border-bottom:none;padding-bottom:0;}
+  .stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--adr);line-height:1;display:block;}
+  .stat-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-top:4px;display:block;}
+  .stat-desc{font-size:14px;color:var(--ink);margin-top:6px;font-style:italic;}
+  .doc{max-width:1100px;margin:0 auto;padding:80px 40px;}
+  .section{margin-bottom:64px;opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s;}
+  .section.visible{opacity:1;transform:none;}
+  .section-header{display:flex;align-items:baseline;gap:16px;margin-bottom:40px;border-bottom:2px solid var(--ink);padding-bottom:16px;}
+  .section-num{font-family:'DM Mono',monospace;font-size:12px;color:var(--adr);letter-spacing:.1em;flex-shrink:0;}
+  h2{font-family:'Syne',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.02em;}
+  h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;margin-bottom:12px;margin-top:24px;}
+  p{margin-bottom:16px;color:#2a2620;}
+
+  /* ADR block */
+  .adr-block{border:1px solid var(--rule);margin-bottom:48px;}
+  .adr-meta{display:grid;grid-template-columns:80px 1fr auto;background:var(--ink);align-items:center;}
+  .adr-id{background:var(--adr);color:white;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;padding:20px;text-align:center;display:flex;align-items:center;justify-content:center;min-height:72px;}
+  .adr-title-block{padding:16px 24px;}
+  .adr-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--paper);line-height:1.2;}
+  .adr-date{font-family:'DM Mono',monospace;font-size:10px;color:rgba(245,240,232,.4);margin-top:4px;letter-spacing:.08em;}
+  .adr-status-block{padding:16px 24px;}
+  .status-pill{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:6px 14px;border:1px solid;}
+  .status-pill.accepted{border-color:var(--accent2);color:var(--accent2);}
+  .status-pill.superseded{border-color:var(--muted);color:var(--muted);text-decoration:line-through;}
+  .status-pill.proposed{border-color:var(--gold);color:var(--gold);}
+
+  .adr-body{display:grid;grid-template-columns:1fr 1fr;}
+  .adr-col{padding:24px 28px;border-right:1px solid var(--rule);}
+  .adr-col:last-child{border-right:none;background:var(--cream);}
+  .adr-col-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--adr);margin-bottom:10px;display:block;}
+  .adr-col p{font-size:13px;color:#2a2620;line-height:1.65;margin-bottom:10px;}
+  .adr-col p:last-child{margin-bottom:0;}
+  .adr-col ul{list-style:none;padding:0;margin:0;}
+  .adr-col ul li{font-size:13px;padding:4px 0 4px 16px;position:relative;color:#3a352d;line-height:1.5;}
+  .adr-col ul li::before{content:'→';position:absolute;left:0;color:var(--muted);font-size:10px;top:7px;}
+
+  .adr-footer{border-top:1px solid var(--rule);padding:16px 28px;background:var(--paper);display:flex;gap:32px;flex-wrap:wrap;}
+  .adr-footer-item{font-size:12px;}
+  .adr-footer-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;}
+
+  .adr-consequences{padding:20px 28px;background:#f8f4ec;border-top:1px solid var(--rule);}
+  .adr-consequences-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;display:block;}
+  .adr-consequences p{font-size:13px;color:#3a352d;margin:0;line-height:1.6;}
+
+  .toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:32px 0;}
+  .toc-item{border:1px solid var(--rule);padding:14px 18px;display:flex;gap:14px;align-items:center;cursor:pointer;transition:background .2s;}
+  .toc-item:hover{background:var(--cream);}
+  .toc-adr-id{font-family:'DM Mono',monospace;font-size:11px;color:var(--adr);width:60px;flex-shrink:0;}
+  .toc-adr-title{font-size:13px;color:var(--ink);line-height:1.4;}
+
+  code{font-family:'DM Mono',monospace;font-size:12px;background:var(--tag-bg);padding:2px 6px;color:var(--adr);}
+  .sidenav{position:fixed;left:24px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:100;}
+  .nav-dot{width:8px;height:8px;background:var(--rule);cursor:pointer;transition:all .3s;position:relative;}
+  .nav-dot:hover,.nav-dot.active{background:var(--adr);transform:scale(1.5);}
+  .nav-dot::after{content:attr(data-label);position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);white-space:nowrap;opacity:0;transition:opacity .2s;background:var(--paper);padding:2px 8px;border:1px solid var(--rule);}
+  .nav-dot:hover::after{opacity:1;}
+  .doc-footer{background:var(--ink);color:rgba(245,240,232,.5);padding:40px;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;}
+  .ft-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--paper);}
+  .ft-brand span{color:var(--adr);}
+  @media(max-width:768px){.cover{grid-template-columns:1fr;}.doc{padding:40px 20px;}.adr-body{grid-template-columns:1fr;}.adr-meta{grid-template-columns:1fr;}.toc-grid{grid-template-columns:1fr;}.sidenav{display:none;}}
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+<nav class="sidenav">
+  <div class="nav-dot" data-label="Index" data-target="s00"></div>
+  <div class="nav-dot" data-label="ADR-001" data-target="adr001"></div>
+  <div class="nav-dot" data-label="ADR-002" data-target="adr002"></div>
+  <div class="nav-dot" data-label="ADR-003" data-target="adr003"></div>
+  <div class="nav-dot" data-label="ADR-004" data-target="adr004"></div>
+  <div class="nav-dot" data-label="ADR-005" data-target="adr005"></div>
+  <div class="nav-dot" data-label="ADR-006" data-target="adr006"></div>
+  <div class="nav-dot" data-label="ADR-007" data-target="adr007"></div>
+  <div class="nav-dot" data-label="ADR-008" data-target="adr008"></div>
+  <div class="nav-dot" data-label="ADR-009" data-target="adr009"></div>
+  <div class="nav-dot" data-label="ADR-010" data-target="adr010"></div>
+</nav>
+
+<div class="cover">
+  <div class="cover-left">
+    <div>
+      <div class="cover-label">AltScore Platform · Engineering</div>
+      <div style="height:40px"></div>
+      <div class="cover-title">Architecture<br>Decision<br><span>Records</span></div>
+    </div>
+    <div class="cover-sub">DOC-ID: ADR-ALTSCORE-001<br>Version: 1.0 · May 2026<br>Classification: INTERNAL — Engineering Leadership<br>Owner: CTO, AltScore Technologies</div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat"><span class="stat-num">10</span><span class="stat-label">Decisions Recorded</span><span class="stat-desc">Model choice · Cloud · Data lake · Consent · Auth · DB · Cache · Messaging · Explainability · Guardrails</span></div>
+    <div class="cover-stat"><span class="stat-num">All</span><span class="stat-label">Status: Accepted</span><span class="stat-desc">All ADRs in this document are active and binding for v1 build</span></div>
+    <div class="cover-stat"><span class="stat-num">ADR format</span><span class="stat-label">MADR-style</span><span class="stat-desc">Context · Decision · Alternatives Considered · Consequences</span></div>
+  </div>
+</div>
+
+<div class="doc">
+
+  <!-- Index -->
+  <div class="section" id="s00">
+    <div class="section-header"><span class="section-num">Index —</span><h2>Decision Registry</h2></div>
+    <p>Each ADR captures a key architectural decision, the context that drove it, alternatives that were seriously considered, and the consequences — both positive and negative — of the chosen path. ADRs are immutable once accepted; superseding decisions create a new ADR that references the old one.</p>
+    <div class="toc-grid">
+      <div class="toc-item" onclick="document.getElementById('adr001').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-001</span><span class="toc-adr-title">XGBoost as primary credit scoring model</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr002').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-002</span><span class="toc-adr-title">AWS ap-south-1 as primary cloud with Azure DR</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr003').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-003</span><span class="toc-adr-title">Medallion data lake (Bronze/Silver/Gold) over OLTP</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr004').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-004</span><span class="toc-adr-title">WhatsApp as primary retailer consent channel</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr005').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-005</span><span class="toc-adr-title">UUID pseudonymization over tokenization or encryption</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr006').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-006</span><span class="toc-adr-title">PostgreSQL with RLS for score and consent storage</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr007').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-007</span><span class="toc-adr-title">JWT RS256 for NBFC authentication over OAuth 2.0 full flow</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr008').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-008</span><span class="toc-adr-title">Kafka for async inter-service events over direct HTTP</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr009').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-009</span><span class="toc-adr-title">SHAP TreeExplainer for mandatory reason codes</span></div>
+      <div class="toc-item" onclick="document.getElementById('adr010').scrollIntoView({behavior:'smooth'})"><span class="toc-adr-id">ADR-010</span><span class="toc-adr-title">Compile-time guardrail constants over runtime configuration</span></div>
+    </div>
+  </div>
+
+  <!-- ADR-001 -->
+  <div class="section" id="adr001">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-001</div>
+        <div class="adr-title-block"><div class="adr-title">XGBoost as Primary Credit Scoring Model</div><div class="adr-date">May 2026 · Authors: ML Lead, Head of Risk</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>We need a classification model that predicts probability of default (PD) for informal Indian retailers from ERP transaction features. The model must be: explainable (RBI FLDG mandates reason codes), robust on tabular/sparse data, trainable on a limited initial dataset (&lt;100K labelled examples), and operationally simple enough for a small ML team to maintain.</p>
+          <p><strong>Decision:</strong> Use XGBoost (gradient-boosted trees) as the primary model, with SHAP TreeExplainer for feature attribution, and Croston's Method as a sub-model for sparse/seasonal retailers.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>Logistic Regression:</strong> Highly explainable, but insufficient capacity for non-linear payment behaviour patterns (e.g., seasonal spikes). Discarded.</li>
+            <li><strong>Neural Network (LSTM/Transformer):</strong> Strong sequence modelling for time-series, but requires 10× more labelled data, black-box by default, and operationally complex. Not viable for v1 with limited outcome labels.</li>
+            <li><strong>LightGBM:</strong> Near-equivalent performance to XGBoost on tabular data. SHAP support equally strong. Not chosen because XGBoost has more community credit-risk precedent in India and lender familiarity.</li>
+            <li><strong>CatBoost:</strong> Strong on categorical features, but our features are predominantly numeric. No material advantage.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> SHAP TreeExplainer gives exact feature attributions (not approximations), satisfying RBI FLDG reason-code mandate. XGBoost is battle-tested in credit scoring globally. Handles missing values natively. Retraining is fast (&lt;30 min on full dataset). <strong>Negative:</strong> Doesn't natively model temporal sequences — we compensate with engineered time-series features. Croston's sub-model adds routing complexity. Neural approaches may outperform in Phase 3+ as outcome labels accumulate.</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>MC-ALTSCORE-001, GRD-ALTSCORE-001</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>AUROC drops below 0.72 or dataset exceeds 500K labelled examples</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-002 -->
+  <div class="section" id="adr002">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-002</div>
+        <div class="adr-title-block"><div class="adr-title">AWS ap-south-1 as Primary Cloud with Azure Central India DR</div><div class="adr-date">May 2026 · Authors: CTO, CISO</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>The DPDP Act 2023 requires all personal data related to Indian citizens to be stored within India. We need a cloud provider with India-region infrastructure, mature managed ML/data services (Kafka, Spark, Kubernetes), and strong support for Customer Managed Keys (CMK). We also need a DR strategy that avoids single-cloud vendor lock-in.</p>
+          <p><strong>Decision:</strong> AWS ap-south-1 (Mumbai) as primary. Azure Central India (Pune) as passive DR. All data — at rest, in transit, in computation — remains within India geographic boundaries at all times.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>GCP Mumbai (asia-south1):</strong> Comparable ML tooling (Vertex AI), but GCP's Kafka equivalent (Pub/Sub) has different semantics than MSK and would require significant data pipeline rework. AWS MSK experience in the team is stronger.</li>
+            <li><strong>Azure only (Central India):</strong> Azure ADLS Gen2 is excellent for data lake but Azure's ML tooling (AzureML) is more opinionated and expensive at our scale. Chosen as DR rather than primary.</li>
+            <li><strong>On-premises / colocation:</strong> Compliant with DPDP but prohibitively expensive for a startup and eliminates auto-scaling for batch ML workloads. Discarded.</li>
+            <li><strong>AWS primary + AWS DR (second India AZ):</strong> Simpler operationally but doesn't protect against AWS-wide India region outage. Multi-cloud DR chosen for resilience.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> Full DPDP data localisation compliance. AWS MSK, EMR, EKS, RDS, S3 are mature and well-understood by the team. Multi-cloud DR reduces catastrophic vendor risk. <strong>Negative:</strong> Operating two cloud environments increases infrastructure complexity and cost (~15% overhead for DR replication). Team must maintain Azure familiarity even if rarely used. DNS failover to Azure involves manual steps (quarterly drill required).</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>DA-ALTSCORE-001, SAR-ALTSCORE-001</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>RBI issues updated data localisation guidance; AWS India pricing changes materially</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-003 -->
+  <div class="section" id="adr003">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-003</div>
+        <div class="adr-title-block"><div class="adr-title">Medallion Data Lake (Bronze/Silver/Gold) over Single OLTP Database</div><div class="adr-date">May 2026 · Authors: Data Engineering Lead, DPO</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>We receive batch ERP data from 1,000s of distributors covering millions of transaction records. We need to: (1) preserve raw data immutably for audit, (2) pseudonymize PII before ML processing, (3) compute 40+ features per retailer per month efficiently, and (4) serve scores with low latency. These concerns pull in different directions — a single OLTP store cannot efficiently satisfy all four.</p>
+          <p><strong>Decision:</strong> Three-tier medallion lake on S3 (Bronze → Silver → Gold), with dbt + Spark for transformations, and PostgreSQL as the operational serving layer for the Score API.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>Single PostgreSQL database:</strong> Familiar and simple, but: (a) WORM immutability for Bronze requires hacky triggers, not native; (b) Spark-scale feature computation on PostgreSQL is impractical; (c) Per-distributor CMK encryption is not supported natively. Discarded.</li>
+            <li><strong>Apache Hudi / Delta Lake:</strong> Excellent ACID on top of S3 with CDC support. Added complexity (schema evolution, compaction) not justified at v1 scale. Revisit if real-time scoring is needed in Phase 5.</li>
+            <li><strong>Snowflake:</strong> Strong for analytics but stores data outside India unless specifically configured (no dedicated India region at time of decision). DPDP non-compliant. Discarded.</li>
+            <li><strong>MongoDB Atlas:</strong> Good for flexible schemas but poor for columnar ML feature computation. Not suited to our analytical workload.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> Bronze WORM provides genuine immutability for audit. Silver cleanly separates PII-containing from PII-free data — a hard DPDP boundary. Gold serves fast feature reads for ML. S3 + Parquet scales to billions of records cheaply. <strong>Negative:</strong> Three-layer pipeline adds latency (Bronze → Gold takes up to 4 hours). Engineers need Spark + dbt + SQL skills. Data lineage requires explicit tooling (OpenLineage). Score API cannot query Bronze directly — must wait for Gold layer.</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>DAS-ALTSCORE-001, FA-ALTSCORE-001, PDP-ALTSCORE-001</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>Real-time scoring requirement emerges; Spark operational cost exceeds 30% of infra budget</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-004 -->
+  <div class="section" id="adr004">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-004</div>
+        <div class="adr-title-block"><div class="adr-title">WhatsApp as Primary Retailer Consent Channel</div><div class="adr-date">May 2026 · Authors: Head of Product, DPO</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>DPDP Act 2023 requires free, specific, informed, and unambiguous consent from retailers before processing their personal data. Consent must be demonstrably obtained and revocable at any time. We need a channel that: (1) reaches 12M+ informal retailers reliably, (2) supports vernacular (Hindi) communication, (3) creates a documented, timestamped consent record, and (4) allows retailers to exercise rights (revocation, grievance) without a smartphone app or web browser.</p>
+          <p><strong>Decision:</strong> WhatsApp Business API as the primary consent channel, with SMS as fallback. All 5-step consent flow (Invite → Notice → Decision → Record → Confirmation) runs via WhatsApp messages.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>Web portal consent:</strong> Requires smartphone with browser and data connection. ~40% of target retailers are feature-phone users or low-data users. Accessibility gap unacceptable. Discarded.</li>
+            <li><strong>IVR (phone call):</strong> High reach but: (a) no written record of consent content shown, (b) difficult to satisfy DPDP "informed" requirement for complex purpose statements, (c) high per-call cost at scale. Discarded.</li>
+            <li><strong>SMS-only:</strong> SMS has ~99% reach but 160-char limit makes it impossible to convey full notice (purpose, rights, consequences) in a single message. Works as fallback for consent confirmation; not sufficient as primary for initial notice.</li>
+            <li><strong>Distributor-mediated (paper) consent:</strong> Scalable initially but creates DPDP risk — AltScore cannot independently verify the consent was genuinely informed. Distributor incentive misalignment is a fraud vector. Rejected on governance grounds.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> WhatsApp reaches 500M+ India users including feature phone users (via basic WhatsApp). Supports rich Hindi text. Webhook delivery provides timestamped record of every message. Revocation via WhatsApp "NAHI" reply is intuitive for retailers. <strong>Negative:</strong> Meta (WhatsApp) is a third-party sub-processor — DPA required and under review. WhatsApp API downtime blocks consent operations (SMS fallback mitigates). Meta policy changes (e.g., template restrictions) could impact consent flow. WhatsApp message_id serves as consent proof — auditors must trust Meta's delivery timestamps.</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>PDP-ALTSCORE-001, FA-ALTSCORE-001, ERP-ALTSCORE-001</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>Meta WhatsApp policy change affects business messaging; DPDP Board issues guidance on digital consent channels</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-005 -->
+  <div class="section" id="adr005">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-005</div>
+        <div class="adr-title-block"><div class="adr-title">UUID Pseudonymization over Tokenization or Field-Level Encryption</div><div class="adr-date">May 2026 · Authors: DPO, Data Engineering Lead</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>We must prevent PII (GST numbers, phone numbers) from reaching the ML pipeline while still being able to: (a) link records across ERP batches to the same retailer, (b) exercise DPDP rights (erasure, portability) by retailer, and (c) resolve retailer identity for the Score API lookup endpoint.</p>
+          <p><strong>Decision:</strong> Replace GST and phone with a stable, random UUID at the Bronze → Silver boundary. The GST → UUID mapping lives in a physically separate, access-isolated identity store. The ML pipeline operates exclusively on UUIDs — it has zero access to the identity store.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>Field-level encryption (FLE):</strong> Encrypt GST in place, decrypt on access. Problem: encrypted ciphertext is still PII under DPDP (it's the same data, protected). ML pipeline would need decryption keys — widening the trust boundary. Discarded.</li>
+            <li><strong>Tokenization (format-preserving):</strong> Replace GST with a synthetic GSTIN-format token. Preserves format for downstream compatibility but complicates identity resolution and doesn't offer stronger privacy guarantees than UUID. More complex to implement. Discarded.</li>
+            <li><strong>Hashing (SHA-256 of GST):</strong> One-way, but GST space is small enough (&lt;5 crore unique GSTINs) to be rainbow-table attacked. Not sufficient pseudonymization under DPDP. Discarded as sole mechanism (used only for lookup, not as stable identifier).</li>
+            <li><strong>Per-record random token (no stable mapping):</strong> Maximum privacy but breaks cross-batch record linkage. Retailers would appear as new entities on every sync. Discarded — linkage is fundamental to feature computation.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> ML pipeline has zero knowledge of real retailer identities — even a full Silver/Gold lake breach reveals no PII. DPDP erasure is operationally clean: delete UUID from identity store, delete Silver/Gold records by UUID. DPDP considers stable UUID pseudonymization (not anonymization), so we retain ability to re-identify for rights requests. <strong>Negative:</strong> Identity store becomes a crown jewel — its compromise re-links UUIDs to real GST numbers. Must be physically isolated, access-logged, and separately encrypted. Cross-distributor deduplication (same retailer, two distributors) requires identity store lookup — adds latency to dedup pipeline.</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>PDP-ALTSCORE-001, DAS-ALTSCORE-001, TM-ALTSCORE-001</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>DPDP Board clarifies pseudonymization standards; identity store access anomaly detected</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-006 -->
+  <div class="section" id="adr006">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-006</div>
+        <div class="adr-title-block"><div class="adr-title">PostgreSQL with Row-Level Security for Score and Consent Storage</div><div class="adr-date">May 2026 · Authors: CTO, API Engineering Lead</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>The Score API serves up to 50 concurrent NBFC lenders, each of whom must only see scores for retailers who have consented to that specific lender. Isolation must be enforced even if application code has a bug — we need defense-in-depth at the database layer. We also need ACID transactions for consent records (a consent grant and its audit record must be written atomically).</p>
+          <p><strong>Decision:</strong> PostgreSQL with Row-Level Security (RLS) policies that enforce per-lender score isolation at the database engine level. Application code sets the <code>app.current_lender_id</code> session variable; the RLS policy filters accordingly. No lender can retrieve another's consented retailers even via SQL injection.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>Application-layer filtering only:</strong> Simpler, but a single SQL injection or code bug exposes cross-lender data. Not acceptable given the sensitivity of credit scores. Discarded — defense-in-depth requires database-level enforcement.</li>
+            <li><strong>Separate database per lender:</strong> Maximum isolation but operationally unsustainable at 50 lenders (50× schema migrations, connection pools, backup jobs). Discarded.</li>
+            <li><strong>MongoDB with tenant field filtering:</strong> No native RLS equivalent. Application-layer filtering only. Discarded for same reason as option 1.</li>
+            <li><strong>CockroachDB:</strong> Distributed SQL, strong consistency, but no India-region AWS deployment at time of decision. RLS support less mature. Discarded.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> Cross-lender isolation enforced at the database engine — not just application code. PostgreSQL JSONB column handles reason_codes[] without a separate table. ACID transactions guarantee consent + audit atomicity. Amazon RDS Multi-AZ provides HA with automated failover. <strong>Negative:</strong> RLS adds ~5–10% query overhead on scores table. Every connection must set the session variable correctly — missed by a service = all rows visible to that session (mitigated by CI test that verifies RLS enforcement). Schema migrations on large tables (score_history) require careful planning with pg_repack.</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>DAS-ALTSCORE-001, SAR-ALTSCORE-001, TCS-ALTSCORE-001 (SEC-01)</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>Lender count exceeds 100; RLS overhead measurably degrades p95 latency</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-007 -->
+  <div class="section" id="adr007">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-007</div>
+        <div class="adr-title-block"><div class="adr-title">JWT RS256 for NBFC API Authentication over Full OAuth 2.0 Flow</div><div class="adr-date">May 2026 · Authors: API Engineering Lead, CISO</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>NBFC partners need to authenticate machine-to-machine API calls at high frequency (up to 100 req/min). Authentication must be stateless (no session lookup on every call), cryptographically strong, and operable by NBFC engineering teams without complex OAuth flows. Admin users need a separate, higher-assurance channel.</p>
+          <p><strong>Decision:</strong> JWT RS256 for NBFC API — lenders obtain a 1-hour JWT via client_credentials exchange and sign every request. FIDO2 hardware key + SAML 2.0 SSO for human admin users. These are intentionally separate trust tiers.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>API Key only (static secret in header):</strong> Simple to implement but: (a) no expiry without explicit revocation, (b) key rotation requires coordination, (c) no claims-based authorization. Insufficient for financial API. Discarded as sole mechanism (used as second factor alongside JWT).</li>
+            <li><strong>Full OAuth 2.0 Authorization Code flow:</strong> Best practice for user-delegated access but adds redirect-based flow complexity inappropriate for M2M API calls. NBFCs would need to operate a redirect URI. Over-engineering for our use case.</li>
+            <li><strong>mTLS for NBFC API:</strong> Strong cryptographic identity but certificate management for 50 NBFC partners (each with their own cert rotation schedule) is operationally complex. mTLS is reserved for ERP connectors (fewer partners, known infrastructure).</li>
+            <li><strong>HMAC-signed requests (AWS SigV4 style):</strong> Strong but requires NBFC teams to implement signing logic. Higher integration friction than JWT which has universal library support. Discarded.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> JWT is stateless — API gateway verifies signature without database round-trip. RS256 asymmetric signing means NBFC partners never see the private key. 1-hour TTL limits blast radius of token compromise. JWKs endpoint enables seamless key rotation. <strong>Negative:</strong> JWT cannot be revoked before expiry (1-hour window for compromised tokens). Mitigated by: blocklist in Redis for known-compromised JTIs, short TTL. NBFC teams must implement token refresh logic. jti claim uniqueness must be validated to prevent replay attacks.</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>API-ALTSCORE-001, SAR-ALTSCORE-001</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>JWT compromise incident; RBI issues API security guidance requiring specific auth standards</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-008 -->
+  <div class="section" id="adr008">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-008</div>
+        <div class="adr-title-block"><div class="adr-title">Kafka for Async Inter-Service Events over Synchronous HTTP Callbacks</div><div class="adr-date">May 2026 · Authors: Platform Engineering Lead, CTO</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>Several critical side effects must happen asynchronously without blocking API responses: audit logging, consent revocation propagation, score cache invalidation, notification triggering, and pipeline triggering. These cannot be synchronous (audit write cannot block score API response) but also cannot be lost (audit records are legally required).</p>
+          <p><strong>Decision:</strong> Apache Kafka (Amazon MSK) as the durable event bus for all async inter-service communication. Avro schema registry for type-safe events. Outbox pattern for at-least-once delivery guarantees. Dead-letter queues for failed events.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>Synchronous HTTP callbacks (service-to-service):</strong> Simple but creates tight coupling — a slow Audit Service blocks the Score API. Cascading failures. Discarded for side-effects that should not block the critical path.</li>
+            <li><strong>AWS SQS + SNS:</strong> Simpler operational model than Kafka but: (a) max 256KB message size constrains audit payloads, (b) no guaranteed ordering within a partition (needed for consent events), (c) no native consumer group replay for debugging. Discarded.</li>
+            <li><strong>RabbitMQ:</strong> Good for task queues but lacks Kafka's durable log semantics — cannot replay events after consumer failure without explicit design. For audit records that must never be lost, Kafka's append-only log is a better fit.</li>
+            <li><strong>Redis Pub/Sub:</strong> Low latency but no persistence — messages lost if consumer is down. Unacceptable for audit events. Discarded (Redis is used for cache, not durable events).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> Kafka's durable log means audit events are never lost even if Audit Service is down (replayed on recovery). Consumer groups enable independent scaling. Event replay is invaluable for debugging and DR scenarios. Consent revocation propagates to all consumers within seconds. <strong>Negative:</strong> Kafka (MSK) adds operational complexity and cost (~$400/month for 3-broker cluster). Team needs Kafka expertise. At-least-once delivery requires idempotent consumers everywhere. Schema evolution (Avro) requires careful backward compatibility discipline.</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>FA-ALTSCORE-001, DA-ALTSCORE-001</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>Message volume exceeds 100K events/sec; MSK cost exceeds 10% of cloud budget</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-009 -->
+  <div class="section" id="adr009">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-009</div>
+        <div class="adr-title-block"><div class="adr-title">SHAP TreeExplainer for Mandatory Reason Codes</div><div class="adr-date">May 2026 · Authors: ML Lead, Head of Risk</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>RBI FLDG Guidelines require that every credit score delivered to an NBFC partner be accompanied by human-readable reason codes explaining the key positive and negative factors. DPDP Act further requires that automated decision-making be explainable to the data subject (the retailer). We need a method that: (a) produces accurate, stable feature attributions, (b) works natively with XGBoost, (c) can be translated into categorical reason codes, and (d) runs within our latency budget.</p>
+          <p><strong>Decision:</strong> SHAP (SHapley Additive exPlanations) TreeExplainer for XGBoost. Top-N SHAP values are mapped to a fixed 24-code taxonomy with Hindi translations. A score is blocked (not returned) if SHAP computation fails.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>LIME (Local Interpretable Model-agnostic Explanations):</strong> Model-agnostic and flexible, but produces approximations (not exact attributions). For tree models, SHAP TreeExplainer gives exact Shapley values — strictly more accurate. LIME also has higher variance across runs (non-deterministic). Discarded.</li>
+            <li><strong>Feature importance (global, permutation-based):</strong> Produces population-level importance, not individual-level attribution. Cannot explain why <em>this retailer</em> got this specific score. Does not satisfy FLDG per-request reason code requirement. Discarded.</li>
+            <li><strong>Rule extraction (decision tree approximation):</strong> Approximate the XGBoost model with a shallow decision tree, then read the decision path as "reasons." Loses accuracy of XGBoost significantly. Discarded.</li>
+            <li><strong>Manual rule-based reason codes:</strong> Hardcoded thresholds (e.g., "if avg_delay &gt; 5 → PAYMENT_DELAY_HIGH"). Simple but: (a) doesn't reflect actual model attribution, (b) reason codes may contradict score if model weighting differs from thresholds. Discarded.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> SHAP TreeExplainer is exact (not approximate) for tree models. Consistent with model logic — reasons always reflect actual feature contributions. Satisfies both RBI FLDG and DPDP explainability requirements. Enables retailer-level dispute resolution (we can show exactly which features drove a low score). <strong>Negative:</strong> SHAP adds ~50–200ms to scoring time per retailer (acceptable within p95 budget). SHAP numeric values must be converted to categorical codes — translation taxonomy must be maintained and versioned. Exposing SHAP values directly would enable gaming — so only categorical codes are returned in the API (numeric values are internal only).</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>MC-ALTSCORE-001, GRD-ALTSCORE-001, API-ALTSCORE-001</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>Model switch to neural architecture (SHAP TreeExplainer not applicable); SHAP latency exceeds p99 budget</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR-010 -->
+  <div class="section" id="adr010">
+    <div class="adr-block">
+      <div class="adr-meta">
+        <div class="adr-id">ADR-010</div>
+        <div class="adr-title-block"><div class="adr-title">Compile-Time Guardrail Constants over Runtime Configuration</div><div class="adr-date">May 2026 · Authors: Head of Risk, CTO, DPO</div></div>
+        <div class="adr-status-block"><span class="status-pill accepted">Accepted</span></div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-col">
+          <span class="adr-col-label">Context &amp; Decision</span>
+          <p>Guardrail thresholds (30% GMV affordability ceiling, AIR ≥ 0.80, PSI &gt; 0.20 model refresh) protect retailers from exploitative lending and protect the platform from regulatory sanctions. If these thresholds are stored in a runtime config (database, environment variable, feature flag), they can be changed by a malicious insider, a misconfigured deploy, or a vendor compromise without audit or governance.</p>
+          <p><strong>Decision:</strong> All guardrail thresholds are compile-time constants in the Scoring Engine codebase. They appear in the source code, are reviewed in code review, and can only change via a full deployment with Guardrail Committee sign-off. They are never read from environment variables, databases, or feature flag systems at runtime.</p>
+        </div>
+        <div class="adr-col">
+          <span class="adr-col-label">Alternatives Considered</span>
+          <ul>
+            <li><strong>Database-stored thresholds (runtime configurable):</strong> Flexible — operations team can tune thresholds without a deployment. But: a single DB write bypasses all governance. Insider threat or SQL injection could silently remove all credit limits. Discarded — flexibility is the exact risk we're trying to eliminate.</li>
+            <li><strong>Feature flags (LaunchDarkly / GrowthBook):</strong> Convenient for A/B testing product features, but feature flag changes bypass code review and deployment governance. A flag flip is indistinguishable from a legitimate config change vs. a policy violation. Discarded for safety-critical thresholds.</li>
+            <li><strong>Signed configuration files (HSM-signed JSON):</strong> Would require runtime HSM signature verification on every score — adds latency and HSM availability dependency. Complexity not justified when compile-time constants achieve the same tamper-resistance more simply. Discarded.</li>
+            <li><strong>Separate policy service with access controls:</strong> Could provide auditability via an API, but introduces another service that could fail, be compromised, or be misconfigured. Adding runtime network dependency to a safety-critical constraint is a fragility. Discarded.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="adr-consequences">
+        <span class="adr-consequences-label">Consequences</span>
+        <p><strong>Positive:</strong> Guardrail thresholds are visible in code review — any change is subject to the full PR + Committee approval process. No runtime bypass possible. Scoring Engine always uses the same thresholds that were tested and approved. Tamper evidence is trivial — git history shows every change with author and timestamp. <strong>Negative:</strong> Threshold changes require a full deployment (30–60 min) rather than a config update (seconds). In a genuine emergency (e.g., model producing dangerously high limits due to a bug), response time is slower. Mitigated by: model freeze capability is a separate, fast operation; we can freeze scoring without changing thresholds.</p>
+      </div>
+      <div class="adr-footer">
+        <div class="adr-footer-item"><span class="adr-footer-label">Documents affected</span>GRD-ALTSCORE-001, FA-ALTSCORE-001, TCS-ALTSCORE-001 (GR-01 through GR-06)</div>
+        <div class="adr-footer-item"><span class="adr-footer-label">Review trigger</span>Regulatory guidance changes required thresholds materially; emergency threshold change needed faster than deployment allows</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="doc-footer">
+  <div><div class="ft-brand">Alt<span>Score</span></div><div style="margin-top:4px">Architecture Decision Records · ADR-ALTSCORE-001 · v1.0 · May 2026</div></div>
+  <div style="text-align:right">INTERNAL — Engineering Leadership<br>AltScore Technologies Private Limited<br>10 decisions · All accepted · Binding for v1 build</div>
+</footer>
+
+<script>
+  const sections=document.querySelectorAll('.section');
+  const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible');}),{threshold:0.05});
+  sections.forEach(s=>obs.observe(s));
+  const dots=document.querySelectorAll('.nav-dot');
+  dots.forEach(d=>d.addEventListener('click',()=>{const t=document.getElementById(d.dataset.target);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}));
+  const navObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){dots.forEach(d=>d.classList.remove('active'));const i=Array.from(sections).indexOf(x.target);if(i>=0&&dots[i])dots[i].classList.add('active');}}),{threshold:0.3});
+  sections.forEach(s=>navObs.observe(s));
+</script>
+</body>
+</html>

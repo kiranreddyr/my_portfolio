@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — ERP Integration Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0f0e0c;--paper:#f5f0e8;--cream:#ede7d9;--accent:#c94b1f;--accent2:#2b5e3f;--accent3:#1a3a5c;--muted:#7a7065;--rule:#ccc4b4;--tag-bg:#e8e0cf;--gold:#c4890d;--erp:#1a4a2e;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.75;}
+  .cover{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+  .cover-left{background:var(--ink);padding:80px 60px;display:flex;flex-direction:column;justify-content:space-between;position:relative;}
+  .cover-left::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px);pointer-events:none;}
+  .cover-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--erp);text-transform:uppercase;}
+  .cover-title{font-family:'Syne',sans-serif;font-size:clamp(36px,5vw,66px);font-weight:800;line-height:.95;color:var(--paper);letter-spacing:-.02em;}
+  .cover-title span{color:var(--erp);}
+  .cover-sub{font-family:'DM Mono',monospace;font-size:13px;color:rgba(245,240,232,.5);line-height:1.8;border-top:1px solid rgba(255,255,255,.1);padding-top:24px;}
+  .cover-right{background:var(--cream);padding:80px 60px;display:flex;flex-direction:column;justify-content:center;gap:28px;border-left:4px solid var(--erp);}
+  .cover-stat{border-bottom:1px solid var(--rule);padding-bottom:22px;}
+  .cover-stat:last-child{border-bottom:none;padding-bottom:0;}
+  .stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--erp);line-height:1;display:block;}
+  .stat-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-top:4px;display:block;}
+  .stat-desc{font-size:14px;color:var(--ink);margin-top:6px;font-style:italic;}
+  .doc{max-width:1100px;margin:0 auto;padding:80px 40px;}
+  .section{margin-bottom:80px;opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s;}
+  .section.visible{opacity:1;transform:none;}
+  .section-header{display:flex;align-items:baseline;gap:16px;margin-bottom:40px;border-bottom:2px solid var(--ink);padding-bottom:16px;}
+  .section-num{font-family:'DM Mono',monospace;font-size:12px;color:var(--erp);letter-spacing:.1em;flex-shrink:0;}
+  h2{font-family:'Syne',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.02em;}
+  h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;margin-bottom:12px;margin-top:32px;}
+  h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:8px;}
+  p{margin-bottom:16px;color:#2a2620;}
+  .callout{background:var(--ink);color:var(--paper);padding:32px 40px;margin:32px 0;border-left:6px solid var(--erp);}
+  .callout p{font-size:17px;font-style:italic;line-height:1.6;color:var(--paper);margin:0;}
+  .callout .attr{font-family:'DM Mono',monospace;font-size:11px;color:var(--erp);letter-spacing:.15em;margin-top:12px;display:block;}
+  .warning{background:#fff8f0;border:1px solid var(--gold);border-left:6px solid var(--gold);padding:20px 28px;margin:24px 0;}
+  .warning .wt{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;display:block;}
+  .warning p{font-size:13px;color:#3a2a00;margin:0;}
+  .doc-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:13px;}
+  .doc-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;text-align:left;padding:10px 14px;background:var(--ink);color:var(--paper);}
+  .doc-table td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5;}
+  .doc-table tr:nth-child(even) td{background:var(--cream);}
+  .code-block{background:#1e1c18;color:#e8d8b0;padding:20px 24px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;overflow-x:auto;margin:12px 0;}
+  .code-block .k{color:#7ec8e3;} .code-block .s{color:#98c379;} .code-block .c{color:#5c6370;font-style:italic;} .code-block .n{color:#e8d8b0;} .code-block .num{color:#d19a66;}
+
+  /* connector card */
+  .connector-block{border:1px solid var(--rule);margin-bottom:40px;}
+  .conn-head{display:flex;align-items:center;gap:0;}
+  .conn-stripe{width:8px;background:var(--erp);align-self:stretch;}
+  .conn-title-block{padding:20px 28px;background:var(--cream);flex:1;border-bottom:1px solid var(--rule);}
+  .conn-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;}
+  .conn-subtitle{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.08em;margin-top:3px;}
+  .conn-body{display:grid;grid-template-columns:1fr 1fr;border-top:0;}
+  .conn-col{padding:24px 28px;background:var(--paper);border-right:1px solid var(--rule);}
+  .conn-col:last-child{border-right:none;background:var(--cream);}
+  .conn-col-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--erp);margin-bottom:10px;display:block;}
+  .conn-col ul{list-style:none;padding:0;margin:0;}
+  .conn-col ul li{font-size:13px;padding:3px 0 3px 14px;position:relative;color:#3a352d;line-height:1.5;}
+  .conn-col ul li::before{content:'→';position:absolute;left:0;color:var(--muted);font-size:10px;top:6px;}
+
+  /* flow steps */
+  .flow-step{display:grid;grid-template-columns:48px 1fr;gap:20px;margin-bottom:24px;align-items:start;}
+  .flow-num{width:48px;height:48px;background:var(--erp);color:white;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .flow-content h4{font-size:14px;margin-bottom:4px;}
+  .flow-content p{font-size:13px;color:#3a352d;margin:0;line-height:1.6;}
+  .flow-connector{width:2px;height:16px;background:var(--rule);margin-left:23px;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:32px 0;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin:32px 0;}
+  .card{background:var(--cream);border:1px solid var(--rule);padding:24px;}
+  .card.erp-top{border-top:4px solid var(--erp);}
+  .card.gold-top{border-top:4px solid var(--gold);}
+  .card.red-top{border-top:4px solid var(--accent);}
+  .card.blue-top{border-top:4px solid var(--accent3);}
+  .card-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;}
+  .card h3{font-size:15px;margin-bottom:8px;margin-top:0;}
+  .card p{font-size:13px;color:#4a4540;margin:0;line-height:1.6;}
+  .card ul{list-style:none;padding:0;margin:8px 0 0 0;}
+  .card ul li{font-size:12px;padding:3px 0 3px 14px;position:relative;color:#3a352d;}
+  .card ul li::before{content:'·';position:absolute;left:0;color:var(--erp);font-weight:bold;}
+  code{font-family:'DM Mono',monospace;font-size:12px;background:var(--tag-bg);padding:2px 6px;color:var(--erp);}
+  .sidenav{position:fixed;left:24px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100;}
+  .nav-dot{width:8px;height:8px;background:var(--rule);cursor:pointer;transition:all .3s;position:relative;}
+  .nav-dot:hover,.nav-dot.active{background:var(--erp);transform:scale(1.5);}
+  .nav-dot::after{content:attr(data-label);position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);white-space:nowrap;opacity:0;transition:opacity .2s;background:var(--paper);padding:2px 8px;border:1px solid var(--rule);}
+  .nav-dot:hover::after{opacity:1;}
+  .doc-footer{background:var(--ink);color:rgba(245,240,232,.5);padding:40px;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;}
+  .ft-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--paper);}
+  .ft-brand span{color:var(--erp);}
+  @media(max-width:768px){.cover{grid-template-columns:1fr;}.doc{padding:40px 20px;}.two-col,.three-col{grid-template-columns:1fr;}.sidenav{display:none;}.conn-body{grid-template-columns:1fr;}}
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+<nav class="sidenav">
+  <div class="nav-dot" data-label="Overview" data-target="s01"></div>
+  <div class="nav-dot" data-label="SDK Architecture" data-target="s02"></div>
+  <div class="nav-dot" data-label="Tally Prime" data-target="s03"></div>
+  <div class="nav-dot" data-label="SAP B1" data-target="s04"></div>
+  <div class="nav-dot" data-label="CSV Upload" data-target="s05"></div>
+  <div class="nav-dot" data-label="Schema Mapping" data-target="s06"></div>
+  <div class="nav-dot" data-label="Delta Sync" data-target="s07"></div>
+  <div class="nav-dot" data-label="Error Handling" data-target="s08"></div>
+  <div class="nav-dot" data-label="Security" data-target="s09"></div>
+  <div class="nav-dot" data-label="Onboarding" data-target="s10"></div>
+</nav>
+
+<div class="cover">
+  <div class="cover-left">
+    <div>
+      <div class="cover-label">AltScore Platform · Integrations</div>
+      <div style="height:40px"></div>
+      <div class="cover-title">ERP Integration<br><span>Specification</span></div>
+    </div>
+    <div class="cover-sub">DOC-ID: ERP-ALTSCORE-001<br>Version: 1.0 · May 2026<br>Classification: CONFIDENTIAL — Engineering &amp; Distributor Partners<br>Owner: Data Engineering, AltScore Technologies</div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat"><span class="stat-num">3</span><span class="stat-label">Supported ERP Sources</span><span class="stat-desc">Tally Prime · SAP Business One · CSV/Manual Upload</span></div>
+    <div class="cover-stat"><span class="stat-num">mTLS</span><span class="stat-label">Connector Auth</span><span class="stat-desc">Per-distributor client certificate + API key + HMAC payload signing</span></div>
+    <div class="cover-stat"><span class="stat-num">Delta</span><span class="stat-label">Sync Strategy</span><span class="stat-desc">Incremental daily sync; full historical backfill on onboarding (24–36 months)</span></div>
+    <div class="cover-stat"><span class="stat-num">Read-Only</span><span class="stat-label">ERP Access Model</span><span class="stat-desc">SDK never writes to distributor ERP; pull-only via voucher/transaction APIs</span></div>
+  </div>
+</div>
+
+<div class="doc">
+
+  <!-- 01 Overview -->
+  <div class="section" id="s01">
+    <div class="section-header"><span class="section-num">01 —</span><h2>Overview &amp; Design Principles</h2></div>
+    <div class="callout"><p>The AltScore ERP Connector SDK is a lightweight, read-only agent deployed on the distributor's infrastructure. It extracts invoice and payment records from the local ERP, normalises them to the AltScore schema, and pushes encrypted batches to the Ingestion API over mTLS. It never modifies ERP data and never stores raw data beyond the current batch window.</p><span class="attr">ERP-ALTSCORE-001 · Connector Design Charter</span></div>
+    <div class="three-col">
+      <div class="card erp-top"><span class="card-tag">Principle 1</span><h3>Read-Only Always</h3><p>The SDK has no write permissions to the ERP system. It uses read-only API credentials or database roles. Any ERP change detected is reported, never originated.</p></div>
+      <div class="card gold-top"><span class="card-tag">Principle 2</span><h3>Minimal Data Extract</h3><p>Only invoice header, payment, and return records are extracted. No customer master data beyond GST and name (which are pseudonymized before transmission). No bank account, pricing, or inventory data.</p></div>
+      <div class="card blue-top"><span class="card-tag">Principle 3</span><h3>Fail Loudly, Fail Safely</h3><p>On any extraction error, the SDK logs the failure, alerts Ops, and stops — it never sends a partial or corrupted batch. Partial batches are worse than no batch for feature quality.</p></div>
+    </div>
+    <div class="warning"><span class="wt">Distributor Disclosure Requirement</span><p>Before deploying the SDK, distributors must disclose to their retail partners (via WhatsApp consent flow) that transaction data will be shared with AltScore for credit scoring purposes. SDK installation without consent completion is a DPDP Act violation and grounds for partnership termination.</p></div>
+  </div>
+
+  <!-- 02 SDK Architecture -->
+  <div class="section" id="s02">
+    <div class="section-header"><span class="section-num">02 —</span><h2>SDK Architecture</h2></div>
+    <p>The connector SDK is packaged as a Docker container (preferred) or a Python 3.11 virtualenv for distributors who cannot run Docker. It runs as a scheduled job (cron or Windows Task Scheduler) rather than a persistent daemon, minimising attack surface.</p>
+    <div class="two-col">
+      <div class="card erp-top">
+        <span class="card-tag">SDK Components</span>
+        <h3>Internal Modules</h3>
+        <ul>
+          <li><strong>Extractor</strong> — ERP-specific pull module (Tally / SAP / CSV)</li>
+          <li><strong>Normaliser</strong> — maps ERP fields to AltScore canonical schema</li>
+          <li><strong>Validator</strong> — schema validation + completeness scoring</li>
+          <li><strong>Deduplicator</strong> — invoice-level idempotency (no re-sends)</li>
+          <li><strong>Encryptor</strong> — AES-256-GCM payload encryption</li>
+          <li><strong>Signer</strong> — HMAC-SHA256 payload signature</li>
+          <li><strong>Transmitter</strong> — mTLS HTTPS POST to Ingestion API</li>
+          <li><strong>Logger</strong> — structured JSON logs, no PII in log lines</li>
+        </ul>
+      </div>
+      <div class="card blue-top">
+        <span class="card-tag">Deployment Options</span>
+        <h3>Supported Environments</h3>
+        <ul>
+          <li>Docker container (preferred): <code>altscore/erp-connector:v1</code></li>
+          <li>Python virtualenv on distributor server (Windows / Linux)</li>
+          <li>Scheduled via cron (Linux) or Windows Task Scheduler</li>
+          <li>Default schedule: 2 AM local time daily (configurable)</li>
+          <li>No inbound ports required — outbound HTTPS 443 only</li>
+          <li>Proxy support: HTTP_PROXY / HTTPS_PROXY env vars respected</li>
+          <li>Air-gapped option: CSV export + manual SFTP (Section 05)</li>
+        </ul>
+      </div>
+    </div>
+    <h3>SDK Configuration File (<code>altscore-connector.yaml</code>)</h3>
+    <div class="code-block">
+<span class="c"># Distributor-specific config — never commit to version control</span><br>
+<span class="k">distributor_id:</span><span class="n"> dist_c4f9ee2a</span><br>
+<span class="k">erp_type:</span><span class="n"> tally_prime  </span><span class="c"># tally_prime | sap_b1 | csv</span><br>
+<span class="k">erp:</span><br>
+&nbsp;&nbsp;<span class="k">host:</span><span class="n"> localhost</span><br>
+&nbsp;&nbsp;<span class="k">port:</span><span class="num"> 9000</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># Tally Prime HTTP server port</span><br>
+&nbsp;&nbsp;<span class="k">company_name:</span><span class="n"> "Sharma FMCG Dist"</span><br>
+<span class="k">altscore:</span><br>
+&nbsp;&nbsp;<span class="k">api_endpoint:</span><span class="n"> https://api.altscore.in/v1/ingest/batch</span><br>
+&nbsp;&nbsp;<span class="k">api_key_path:</span><span class="n"> /secrets/altscore_api_key  </span><span class="c"># never inline</span><br>
+&nbsp;&nbsp;<span class="k">cert_path:</span><span class="n"> /secrets/client.crt</span><br>
+&nbsp;&nbsp;<span class="k">key_path:</span><span class="n"> /secrets/client.key</span><br>
+<span class="k">sync:</span><br>
+&nbsp;&nbsp;<span class="k">mode:</span><span class="n"> delta  </span><span class="c"># delta | full_backfill</span><br>
+&nbsp;&nbsp;<span class="k">lookback_days:</span><span class="num"> 7</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># overlap window for missed records</span><br>
+&nbsp;&nbsp;<span class="k">max_records_per_batch:</span><span class="num"> 1000</span><br>
+<span class="k">schedule:</span><span class="n"> "0 2 * * *"</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># cron: daily at 2 AM local</span>
+    </div>
+  </div>
+
+  <!-- 03 Tally Prime -->
+  <div class="section" id="s03">
+    <div class="section-header"><span class="section-num">03 —</span><h2>Tally Prime Connector</h2></div>
+    <div class="connector-block">
+      <div class="conn-head">
+        <div class="conn-stripe"></div>
+        <div class="conn-title-block">
+          <div class="conn-title">Tally Prime (v2.0+)</div>
+          <div class="conn-subtitle">HTTP XML API · Local port 9000 · TDL schema · ~60% of distributor base</div>
+        </div>
+      </div>
+      <div class="conn-body">
+        <div class="conn-col">
+          <span class="conn-col-label">Extraction Method</span>
+          <ul>
+            <li>Tally Prime exposes a local HTTP server on port 9000 (must be enabled in Tally Gateway of Tally.ERP 9)</li>
+            <li>SDK sends TDL (Tally Definition Language) XML requests to <code>http://localhost:9000</code></li>
+            <li>Requests are wrapped in <code>&lt;ENVELOPE&gt;&lt;BODY&gt;&lt;EXPORTDATA&gt;</code> structure</li>
+            <li>Returns XML response; SDK parses to canonical JSON schema</li>
+            <li>No Tally credentials required if running on same machine as Tally</li>
+            <li>Read-only: uses LEDGER and VOUCHER report exports only</li>
+          </ul>
+        </div>
+        <div class="conn-col">
+          <span class="conn-col-label">Data Extracted</span>
+          <ul>
+            <li>Sales vouchers (Type: Sales) → invoice records</li>
+            <li>Receipt vouchers (Type: Receipt) → payment records</li>
+            <li>Credit notes (Type: Credit Note) → return records</li>
+            <li>Party ledger entries for credit term resolution</li>
+            <li>Filter: only vouchers where party is in Sundry Debtors group</li>
+            <li>Date range: configurable (default: 36-month backfill, then daily delta)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <h3>Tally TDL Request Template — Invoice Extract</h3>
+    <div class="code-block">
+<span class="c">&lt;!-- POST to http://localhost:9000 --&gt;</span><br>
+<span class="k">&lt;ENVELOPE&gt;</span><br>
+&nbsp;&nbsp;<span class="k">&lt;HEADER&gt;&lt;TALLYREQUEST&gt;</span>Export Data<span class="k">&lt;/TALLYREQUEST&gt;&lt;/HEADER&gt;</span><br>
+&nbsp;&nbsp;<span class="k">&lt;BODY&gt;&lt;EXPORTDATA&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">&lt;REQUESTDESC&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">&lt;REPORTNAME&gt;</span>Voucher Register<span class="k">&lt;/REPORTNAME&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">&lt;STATICVARIABLES&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">&lt;SVFROMDATE&gt;</span><span class="s">20260401</span><span class="k">&lt;/SVFROMDATE&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">&lt;SVTODATE&gt;</span><span class="s">20260519</span><span class="k">&lt;/SVTODATE&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">&lt;VOUCHERTYPENAME&gt;</span><span class="s">Sales</span><span class="k">&lt;/VOUCHERTYPENAME&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">&lt;/STATICVARIABLES&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">&lt;/REQUESTDESC&gt;</span><br>
+&nbsp;&nbsp;<span class="k">&lt;/EXPORTDATA&gt;&lt;/BODY&gt;</span><br>
+<span class="k">&lt;/ENVELOPE&gt;</span>
+    </div>
+    <h3>Tally Field Mapping to AltScore Schema</h3>
+    <table class="doc-table">
+      <thead><tr><th>Tally TDL Field</th><th>AltScore Bronze Field</th><th>Transformation</th></tr></thead>
+      <tbody>
+        <tr><td><code>VOUCHERNUMBER</code></td><td><code>invoice_id</code></td><td>Prefix with distributor_id: <code>{dist_id}::{VOUCHERNUMBER}</code></td></tr>
+        <tr><td><code>DATE</code> (YYYYMMDD)</td><td><code>invoice_date</code></td><td>Parse to ISO-8601 date</td></tr>
+        <tr><td><code>PARTYLEDGERNAME</code></td><td><code>retailer_name</code></td><td>Raw value; GST resolved via party master lookup</td></tr>
+        <tr><td><code>PARTYGSTIN</code></td><td><code>retailer_gst</code></td><td>Raw GSTIN; pseudonymized in Silver pipeline</td></tr>
+        <tr><td><code>AMOUNT</code></td><td><code>amount_inr</code></td><td>Tally stores as negative for sales; abs() applied</td></tr>
+        <tr><td><code>BILLREF.DUEDATE</code></td><td><code>due_date</code></td><td>Extract from BILLALLOCATIONS; ISO-8601 parse</td></tr>
+        <tr><td><code>VOUCHERTYPE = "Receipt"</code></td><td>bronze_payments record</td><td>Match to invoice via BILLREF.NAME = invoice VOUCHERNUMBER</td></tr>
+        <tr><td><code>AMOUNT</code> (Receipt)</td><td><code>amount_paid_inr</code></td><td>abs() of receipt amount</td></tr>
+        <tr><td><code>DATE</code> (Receipt)</td><td><code>paid_date</code></td><td>ISO-8601 parse</td></tr>
+      </tbody>
+    </table>
+    <div class="warning"><span class="wt">Tally GSTIN Gap</span><p>Older Tally Prime installations (pre-2022) may not store GSTIN in <code>PARTYGSTIN</code>. In this case, the SDK falls back to phone number extraction from the party master. If neither is available, the record is quarantined with error code <code>IDENTITY_UNRESOLVABLE</code>.</p></div>
+  </div>
+
+  <!-- 04 SAP B1 -->
+  <div class="section" id="s04">
+    <div class="section-header"><span class="section-num">04 —</span><h2>SAP Business One Connector</h2></div>
+    <div class="connector-block">
+      <div class="conn-head">
+        <div class="conn-stripe"></div>
+        <div class="conn-title-block">
+          <div class="conn-title">SAP Business One (v9.3+)</div>
+          <div class="conn-subtitle">Service Layer REST API · HTTPS · OData v4 · ~25% of distributor base</div>
+        </div>
+      </div>
+      <div class="conn-body">
+        <div class="conn-col">
+          <span class="conn-col-label">Extraction Method</span>
+          <ul>
+            <li>SAP B1 Service Layer REST API (OData v4)</li>
+            <li>Base URL: <code>https://{sap_host}:50000/b1s/v1/</code></li>
+            <li>Session-based auth: POST to <code>/Login</code> for session cookie; 30-min TTL</li>
+            <li>Read-only service user (custom role: AltScore_ReadOnly)</li>
+            <li>Pagination via <code>$top</code> / <code>$skip</code> with <code>$count</code></li>
+            <li>Date filter via OData <code>$filter=DocDate ge '2026-04-01'</code></li>
+          </ul>
+        </div>
+        <div class="conn-col">
+          <span class="conn-col-label">Endpoints Used</span>
+          <ul>
+            <li><code>GET /Invoices</code> — A/R invoices (Type: Customer)</li>
+            <li><code>GET /IncomingPayments</code> — customer receipts</li>
+            <li><code>GET /CreditNotes</code> — return / credit note documents</li>
+            <li><code>GET /BusinessPartners</code> — GSTIN resolution from BP master</li>
+            <li>All calls include <code>$select</code> to fetch only required fields</li>
+            <li>No POST/PATCH/DELETE permissions on read-only role</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <h3>SAP B1 Field Mapping</h3>
+    <table class="doc-table">
+      <thead><tr><th>SAP B1 OData Field</th><th>AltScore Bronze Field</th><th>Transformation</th></tr></thead>
+      <tbody>
+        <tr><td><code>DocNum</code></td><td><code>invoice_id</code></td><td>Prefix: <code>{dist_id}::SAP::{DocNum}</code></td></tr>
+        <tr><td><code>DocDate</code></td><td><code>invoice_date</code></td><td>ISO-8601 (SAP returns YYYY-MM-DDThh:mm:ss)</td></tr>
+        <tr><td><code>CardCode</code></td><td>BP lookup key</td><td>Resolve to GSTIN via BusinessPartners endpoint</td></tr>
+        <tr><td><code>CardName</code></td><td><code>retailer_name</code></td><td>Raw value</td></tr>
+        <tr><td><code>FederalTaxID</code> (from BP)</td><td><code>retailer_gst</code></td><td>Raw GSTIN from BusinessPartners master</td></tr>
+        <tr><td><code>DocTotal</code></td><td><code>amount_inr</code></td><td>Direct; SAP stores in company currency (INR assumed)</td></tr>
+        <tr><td><code>PaymentTermsGroupCode</code></td><td>Due date derivation</td><td>Lookup payment terms → due_date = invoice_date + net_days</td></tr>
+        <tr><td><code>IncomingPayments.DocDate</code></td><td><code>paid_date</code></td><td>ISO-8601</td></tr>
+        <tr><td><code>IncomingPayments.CashSum + CheckSum + TransferSum</code></td><td><code>amount_paid_inr</code></td><td>Sum of all payment components</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 05 CSV -->
+  <div class="section" id="s05">
+    <div class="section-header"><span class="section-num">05 —</span><h2>CSV / Manual Upload</h2></div>
+    <p>For distributors who cannot deploy the SDK (air-gapped systems, legacy ERPs, or low-tech operators), a CSV template upload pathway is available. The distributor exports data manually from their ERP and uploads via SFTP or the distributor dashboard. This path has lower data freshness (typically weekly vs. daily) and counts toward the data completeness score.</p>
+    <h3>Required CSV Templates</h3>
+    <table class="doc-table">
+      <thead><tr><th>File</th><th>Required Columns</th><th>Format Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>invoices.csv</code></td><td>invoice_id, retailer_gst, invoice_date, due_date, amount_inr</td><td>Dates: YYYY-MM-DD. Amount: numeric, no currency symbol.</td></tr>
+        <tr><td><code>payments.csv</code></td><td>payment_id, invoice_id, paid_date, amount_paid_inr</td><td>invoice_id must match a row in invoices.csv.</td></tr>
+        <tr><td><code>returns.csv</code> (optional)</td><td>return_id, original_invoice_id, return_date, return_amount_inr</td><td>Optional but improves completeness score.</td></tr>
+      </tbody>
+    </table>
+    <h3>CSV Upload Paths</h3>
+    <div class="two-col">
+      <div class="card erp-top"><span class="card-tag">SFTP Upload</span><h3>Automated Batch</h3><p>Distributor drops CSV files into SFTP landing zone (<code>sftp://ingest.altscore.in/dist_{id}/</code>). AltScore SFTP server picks up files, validates, and processes within 1 hour. Files are deleted from SFTP after successful ingestion.</p></div>
+      <div class="card gold-top"><span class="card-tag">Dashboard Upload</span><h3>Manual Upload</h3><p>Distributor logs into distributor dashboard and uploads CSV files directly. Immediate schema validation feedback. Suitable for one-off backfills or troubleshooting.</p></div>
+    </div>
+    <div class="warning"><span class="wt">CSV Data Quality Note</span><p>CSV uploads have a data_completeness_score ceiling of 75 (vs. 100 for ERP connectors) because CSV exports frequently miss intra-day payments and return records. Retailers scored from CSV-only data will often receive a <code>low_confidence</code> flag at lower credit limits.</p></div>
+  </div>
+
+  <!-- 06 Schema Mapping -->
+  <div class="section" id="s06">
+    <div class="section-header"><span class="section-num">06 —</span><h2>Canonical Schema Mapping</h2></div>
+    <p>All three ERP sources (Tally, SAP B1, CSV) map to the AltScore canonical Bronze schema before transmission. The normaliser module handles all source-specific transformations; downstream services only ever see the canonical format.</p>
+    <div class="code-block">
+<span class="c">// Canonical Invoice Payload (sent to POST /v1/ingest/batch)</span><br>
+<span class="k">{</span><br>
+&nbsp;&nbsp;<span class="s">"invoice_id"</span><span class="n">: </span><span class="s">"dist_c4f9::INV-2026-00142"</span><span class="n">,    </span><span class="c">// unique within AltScore</span><br>
+&nbsp;&nbsp;<span class="s">"retailer_gst"</span><span class="n">: </span><span class="s">"29AABCT1332L1Z2"</span><span class="n">,          </span><span class="c">// 15-char GSTIN</span><br>
+&nbsp;&nbsp;<span class="s">"retailer_name"</span><span class="n">: </span><span class="s">"Sharma General Store"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"retailer_phone"</span><span class="n">: </span><span class="s">"9876543210"</span><span class="n">,             </span><span class="c">// 10-digit, no +91</span><br>
+&nbsp;&nbsp;<span class="s">"invoice_date"</span><span class="n">: </span><span class="s">"2026-05-03"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"due_date"</span><span class="n">: </span><span class="s">"2026-05-17"</span><span class="n">,                  </span><span class="c">// null if payment terms unknown</span><br>
+&nbsp;&nbsp;<span class="s">"amount_inr"</span><span class="n">: </span><span class="num">42000.00</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"is_return"</span><span class="n">: </span><span class="k">false</span><span class="n">,                        </span><span class="c">// true for credit notes</span><br>
+&nbsp;&nbsp;<span class="s">"original_invoice_id"</span><span class="n">: </span><span class="k">null</span><span class="n">,               </span><span class="c">// set for returns</span><br>
+&nbsp;&nbsp;<span class="s">"erp_type"</span><span class="n">: </span><span class="s">"tally_prime"</span><br>
+<span class="k">}</span><br><br>
+<span class="c">// Canonical Payment Payload</span><br>
+<span class="k">{</span><br>
+&nbsp;&nbsp;<span class="s">"payment_id"</span><span class="n">: </span><span class="s">"dist_c4f9::REC-2026-00087"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"invoice_id"</span><span class="n">: </span><span class="s">"dist_c4f9::INV-2026-00142"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"retailer_gst"</span><span class="n">: </span><span class="s">"29AABCT1332L1Z2"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"paid_date"</span><span class="n">: </span><span class="s">"2026-05-15"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"amount_paid_inr"</span><span class="n">: </span><span class="num">42000.00</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"payment_method"</span><span class="n">: </span><span class="s">"NEFT"</span>  <span class="c">// NEFT | RTGS | IMPS | cheque | cash | null</span><br>
+<span class="k">}</span>
+    </div>
+    <h3>Validation Rules Applied at Normalisation</h3>
+    <table class="doc-table">
+      <thead><tr><th>Field</th><th>Validation Rule</th><th>On Failure</th></tr></thead>
+      <tbody>
+        <tr><td><code>retailer_gst</code></td><td>Regex: <code>^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$</code></td><td>Quarantine with <code>INVALID_GSTIN</code></td></tr>
+        <tr><td><code>invoice_date</code></td><td>Valid ISO-8601 date; not in future; not before 2018-01-01</td><td>Quarantine with <code>INVALID_DATE</code></td></tr>
+        <tr><td><code>due_date</code></td><td>≥ invoice_date if present; not more than 180 days after invoice_date</td><td>Set to null; flag for review</td></tr>
+        <tr><td><code>amount_inr</code></td><td>Positive numeric; &lt; ₹50,00,000 (₹5 crore per invoice)</td><td>Quarantine with <code>AMOUNT_OUTLIER</code></td></tr>
+        <tr><td><code>paid_date</code></td><td>≥ invoice_date if present; not in future</td><td>Quarantine payment with <code>INVALID_PAYMENT_DATE</code></td></tr>
+        <tr><td><code>invoice_id</code></td><td>Unique within distributor_id + invoice_id composite</td><td>Deduplicated silently (idempotent)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 07 Delta Sync -->
+  <div class="section" id="s07">
+    <div class="section-header"><span class="section-num">07 —</span><h2>Delta Sync Protocol</h2></div>
+    <p>After the initial full backfill (24–36 months of history), the connector switches to daily incremental (delta) sync. The delta strategy extracts records modified or created since the last successful sync, with a 7-day overlap window to catch late-recorded payments.</p>
+
+    <div class="flow-step"><div class="flow-num">1</div><div class="flow-content"><h4>Load Last Sync Watermark</h4><p>SDK reads <code>last_sync_at</code> from local state file (<code>.altscore_state.json</code>). On first run (or state file missing), defaults to full backfill mode from <code>today - 36 months</code>.</p></div></div>
+    <div class="flow-connector"></div>
+    <div class="flow-step"><div class="flow-num">2</div><div class="flow-content"><h4>Extract with Overlap Window</h4><p>Query ERP for records with <code>date &gt;= last_sync_at - 7 days</code>. The 7-day overlap catches payment receipts recorded late in Tally or SAP (common for cheque payments). Duplicates are handled by invoice-level deduplication.</p></div></div>
+    <div class="flow-connector"></div>
+    <div class="flow-step"><div class="flow-num">3</div><div class="flow-content"><h4>Normalise &amp; Validate</h4><p>Run all normalisation and validation rules (Section 06). Invalid records are quarantined to local quarantine log. Valid records are serialised to canonical JSON.</p></div></div>
+    <div class="flow-connector"></div>
+    <div class="flow-step"><div class="flow-num">4</div><div class="flow-content"><h4>Chunk into Batches</h4><p>Records are split into batches of max 1,000 records each. Each batch gets a unique <code>batch_id</code> (UUID). Batches are numbered sequentially for ordering: <code>batch_seq: 1/3, 2/3, 3/3</code>.</p></div></div>
+    <div class="flow-connector"></div>
+    <div class="flow-step"><div class="flow-num">5</div><div class="flow-content"><h4>Sign &amp; Transmit</h4><p>Each batch payload is HMAC-SHA256 signed using the distributor's signing secret. Transmitted via mTLS HTTPS POST to <code>/v1/ingest/batch</code>. Retry on failure (Section 08).</p></div></div>
+    <div class="flow-connector"></div>
+    <div class="flow-step"><div class="flow-num">6</div><div class="flow-content"><h4>Update Watermark</h4><p>On receipt of 202 Accepted for all batches, SDK updates <code>last_sync_at</code> to <code>sync_to</code> timestamp. State is persisted atomically (write temp → rename) to prevent corruption on crash.</p></div></div>
+
+    <h3>State File Format</h3>
+    <div class="code-block">
+<span class="c">// .altscore_state.json — stored on connector host, not transmitted</span><br>
+<span class="k">{</span><br>
+&nbsp;&nbsp;<span class="s">"distributor_id"</span><span class="n">: </span><span class="s">"dist_c4f9"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"last_sync_at"</span><span class="n">: </span><span class="s">"2026-05-18T02:00:00Z"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"last_batch_id"</span><span class="n">: </span><span class="s">"bat_8f3c"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"last_sync_status"</span><span class="n">: </span><span class="s">"success"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"records_sent_total"</span><span class="n">: </span><span class="num">18742</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"backfill_complete"</span><span class="n">: </span><span class="k">true</span><br>
+<span class="k">}</span>
+    </div>
+  </div>
+
+  <!-- 08 Error Handling -->
+  <div class="section" id="s08">
+    <div class="section-header"><span class="section-num">08 —</span><h2>Error Handling &amp; Retry Logic</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>Error Scenario</th><th>SDK Behaviour</th><th>Retry Policy</th><th>Escalation</th></tr></thead>
+      <tbody>
+        <tr><td>ERP unreachable (Tally not running / SAP down)</td><td>Log error; do not update watermark; exit gracefully</td><td>Next scheduled run (24h)</td><td>Alert after 3 consecutive missed syncs → Ops email</td></tr>
+        <tr><td>ERP GSTIN missing on record</td><td>Attempt phone fallback; if both missing → quarantine record; continue batch</td><td>No retry — quarantine log for Ops review</td><td>Quarantine count &gt;10% of batch → alert distributor</td></tr>
+        <tr><td>Ingestion API 429 (rate limit)</td><td>Back off per <code>Retry-After</code> header; hold and retry same batch</td><td>Up to 3 retries with Retry-After delay</td><td>If all retries fail → defer to next scheduled run</td></tr>
+        <tr><td>Ingestion API 5xx</td><td>Exponential backoff: 30s → 5min → 30min</td><td>3 retries; watermark not updated</td><td>Alert Ops after 3 failures; batch queued for manual retry</td></tr>
+        <tr><td>mTLS certificate error</td><td>Abort entire run; do not retry automatically</td><td>Manual — cert may be expired</td><td>Immediate Ops alert: certificate expiry check required</td></tr>
+        <tr><td>HMAC signature mismatch (server-side)</td><td>Server returns 401; SDK logs error</td><td>No retry — key rotation may be needed</td><td>Immediate Ops alert: API key rotation procedure</td></tr>
+        <tr><td>Partial batch failure (some records quarantined)</td><td>Batch submitted with accepted records; quarantine log written locally</td><td>Quarantined records not re-attempted automatically</td><td>Daily quarantine report to Ops; distributor notified if &gt;5%</td></tr>
+        <tr><td>Network timeout (&gt;120s)</td><td>Treat as 5xx; exponential backoff applies</td><td>3 retries</td><td>Alert after all retries exhausted</td></tr>
+      </tbody>
+    </table>
+    <h3>Quarantine Log Format</h3>
+    <div class="code-block">
+<span class="c">// quarantine_{batch_id}.jsonl — one JSON object per line</span><br>
+<span class="k">{</span><span class="s">"record_type"</span><span class="n">:</span><span class="s">"invoice"</span><span class="n">,</span><span class="s">"original_id"</span><span class="n">:</span><span class="s">"INV-2026-00099"</span><span class="n">,</span><span class="s">"error_code"</span><span class="n">:</span><span class="s">"INVALID_GSTIN"</span><span class="n">,</span><span class="s">"field"</span><span class="n">:</span><span class="s">"retailer_gst"</span><span class="n">,</span><span class="s">"value_hash"</span><span class="n">:</span><span class="s">"sha256_of_bad_value"</span><span class="n">,</span><span class="s">"quarantined_at"</span><span class="n">:</span><span class="s">"2026-05-19T02:04:11Z"</span><span class="k">}</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Note: quarantine logs never contain raw PII — only hashed values and error codes.</p>
+  </div>
+
+  <!-- 09 Security -->
+  <div class="section" id="s09">
+    <div class="section-header"><span class="section-num">09 —</span><h2>Connector Security</h2></div>
+    <div class="two-col">
+      <div class="card erp-top">
+        <span class="card-tag">Transport Security</span>
+        <h3>mTLS + HMAC</h3>
+        <ul>
+          <li>All transmission over TLS 1.3 (minimum TLS 1.2)</li>
+          <li>Per-distributor client certificate (EC P-256, 90-day rotation)</li>
+          <li>Certificate issued by AltScore internal CA (cert-manager on K8s)</li>
+          <li>Connector verifies AltScore server cert (cert pinning via <code>altscore-ca.crt</code>)</li>
+          <li>HMAC-SHA256 payload signature on every batch (prevents tampering in transit)</li>
+          <li>Signature key: 32-byte secret, rotated annually by Ops</li>
+        </ul>
+      </div>
+      <div class="card blue-top">
+        <span class="card-tag">Local Security</span>
+        <h3>Secrets &amp; Storage</h3>
+        <ul>
+          <li>All secrets (cert, key, API key, HMAC secret) stored in OS keystore or HashiCorp Vault — never in config files</li>
+          <li>State file (<code>.altscore_state.json</code>) contains no secrets or PII</li>
+          <li>Quarantine logs use hashed values only</li>
+          <li>Extracted batch data held in memory only; never written to disk mid-process</li>
+          <li>Container runs as non-root user (UID 1000)</li>
+          <li>Read-only filesystem except for state file path</li>
+        </ul>
+      </div>
+    </div>
+    <h3>ERP Credentials Required</h3>
+    <table class="doc-table">
+      <thead><tr><th>ERP</th><th>Required Credential</th><th>Minimum Permission</th><th>Recommended Setup</th></tr></thead>
+      <tbody>
+        <tr><td>Tally Prime</td><td>None (local HTTP API, no auth by default)</td><td>Tally Gateway must be enabled; no additional auth</td><td>Restrict Tally HTTP API to localhost only (firewall rule)</td></tr>
+        <tr><td>SAP Business One</td><td>Service Layer username + password</td><td>Read-only role: <code>AltScore_ReadOnly</code> (custom B1 role)</td><td>Dedicated SAP service user; disable login from SAP UI</td></tr>
+        <tr><td>CSV Upload</td><td>SFTP key pair or dashboard credentials</td><td>Write to landing zone only; no other SFTP access</td><td>Dedicated SFTP key; chroot jail to landing directory</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 10 Onboarding -->
+  <div class="section" id="s10">
+    <div class="section-header"><span class="section-num">10 —</span><h2>Distributor Onboarding Checklist</h2></div>
+    <p>End-to-end onboarding from contract signing to first successful sync takes approximately 3–5 business days for a Tally Prime distributor and 5–7 days for SAP B1 (due to SAP service user setup).</p>
+    <table class="doc-table">
+      <thead><tr><th>#</th><th>Step</th><th>Owner</th><th>Tooling</th><th>SLA</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Data Partnership Agreement signed</td><td>AltScore BD + Distributor</td><td>DocuSign</td><td>Day 0</td></tr>
+        <tr><td>2</td><td>Distributor registered in Admin Service; distributor_id assigned</td><td>AltScore Ops</td><td>Admin API <code>POST /v1/admin/distributors</code></td><td>Day 1</td></tr>
+        <tr><td>3</td><td>mTLS client certificate issued; API key generated; HMAC secret provisioned</td><td>AltScore Ops (automated)</td><td>cert-manager + Admin Service</td><td>Day 1</td></tr>
+        <tr><td>4</td><td>Secrets securely shared with distributor IT (via encrypted email or vault)</td><td>AltScore Ops + Distributor IT</td><td>PGP-encrypted email or AltScore secure share portal</td><td>Day 1–2</td></tr>
+        <tr><td>5</td><td>SDK installed and configured on distributor server</td><td>Distributor IT (AltScore support)</td><td>Docker / Python package; altscore-connector.yaml</td><td>Day 2–3</td></tr>
+        <tr><td>6</td><td>Connectivity test: <code>altscore-connector test</code> command verifies mTLS + HMAC + API reachability</td><td>Distributor IT + AltScore Ops</td><td>SDK built-in test mode</td><td>Day 3</td></tr>
+        <tr><td>7</td><td>Full historical backfill run (24–36 months)</td><td>SDK (automated once config complete)</td><td>SDK with <code>mode: full_backfill</code></td><td>Day 3–4 (may take several hours)</td></tr>
+        <tr><td>8</td><td>Data quality review: completeness score ≥70% confirmed in Admin dashboard</td><td>AltScore Data Engineering</td><td>Admin dashboard</td><td>Day 4</td></tr>
+        <tr><td>9</td><td>Retailer consent campaign initiated via WhatsApp</td><td>AltScore + Distributor</td><td>WhatsApp Business API via Admin Service</td><td>Day 4–5</td></tr>
+        <tr><td>10</td><td>Daily delta sync scheduled; first scores computed</td><td>SDK (cron)</td><td>Automated post-consent</td><td>Day 5+</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer class="doc-footer">
+  <div><div class="ft-brand">Alt<span>Score</span></div><div style="margin-top:4px">ERP Integration Specification · ERP-ALTSCORE-001 · v1.0 · May 2026</div></div>
+  <div style="text-align:right">CONFIDENTIAL — Engineering &amp; Distributor Partners<br>AltScore Technologies Private Limited<br>3 ERP sources · Read-only · mTLS + HMAC</div>
+</footer>
+
+<script>
+  const sections=document.querySelectorAll('.section');
+  const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible');}),{threshold:0.07});
+  sections.forEach(s=>obs.observe(s));
+  const dots=document.querySelectorAll('.nav-dot');
+  dots.forEach(d=>d.addEventListener('click',()=>{const t=document.getElementById(d.dataset.target);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}));
+  const navObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){dots.forEach(d=>d.classList.remove('active'));const i=Array.from(sections).indexOf(x.target);if(i>=0&&dots[i])dots[i].classList.add('active');}}),{threshold:0.4});
+  sections.forEach(s=>navObs.observe(s));
+</script>
+</body>
+</html>

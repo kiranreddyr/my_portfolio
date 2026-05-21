@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Data Architecture & Schema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0f0e0c;--paper:#f5f0e8;--cream:#ede7d9;--accent:#c94b1f;--accent2:#2b5e3f;--accent3:#1a3a5c;--muted:#7a7065;--rule:#ccc4b4;--tag-bg:#e8e0cf;--gold:#c4890d;--da-color:#5c2d0e;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.75;}
+  .cover{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+  .cover-left{background:var(--ink);padding:80px 60px;display:flex;flex-direction:column;justify-content:space-between;position:relative;}
+  .cover-left::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px);pointer-events:none;}
+  .cover-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--da-color);text-transform:uppercase;}
+  .cover-title{font-family:'Syne',sans-serif;font-size:clamp(38px,5vw,68px);font-weight:800;line-height:.95;color:var(--paper);letter-spacing:-.02em;}
+  .cover-title span{color:var(--da-color);}
+  .cover-sub{font-family:'DM Mono',monospace;font-size:13px;color:rgba(245,240,232,.5);line-height:1.8;border-top:1px solid rgba(255,255,255,.1);padding-top:24px;}
+  .cover-right{background:var(--cream);padding:80px 60px;display:flex;flex-direction:column;justify-content:center;gap:28px;border-left:4px solid var(--da-color);}
+  .cover-stat{border-bottom:1px solid var(--rule);padding-bottom:22px;}
+  .cover-stat:last-child{border-bottom:none;padding-bottom:0;}
+  .stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--da-color);line-height:1;display:block;}
+  .stat-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-top:4px;display:block;}
+  .stat-desc{font-size:14px;color:var(--ink);margin-top:6px;font-style:italic;}
+  .doc{max-width:1100px;margin:0 auto;padding:80px 40px;}
+  .section{margin-bottom:80px;opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s;}
+  .section.visible{opacity:1;transform:none;}
+  .section-header{display:flex;align-items:baseline;gap:16px;margin-bottom:40px;border-bottom:2px solid var(--ink);padding-bottom:16px;}
+  .section-num{font-family:'DM Mono',monospace;font-size:12px;color:var(--da-color);letter-spacing:.1em;flex-shrink:0;}
+  h2{font-family:'Syne',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.02em;}
+  h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;margin-bottom:12px;margin-top:32px;}
+  h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:8px;}
+  p{margin-bottom:16px;color:#2a2620;}
+  .callout{background:var(--ink);color:var(--paper);padding:32px 40px;margin:32px 0;border-left:6px solid var(--da-color);}
+  .callout p{font-size:17px;font-style:italic;line-height:1.6;color:var(--paper);margin:0;}
+  .callout .attr{font-family:'DM Mono',monospace;font-size:11px;color:var(--da-color);letter-spacing:.15em;margin-top:12px;display:block;}
+  .doc-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:13px;}
+  .doc-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;text-align:left;padding:10px 14px;background:var(--ink);color:var(--paper);}
+  .doc-table td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5;}
+  .doc-table tr:nth-child(even) td{background:var(--cream);}
+  .code-block{background:#1e1c18;color:#e8d8b0;padding:20px 24px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;overflow-x:auto;margin:12px 0;}
+  .code-block .k{color:#7ec8e3;} .code-block .s{color:#98c379;} .code-block .c{color:#5c6370;font-style:italic;} .code-block .t{color:#d19a66;}
+
+  /* medallion layers */
+  .medallion{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin:32px 0;border:1px solid var(--rule);}
+  .medal-col{border-right:1px solid var(--rule);}
+  .medal-col:last-child{border-right:none;}
+  .medal-head{padding:20px 24px;text-align:center;}
+  .medal-head.bronze{background:#cd7f3220;border-top:6px solid #cd7f32;}
+  .medal-head.silver{background:#c0c0c020;border-top:6px solid #888;}
+  .medal-head.gold{background:#ffd70020;border-top:6px solid var(--gold);}
+  .medal-label{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;}
+  .medal-label.bronze{color:#8b5513;}
+  .medal-label.silver{color:#555;}
+  .medal-label.gold{color:var(--gold);}
+  .medal-sub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+  .medal-body{padding:20px 24px;background:var(--cream);font-size:13px;color:#3a352d;line-height:1.6;}
+  .medal-body ul{list-style:none;padding:0;}
+  .medal-body ul li{padding:3px 0 3px 14px;position:relative;}
+  .medal-body ul li::before{content:'→';position:absolute;left:0;color:var(--muted);font-size:10px;top:6px;}
+
+  /* schema block */
+  .schema-block{border:1px solid var(--rule);margin-bottom:32px;}
+  .schema-head{padding:16px 24px;background:var(--ink);display:flex;justify-content:space-between;align-items:center;}
+  .schema-name{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--paper);}
+  .schema-db{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:rgba(245,240,232,.4);}
+  .schema-body{overflow-x:auto;}
+
+  /* flow */
+  .data-flow{background:var(--ink);padding:32px;margin:32px 0;display:flex;gap:0;overflow-x:auto;}
+  .df-step{flex:1;min-width:140px;padding:20px 16px;text-align:center;border-right:1px solid rgba(255,255,255,.08);position:relative;}
+  .df-step:last-child{border-right:none;}
+  .df-step-num{font-family:'DM Mono',monospace;font-size:10px;color:rgba(245,240,232,.35);letter-spacing:.1em;margin-bottom:8px;display:block;}
+  .df-step-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--paper);margin-bottom:6px;}
+  .df-step-detail{font-family:'DM Mono',monospace;font-size:10px;color:rgba(245,240,232,.45);line-height:1.5;}
+  .df-arrow{display:flex;align-items:center;padding:0 4px;color:rgba(245,240,232,.25);font-size:18px;flex-shrink:0;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:32px 0;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin:32px 0;}
+  .card{background:var(--cream);border:1px solid var(--rule);padding:24px;}
+  .card.bronze-top{border-top:4px solid #cd7f32;}
+  .card.silver-top{border-top:4px solid #888;}
+  .card.gold-top{border-top:4px solid var(--gold);}
+  .card.da-top{border-top:4px solid var(--da-color);}
+  .card.green-top{border-top:4px solid var(--accent2);}
+  .card-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;}
+  .card h3{font-size:15px;margin-bottom:8px;margin-top:0;}
+  .card p{font-size:13px;color:#4a4540;margin:0;line-height:1.6;}
+  .card ul{list-style:none;padding:0;margin:8px 0 0 0;}
+  .card ul li{font-size:12px;padding:3px 0 3px 14px;position:relative;color:#3a352d;}
+  .card ul li::before{content:'·';position:absolute;left:0;color:var(--da-color);font-weight:bold;}
+  code{font-family:'DM Mono',monospace;font-size:12px;background:var(--tag-bg);padding:2px 6px;color:var(--da-color);}
+  .divider{border:none;border-top:1px solid var(--rule);margin:64px 0;}
+  .sidenav{position:fixed;left:24px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100;}
+  .nav-dot{width:8px;height:8px;background:var(--rule);cursor:pointer;transition:all .3s;position:relative;}
+  .nav-dot:hover,.nav-dot.active{background:var(--da-color);transform:scale(1.5);}
+  .nav-dot::after{content:attr(data-label);position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);white-space:nowrap;opacity:0;transition:opacity .2s;background:var(--paper);padding:2px 8px;border:1px solid var(--rule);}
+  .nav-dot:hover::after{opacity:1;}
+  .doc-footer{background:var(--ink);color:rgba(245,240,232,.5);padding:40px;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;}
+  .ft-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--paper);}
+  .ft-brand span{color:var(--da-color);}
+  @media(max-width:768px){.cover{grid-template-columns:1fr;}.doc{padding:40px 20px;}.two-col,.three-col,.medallion{grid-template-columns:1fr;}.sidenav{display:none;}.data-flow{flex-direction:column;}}
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+<nav class="sidenav">
+  <div class="nav-dot" data-label="Overview" data-target="s01"></div>
+  <div class="nav-dot" data-label="Medallion Lake" data-target="s02"></div>
+  <div class="nav-dot" data-label="Bronze Schema" data-target="s03"></div>
+  <div class="nav-dot" data-label="Silver Schema" data-target="s04"></div>
+  <div class="nav-dot" data-label="Gold Schema" data-target="s05"></div>
+  <div class="nav-dot" data-label="PostgreSQL" data-target="s06"></div>
+  <div class="nav-dot" data-label="Redis" data-target="s07"></div>
+  <div class="nav-dot" data-label="dbt Models" data-target="s08"></div>
+  <div class="nav-dot" data-label="Lineage" data-target="s09"></div>
+  <div class="nav-dot" data-label="Retention" data-target="s10"></div>
+</nav>
+
+<div class="cover">
+  <div class="cover-left">
+    <div>
+      <div class="cover-label">AltScore Platform · Data</div>
+      <div style="height:40px"></div>
+      <div class="cover-title">Data Architecture<br><span>&amp; Schema</span></div>
+    </div>
+    <div class="cover-sub">DOC-ID: DAS-ALTSCORE-001<br>Version: 1.0 · May 2026<br>Classification: INTERNAL — Data Engineering &amp; ML<br>Owner: Data Engineering, AltScore Technologies</div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat"><span class="stat-num">3-Tier</span><span class="stat-label">Medallion Architecture</span><span class="stat-desc">Bronze (raw) → Silver (pseudonymized features) → Gold (scores)</span></div>
+    <div class="cover-stat"><span class="stat-num">40+</span><span class="stat-label">Engineered Features</span><span class="stat-desc">Computed in Silver layer via dbt + Spark; fully deterministic</span></div>
+    <div class="cover-stat"><span class="stat-num">7 years</span><span class="stat-label">Audit &amp; Consent Retention</span><span class="stat-desc">DPDP Act 2023 compliance; S3 WORM Object Lock for immutable records</span></div>
+    <div class="cover-stat"><span class="stat-num">RLS</span><span class="stat-label">PostgreSQL Row-Level Security</span><span class="stat-desc">Per-lender data isolation enforced at the database layer</span></div>
+  </div>
+</div>
+
+<div class="doc">
+
+  <!-- 01 -->
+  <div class="section" id="s01">
+    <div class="section-header"><span class="section-num">01 —</span><h2>Data Architecture Overview</h2></div>
+    <div class="callout"><p>The AltScore data architecture follows a medallion (Bronze → Silver → Gold) pattern over a cloud object store, with PostgreSQL as the operational store for scores, consent, and audit records, and Redis as a caching layer. No PII crosses the Bronze → Silver boundary in raw form.</p><span class="attr">DAS-ALTSCORE-001 · Architecture Charter</span></div>
+    <div class="data-flow">
+      <div class="df-step"><span class="df-step-num">ERP SOURCE</span><div class="df-step-name">Tally / SAP / CSV</div><div class="df-step-detail">Raw invoices<br>payments<br>returns<br>GST numbers</div></div>
+      <div class="df-arrow">→</div>
+      <div class="df-step"><span class="df-step-num">BRONZE LAYER</span><div class="df-step-name">Raw Immutable</div><div class="df-step-detail">WORM S3<br>Per-distributor CMK<br>Append-only<br>Schema validated</div></div>
+      <div class="df-arrow">→</div>
+      <div class="df-step"><span class="df-step-num">PSEUDONYMIZE</span><div class="df-step-name">GST → UUID</div><div class="df-step-detail">Identity resolver<br>ECDSA signed<br>Isolated store<br>One-way mapping</div></div>
+      <div class="df-arrow">→</div>
+      <div class="df-step"><span class="df-step-num">SILVER LAYER</span><div class="df-step-name">Clean Features</div><div class="df-step-detail">No PII<br>dbt normalized<br>Outlier-capped<br>Retailer UUID only</div></div>
+      <div class="df-arrow">→</div>
+      <div class="df-step"><span class="df-step-num">GOLD LAYER</span><div class="df-step-name">Scores + Features</div><div class="df-step-detail">ML-ready features<br>XGBoost scores<br>SHAP codes<br>PD estimates</div></div>
+      <div class="df-arrow">→</div>
+      <div class="df-step"><span class="df-step-num">OPERATIONAL</span><div class="df-step-name">PostgreSQL + Redis</div><div class="df-step-detail">Score store RLS<br>Consent records<br>Audit log WORM<br>Redis cache TTL 4h</div></div>
+    </div>
+  </div>
+
+  <!-- 02 Medallion -->
+  <div class="section" id="s02">
+    <div class="section-header"><span class="section-num">02 —</span><h2>Medallion Lake Design</h2></div>
+    <div class="medallion">
+      <div class="medal-col">
+        <div class="medal-head bronze"><div class="medal-label bronze">Bronze</div><div class="medal-sub">Raw · Immutable · PII Present</div></div>
+        <div class="medal-body"><ul>
+          <li>Append-only; never modified post-write</li>
+          <li>S3 Object Lock WORM (compliance mode)</li>
+          <li>Encrypted with per-distributor Customer Managed Key (CMK)</li>
+          <li>Partitioned: <code>s3://lake/bronze/dist_{id}/year/month/</code></li>
+          <li>Retains raw GST, phone, invoice data as received</li>
+          <li>Schema validation at write time; quarantine on fail</li>
+          <li>Retention: 2 years active + 5 years archive (Glacier)</li>
+          <li>Access: Data Engineering only (IAM scoped)</li>
+        </ul></div>
+      </div>
+      <div class="medal-col">
+        <div class="medal-head silver"><div class="medal-label silver">Silver</div><div class="medal-sub">Pseudonymized · Normalized · No PII</div></div>
+        <div class="medal-body"><ul>
+          <li>GST and phone replaced with stable retailer_uuid</li>
+          <li>Schema normalized across Tally / SAP / CSV sources</li>
+          <li>Outlier capping applied (e.g., delay days capped at 365)</li>
+          <li>Partitioned: <code>s3://lake/silver/retailer_{uuid}/year/month/</code></li>
+          <li>dbt source layer models run here</li>
+          <li>Encrypted with shared Silver KMS key (no per-distributor CMK)</li>
+          <li>Retention: consent duration + 6 months, then delete</li>
+          <li>Access: ML Engineering + Data Engineering (IAM scoped)</li>
+        </ul></div>
+      </div>
+      <div class="medal-col">
+        <div class="medal-head gold"><div class="medal-label gold">Gold</div><div class="medal-sub">Features · Scores · ML-Ready</div></div>
+        <div class="medal-body"><ul>
+          <li>40+ computed features per retailer per month</li>
+          <li>AltScore value, risk_band, PD, recommended_limit</li>
+          <li>SHAP reason codes (categorical, ranked)</li>
+          <li>Partitioned: <code>s3://lake/gold/scores/year/month/</code></li>
+          <li>dbt mart layer models run here</li>
+          <li>Mirrored to PostgreSQL <code>scores</code> table for API serving</li>
+          <li>Retention: consent duration + 12 months</li>
+          <li>Access: Scoring Engine + Score API (read only via RLS)</li>
+        </ul></div>
+      </div>
+    </div>
+    <h3>S3 Bucket Structure</h3>
+    <div class="code-block">
+<span class="c"># Bucket: altscore-datalake-prod (ap-south-1, versioning ON)</span><br>
+<span class="s">bronze/</span><br>
+&nbsp;&nbsp;<span class="k">dist_{distributor_id}/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">invoices/year={y}/month={m}/</span><span class="t">invoices_{batch_id}.parquet</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">payments/year={y}/month={m}/</span><span class="t">payments_{batch_id}.parquet</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">quarantine/</span><span class="t">quarantined_{batch_id}.json  </span><span class="c"># malformed records</span><br>
+<span class="s">silver/</span><br>
+&nbsp;&nbsp;<span class="k">transactions/year={y}/month={m}/retailer_uuid={uuid}/</span><span class="t">transactions.parquet</span><br>
+&nbsp;&nbsp;<span class="k">identity_map/</span><span class="t">  </span><span class="c"># GST→UUID resolver (separate, access-restricted)</span><br>
+<span class="s">gold/</span><br>
+&nbsp;&nbsp;<span class="k">features/year={y}/month={m}/</span><span class="t">features.parquet  </span><span class="c"># 40+ features per retailer</span><br>
+&nbsp;&nbsp;<span class="k">scores/year={y}/month={m}/</span><span class="t">scores.parquet    </span><span class="c"># AltScore + PD + reason codes</span><br>
+<span class="s">audit/</span><br>
+&nbsp;&nbsp;<span class="k">year={y}/month={m}/day={d}/</span><span class="t">audit_{timestamp}.parquet  </span><span class="c"># WORM 7yr</span><br>
+<span class="s">mlflow/</span><br>
+&nbsp;&nbsp;<span class="k">artifacts/models/altscore-xgb-v{n}/</span><span class="t">model.pkl + sha256.txt  </span><span class="c"># WORM</span>
+    </div>
+  </div>
+
+  <!-- 03 Bronze Schema -->
+  <div class="section" id="s03">
+    <div class="section-header"><span class="section-num">03 —</span><h2>Bronze Layer Schema</h2></div>
+    <p>Bronze stores raw ERP data exactly as received. PII fields (GST, phone, address) are present. Access is restricted to Data Engineering via IAM. No ML or API service has access to Bronze.</p>
+
+    <div class="schema-block">
+      <div class="schema-head"><span class="schema-name">bronze_invoices</span><span class="schema-db">Parquet · S3 Bronze · Partitioned by distributor_id + year + month</span></div>
+      <table class="doc-table" style="margin:0;">
+        <thead><tr><th>Column</th><th>Type</th><th>PII</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>invoice_id</code></td><td>STRING</td><td>No</td><td>Original ERP invoice ID (source system)</td></tr>
+          <tr><td><code>distributor_id</code></td><td>STRING</td><td>No</td><td>AltScore distributor UUID</td></tr>
+          <tr><td><code>retailer_gst</code></td><td>STRING</td><td><strong>YES</strong></td><td>GSTIN — pseudonymized in Silver layer</td></tr>
+          <tr><td><code>retailer_name</code></td><td>STRING</td><td><strong>YES</strong></td><td>Business name — dropped in Silver layer</td></tr>
+          <tr><td><code>retailer_phone</code></td><td>STRING</td><td><strong>YES</strong></td><td>Phone number — pseudonymized in Silver layer</td></tr>
+          <tr><td><code>invoice_date</code></td><td>DATE</td><td>No</td><td>Invoice creation date</td></tr>
+          <tr><td><code>due_date</code></td><td>DATE</td><td>No</td><td>Payment due date per credit terms</td></tr>
+          <tr><td><code>amount_inr</code></td><td>DECIMAL(15,2)</td><td>No</td><td>Invoice gross amount in INR</td></tr>
+          <tr><td><code>erp_type</code></td><td>STRING</td><td>No</td><td><code>tally_prime</code> | <code>sap_b1</code> | <code>csv</code></td></tr>
+          <tr><td><code>ingested_at</code></td><td>TIMESTAMP</td><td>No</td><td>Ingest timestamp (UTC)</td></tr>
+          <tr><td><code>batch_id</code></td><td>STRING</td><td>No</td><td>Source batch_id from ERP Ingestion Service</td></tr>
+          <tr><td><code>_row_hash</code></td><td>STRING</td><td>No</td><td>SHA-256 of all fields — tamper detection</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-head"><span class="schema-name">bronze_payments</span><span class="schema-db">Parquet · S3 Bronze · Partitioned by distributor_id + year + month</span></div>
+      <table class="doc-table" style="margin:0;">
+        <thead><tr><th>Column</th><th>Type</th><th>PII</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>payment_id</code></td><td>STRING</td><td>No</td><td>Original ERP payment ID</td></tr>
+          <tr><td><code>invoice_id</code></td><td>STRING</td><td>No</td><td>Links to bronze_invoices.invoice_id</td></tr>
+          <tr><td><code>distributor_id</code></td><td>STRING</td><td>No</td><td>AltScore distributor UUID</td></tr>
+          <tr><td><code>retailer_gst</code></td><td>STRING</td><td><strong>YES</strong></td><td>GSTIN — pseudonymized in Silver layer</td></tr>
+          <tr><td><code>paid_date</code></td><td>DATE</td><td>No</td><td>Date payment was received</td></tr>
+          <tr><td><code>amount_paid_inr</code></td><td>DECIMAL(15,2)</td><td>No</td><td>Amount actually paid (may be partial)</td></tr>
+          <tr><td><code>payment_method</code></td><td>STRING</td><td>No</td><td>NEFT | RTGS | IMPS | cheque | cash</td></tr>
+          <tr><td><code>ingested_at</code></td><td>TIMESTAMP</td><td>No</td><td>Ingest timestamp (UTC)</td></tr>
+          <tr><td><code>_row_hash</code></td><td>STRING</td><td>No</td><td>SHA-256 — tamper detection</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 04 Silver Schema -->
+  <div class="section" id="s04">
+    <div class="section-header"><span class="section-num">04 —</span><h2>Silver Layer Schema</h2></div>
+    <p>Silver contains pseudonymized, normalized transaction records. No PII is present. The <code>retailer_gst</code> → <code>retailer_uuid</code> mapping lives in a separate access-restricted identity store. ML and API services interact with Silver data only through the Gold layer — never directly.</p>
+
+    <div class="schema-block">
+      <div class="schema-head"><span class="schema-name">silver_transactions</span><span class="schema-db">Parquet · S3 Silver · Partitioned by retailer_uuid + year + month</span></div>
+      <table class="doc-table" style="margin:0;">
+        <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>retailer_uuid</code></td><td>STRING (UUID)</td><td>Stable pseudonymous identifier (replaces GST)</td></tr>
+          <tr><td><code>distributor_uuid</code></td><td>STRING (UUID)</td><td>Pseudonymous distributor identifier</td></tr>
+          <tr><td><code>invoice_uuid</code></td><td>STRING (UUID)</td><td>Pseudonymous invoice ID (deduped)</td></tr>
+          <tr><td><code>invoice_date</code></td><td>DATE</td><td>Invoice creation date</td></tr>
+          <tr><td><code>due_date</code></td><td>DATE</td><td>Payment due date</td></tr>
+          <tr><td><code>amount_inr</code></td><td>DECIMAL(15,2)</td><td>Invoice amount (outlier-capped at p99 per distributor)</td></tr>
+          <tr><td><code>paid_date</code></td><td>DATE (nullable)</td><td>Actual payment date; NULL if unpaid</td></tr>
+          <tr><td><code>amount_paid_inr</code></td><td>DECIMAL(15,2)</td><td>Actual amount paid (0 if unpaid)</td></tr>
+          <tr><td><code>payment_delay_days</code></td><td>INTEGER</td><td>paid_date - due_date (negative = early, positive = late, NULL = unpaid)</td></tr>
+          <tr><td><code>is_partial_payment</code></td><td>BOOLEAN</td><td>True if amount_paid &lt; amount × 0.95</td></tr>
+          <tr><td><code>is_return</code></td><td>BOOLEAN</td><td>True if invoice is a credit note / return</td></tr>
+          <tr><td><code>data_source</code></td><td>STRING</td><td><code>tally_prime</code> | <code>sap_b1</code> | <code>csv</code></td></tr>
+          <tr><td><code>silver_created_at</code></td><td>TIMESTAMP</td><td>Silver pipeline run timestamp</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-head"><span class="schema-name">identity_map</span><span class="schema-db">PostgreSQL (isolated schema) · Access-restricted · Never in ML pipeline</span></div>
+      <table class="doc-table" style="margin:0;">
+        <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>retailer_uuid</code></td><td>UUID PRIMARY KEY</td><td>Stable pseudonymous identifier (exposed to API)</td></tr>
+          <tr><td><code>gst_hash</code></td><td>BYTEA</td><td>HMAC-SHA256 of GSTIN (allows lookup without storing raw GSTIN)</td></tr>
+          <tr><td><code>phone_hash</code></td><td>BYTEA</td><td>HMAC-SHA256 of phone number</td></tr>
+          <tr><td><code>distributor_uuid</code></td><td>UUID</td><td>Primary distributor UUID</td></tr>
+          <tr><td><code>consent_id</code></td><td>UUID</td><td>FK to consent_records.consent_id</td></tr>
+          <tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>First time retailer seen in system</td></tr>
+          <tr><td><code>erasure_requested_at</code></td><td>TIMESTAMP (nullable)</td><td>Set when DPDP Right-to-Erasure filed (30-day SLA timer)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 05 Gold Schema -->
+  <div class="section" id="s05">
+    <div class="section-header"><span class="section-num">05 —</span><h2>Gold Layer Schema</h2></div>
+
+    <div class="schema-block">
+      <div class="schema-head"><span class="schema-name">gold_retailer_features</span><span class="schema-db">Parquet · S3 Gold + PostgreSQL feature_store · ML-ready</span></div>
+      <table class="doc-table" style="margin:0;">
+        <thead><tr><th>Feature Column</th><th>Type</th><th>Family</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>retailer_uuid</code></td><td>UUID</td><td>Key</td><td>Stable pseudonymous retailer identifier</td></tr>
+          <tr><td><code>feature_month</code></td><td>DATE</td><td>Key</td><td>Month for which features are computed (YYYY-MM-01)</td></tr>
+          <tr><td><code>avg_payment_delay_days</code></td><td>FLOAT</td><td>Payment</td><td>Mean payment_delay_days over trailing 6 months</td></tr>
+          <tr><td><code>p90_payment_delay_days</code></td><td>FLOAT</td><td>Payment</td><td>90th percentile payment delay</td></tr>
+          <tr><td><code>zero_delay_rate</code></td><td>FLOAT</td><td>Payment</td><td>Fraction of invoices paid on or before due date</td></tr>
+          <tr><td><code>partial_payment_freq</code></td><td>FLOAT</td><td>Payment</td><td>Fraction of invoices with partial payment</td></tr>
+          <tr><td><code>partial_payment_ratio</code></td><td>FLOAT</td><td>Payment</td><td>Median (amount_paid / amount) for partial payments</td></tr>
+          <tr><td><code>max_consecutive_delays</code></td><td>INTEGER</td><td>Payment</td><td>Longest consecutive delay streak (invoices)</td></tr>
+          <tr><td><code>monthly_order_frequency</code></td><td>FLOAT</td><td>Order</td><td>Avg invoices per month, trailing 6 months</td></tr>
+          <tr><td><code>order_gap_median_days</code></td><td>FLOAT</td><td>Order</td><td>Median days between consecutive invoices</td></tr>
+          <tr><td><code>order_gap_cv</code></td><td>FLOAT</td><td>Order</td><td>Coefficient of variation of inter-order gaps</td></tr>
+          <tr><td><code>return_rate_pct</code></td><td>FLOAT</td><td>Order</td><td>% of total invoiced value returned</td></tr>
+          <tr><td><code>return_freq_pct</code></td><td>FLOAT</td><td>Order</td><td>% of invoices with any return</td></tr>
+          <tr><td><code>gmv_trend_slope</code></td><td>FLOAT</td><td>Trajectory</td><td>OLS slope of monthly GMV (INR/month)</td></tr>
+          <tr><td><code>gmv_3m_vs_12m_ratio</code></td><td>FLOAT</td><td>Trajectory</td><td>Recent 3-month avg GMV / trailing 12-month avg GMV</td></tr>
+          <tr><td><code>gmv_yoy_growth</code></td><td>FLOAT (nullable)</td><td>Trajectory</td><td>Year-over-year GMV growth rate (requires 12+ months)</td></tr>
+          <tr><td><code>avg_monthly_gmv_log</code></td><td>FLOAT</td><td>Trajectory</td><td>log(avg_monthly_gmv) — normalised for model</td></tr>
+          <tr><td><code>seasonal_amplitude</code></td><td>FLOAT</td><td>Seasonal</td><td>Peak season / trough season GMV ratio</td></tr>
+          <tr><td><code>seasonal_recovery_rate</code></td><td>FLOAT</td><td>Seasonal</td><td>GMV recovery speed post-seasonal trough (0–1)</td></tr>
+          <tr><td><code>distributor_tenure_months</code></td><td>INTEGER</td><td>Relationship</td><td>Months since first invoice with any distributor</td></tr>
+          <tr><td><code>distributor_count</code></td><td>INTEGER</td><td>Relationship</td><td>Number of distinct distributors in history</td></tr>
+          <tr><td><code>data_completeness_score</code></td><td>FLOAT</td><td>Quality</td><td>Weighted completeness 0–100 (GR-5)</td></tr>
+          <tr><td><code>data_freshness_days</code></td><td>INTEGER</td><td>Quality</td><td>Days since most recent ERP record</td></tr>
+          <tr><td><code>is_sparse_retailer</code></td><td>BOOLEAN</td><td>Routing</td><td>True → Croston's routing; False → XGBoost primary</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-head"><span class="schema-name">gold_scores</span><span class="schema-db">Parquet · S3 Gold + PostgreSQL scores table · Served by Score API</span></div>
+      <table class="doc-table" style="margin:0;">
+        <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>score_id</code></td><td>UUID PRIMARY KEY</td><td>Immutable score record identifier</td></tr>
+          <tr><td><code>retailer_uuid</code></td><td>UUID</td><td>FK to identity_map.retailer_uuid</td></tr>
+          <tr><td><code>score_month</code></td><td>DATE</td><td>Month score is valid for</td></tr>
+          <tr><td><code>altscore</code></td><td>INTEGER</td><td>300–900 integer score</td></tr>
+          <tr><td><code>risk_band</code></td><td>CHAR(1)</td><td>A | B | C | D</td></tr>
+          <tr><td><code>probability_of_default</code></td><td>FLOAT</td><td>Raw XGBoost output, calibrated to PD (0.0–1.0)</td></tr>
+          <tr><td><code>recommended_limit_inr</code></td><td>DECIMAL(15,0)</td><td>Guardrail-capped limit (30% of 6-month GMV)</td></tr>
+          <tr><td><code>reason_codes</code></td><td>JSONB</td><td>Array of {code, direction, rank, label_en, label_hi}</td></tr>
+          <tr><td><code>low_confidence</code></td><td>BOOLEAN</td><td>True if completeness 50–69% or freshness &gt;14 days</td></tr>
+          <tr><td><code>anomaly_flag</code></td><td>BOOLEAN</td><td>True if Isolation Forest flagged gaming signals</td></tr>
+          <tr><td><code>score_version</code></td><td>STRING</td><td>MLflow model version (e.g., altscore-xgb-v1-prod)</td></tr>
+          <tr><td><code>scored_at</code></td><td>TIMESTAMP</td><td>Scoring engine run timestamp (UTC)</td></tr>
+          <tr><td><code>feature_snapshot_hash</code></td><td>BYTEA</td><td>SHA-256 of feature vector — audit / reproducibility</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 06 PostgreSQL -->
+  <div class="section" id="s06">
+    <div class="section-header"><span class="section-num">06 —</span><h2>PostgreSQL Schema Design</h2></div>
+    <p>PostgreSQL (Amazon RDS, Multi-AZ) is the operational database. Six logical databases are segregated by function. Row-Level Security (RLS) enforces per-lender data isolation on the <code>scores</code> table. All tables use UUIDs as primary keys (no sequential integers exposed to API).</p>
+
+    <div class="two-col">
+      <div class="card bronze-top">
+        <span class="card-tag">Database: consent_db</span>
+        <h3>Tables</h3>
+        <ul>
+          <li><code>consent_records</code> — signed consent artefacts (immutable)</li>
+          <li><code>consent_scope</code> — lender_id + consent_id + purpose</li>
+          <li><code>consent_revocations</code> — revocation events + timestamps</li>
+          <li><code>identity_map</code> — GST_hash → retailer_uuid (access-isolated)</li>
+        </ul>
+      </div>
+      <div class="card silver-top">
+        <span class="card-tag">Database: score_db</span>
+        <h3>Tables</h3>
+        <ul>
+          <li><code>scores</code> — current scores per retailer (RLS enforced)</li>
+          <li><code>score_history</code> — monthly score snapshots (12-month ring)</li>
+          <li><code>score_blocks</code> — records where scoring was blocked + reason</li>
+          <li><code>feature_store</code> — Gold layer feature cache per retailer</li>
+        </ul>
+      </div>
+      <div class="card gold-top">
+        <span class="card-tag">Database: audit_db</span>
+        <h3>Tables</h3>
+        <ul>
+          <li><code>audit_log</code> — append-only, no UPDATE/DELETE (DB trigger enforced)</li>
+          <li><code>audit_log</code> partitioned monthly; old partitions archived to S3 WORM</li>
+          <li>Indexes on: event_type, retailer_uuid, lender_id, timestamp</li>
+        </ul>
+      </div>
+      <div class="card da-top">
+        <span class="card-tag">Database: admin_db</span>
+        <h3>Tables</h3>
+        <ul>
+          <li><code>distributors</code> — onboarded distributors + cert metadata</li>
+          <li><code>lenders</code> — NBFC partner records + API key metadata</li>
+          <li><code>grievances</code> — grievance cases with SLA timers</li>
+          <li><code>model_registry_pointers</code> — active model version per env</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Row-Level Security (RLS) on scores table</h3>
+    <div class="code-block">
+<span class="c">-- Enable RLS on scores table</span><br>
+<span class="k">ALTER TABLE</span> score_db.scores <span class="k">ENABLE ROW LEVEL SECURITY</span><span class="k">;</span><br><br>
+<span class="c">-- Policy: lender can only see scores for retailers who consented to them</span><br>
+<span class="k">CREATE POLICY</span> lender_score_isolation <span class="k">ON</span> score_db.scores<br>
+&nbsp;&nbsp;<span class="k">USING</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retailer_uuid <span class="k">IN</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">SELECT</span> retailer_uuid <span class="k">FROM</span> consent_db.consent_scope<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">WHERE</span> lender_id = <span class="k">current_setting</span>(<span class="s">'app.current_lender_id'</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">AND</span> status = <span class="s">'active'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;)<span class="k">;</span><br><br>
+<span class="c">-- Set per-request lender context before any query</span><br>
+<span class="k">SET LOCAL</span> app.current_lender_id = <span class="s">'lender_shriram'</span><span class="k">;</span><br>
+<span class="k">SELECT</span> * <span class="k">FROM</span> score_db.scores <span class="k">WHERE</span> retailer_uuid = <span class="s">'ret_7f3a...'</span><span class="k">;</span>
+    </div>
+  </div>
+
+  <!-- 07 Redis -->
+  <div class="section" id="s07">
+    <div class="section-header"><span class="section-num">07 —</span><h2>Redis Cache Strategy</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>Cache Key Pattern</th><th>Value</th><th>TTL</th><th>Invalidation</th></tr></thead>
+      <tbody>
+        <tr><td><code>score:{retailer_uuid}:{lender_id}</code></td><td>Full score JSON (serialized)</td><td>4 hours</td><td>On <code>score.computed</code> Kafka event</td></tr>
+        <tr><td><code>consent:{retailer_uuid}:{lender_id}</code></td><td><code>active</code> | <code>revoked</code> | <code>none</code></td><td>60 seconds</td><td>On <code>consent.revoked</code> Kafka event (immediate purge)</td></tr>
+        <tr><td><code>ratelimit:{lender_id}:{minute_bucket}</code></td><td>Request counter</td><td>61 seconds</td><td>Natural TTL expiry</td></tr>
+        <tr><td><code>session:{token_jti}</code></td><td>JWT validation metadata</td><td>JWT exp - now</td><td>On JWT expiry or explicit logout</td></tr>
+        <tr><td><code>blocklist:{token_jti}</code></td><td><code>revoked</code></td><td>JWT exp - now</td><td>On admin token revocation</td></tr>
+        <tr><td><code>features:{retailer_uuid}</code></td><td>Latest Gold feature vector</td><td>24 hours</td><td>On <code>pipeline.gold.ready</code> Kafka event</td></tr>
+      </tbody>
+    </table>
+    <p>Redis Cluster mode is used (3 shards × 2 replicas). All keys are prefixed with environment (<code>prod:</code>, <code>staging:</code>) to prevent cross-environment contamination. Consent cache TTL is intentionally short (60s) so revocations propagate quickly. Score cache TTL (4h) is longer since scores change only on pipeline runs.</p>
+  </div>
+
+  <!-- 08 dbt -->
+  <div class="section" id="s08">
+    <div class="section-header"><span class="section-num">08 —</span><h2>dbt Model Map</h2></div>
+    <p>dbt Core manages all SQL transformations from Bronze → Silver → Gold. Models are organized in three layers following dbt best practice: <code>sources</code> (Bronze), <code>staging</code> (Silver normalization), <code>intermediate</code> (feature computation), <code>marts</code> (Gold layer, ML-ready). All models are fully documented and tested via dbt schema tests.</p>
+    <table class="doc-table">
+      <thead><tr><th>Layer</th><th>dbt Model</th><th>Input</th><th>Output</th><th>Key Transformations</th></tr></thead>
+      <tbody>
+        <tr><td>Sources</td><td><code>src_bronze_invoices</code></td><td>S3 Bronze Parquet</td><td>Raw staging ref</td><td>None — source definition only</td></tr>
+        <tr><td>Staging</td><td><code>stg_transactions</code></td><td>Bronze invoices + payments</td><td>Silver transactions</td><td>GST→UUID lookup, schema normalisation, outlier cap</td></tr>
+        <tr><td>Staging</td><td><code>stg_returns</code></td><td>Bronze invoices (credit notes)</td><td>Silver returns</td><td>Flag returns, link to original invoice</td></tr>
+        <tr><td>Intermediate</td><td><code>int_payment_features</code></td><td>stg_transactions</td><td>Payment family features</td><td>avg_delay, p90_delay, zero_delay_rate, partial_payment_freq</td></tr>
+        <tr><td>Intermediate</td><td><code>int_order_features</code></td><td>stg_transactions, stg_returns</td><td>Order family features</td><td>monthly_freq, gap_cv, return_rate, gmv_per_order_cv</td></tr>
+        <tr><td>Intermediate</td><td><code>int_trajectory_features</code></td><td>stg_transactions</td><td>Trajectory family features</td><td>OLS GMV slope, yoy_growth, 3m_vs_12m_ratio</td></tr>
+        <tr><td>Intermediate</td><td><code>int_seasonal_features</code></td><td>stg_transactions</td><td>Seasonal family features</td><td>seasonal_amplitude, recovery_rate, festival windows</td></tr>
+        <tr><td>Intermediate</td><td><code>int_relationship_features</code></td><td>stg_transactions</td><td>Relationship family features</td><td>distributor_tenure, distributor_count, credit_term_utilization</td></tr>
+        <tr><td>Intermediate</td><td><code>int_quality_features</code></td><td>All staging models</td><td>Data quality dimensions</td><td>completeness_score (GR-5 formula), freshness_days</td></tr>
+        <tr><td>Mart</td><td><code>mart_retailer_features</code></td><td>All int_ models</td><td>gold_retailer_features</td><td>Union all 40+ features; routing flag (sparse/XGBoost)</td></tr>
+        <tr><td>Mart</td><td><code>mart_scores</code></td><td>Scoring Engine output</td><td>gold_scores</td><td>Final score + reason codes; written by Scoring Engine (not dbt)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 09 Lineage -->
+  <div class="section" id="s09">
+    <div class="section-header"><span class="section-num">09 —</span><h2>Data Lineage &amp; Reproducibility</h2></div>
+    <div class="three-col">
+      <div class="card bronze-top"><span class="card-tag">Lineage Tracking</span><h3>dbt Docs + OpenLineage</h3><p>Every dbt model records its source tables, transformations applied, and test results. OpenLineage integration emits lineage events to Marquez for cross-pipeline tracking. Any score can be traced back to its source Bronze batch_id.</p></div>
+      <div class="card silver-top"><span class="card-tag">Reproducibility</span><h3>Deterministic Transformations</h3><p>All dbt and Spark transformations are deterministic — same input always produces same output. Feature snapshots are SHA-256 hashed at scoring time, enabling exact reproduction of any historical score for audit or dispute resolution.</p></div>
+      <div class="card gold-top"><span class="card-tag">Audit Trail</span><h3>Score Provenance</h3><p>Every <code>gold_scores</code> record stores: feature_snapshot_hash, score_version (MLflow model ID), scored_at, and the Airflow DAG run_id. A full lineage chain exists from retailer score → features → Bronze records → ERP batch.</p></div>
+    </div>
+  </div>
+
+  <!-- 10 Retention -->
+  <div class="section" id="s10">
+    <div class="section-header"><span class="section-num">10 —</span><h2>Data Retention &amp; Lifecycle</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>Data Store</th><th>Active Retention</th><th>Archive Retention</th><th>Deletion Trigger</th><th>Deletion Method</th></tr></thead>
+      <tbody>
+        <tr><td>Bronze (S3 WORM)</td><td>2 years</td><td>5 years (Glacier)</td><td>Automatic lifecycle rule</td><td>S3 lifecycle → Glacier; CMK deletion after 7yr</td></tr>
+        <tr><td>Silver (S3)</td><td>Consent duration + 6 months</td><td>None</td><td>Consent revocation</td><td>Spark delete + S3 object delete; UUID nulled</td></tr>
+        <tr><td>Gold scores (S3)</td><td>Consent duration + 12 months</td><td>None</td><td>Consent revocation</td><td>Parquet partition delete</td></tr>
+        <tr><td>PostgreSQL scores</td><td>36 months rolling</td><td>Partitioned archive</td><td>Monthly partition drop</td><td>Table partition detach + drop</td></tr>
+        <tr><td>Consent records</td><td>Forever (never deleted)</td><td>N/A</td><td>Never</td><td>DPDP requirement: consent records immutable</td></tr>
+        <tr><td>Audit log</td><td>3 years hot</td><td>4 years (S3 WORM)</td><td>Never deleted</td><td>Partition archive to S3; 7-year total retention</td></tr>
+        <tr><td>Identity map</td><td>Active consent</td><td>Erasure hold</td><td>Consent revocation + 30-day erasure SLA</td><td>Row deletion + UUID tombstone retained</td></tr>
+        <tr><td>Redis cache</td><td>TTL per key (60s–24h)</td><td>None</td><td>TTL expiry or event-driven invalidation</td><td>Automatic TTL</td></tr>
+        <tr><td>Model artifacts</td><td>Indefinite (model lineage)</td><td>N/A</td><td>Never deleted</td><td>WORM; old versions marked deprecated in MLflow</td></tr>
+      </tbody>
+    </table>
+    <p>DPDP Act Right-to-Erasure (Article 13): on retailer request, all Silver and Gold records are deleted within 30 days. Bronze records are pseudonymized (CMK deleted so Bronze becomes unreadable). Consent records and audit logs are retained (legal hold exemption under DPDP Act Section 8(7)).</p>
+  </div>
+
+</div>
+
+<footer class="doc-footer">
+  <div><div class="ft-brand">Alt<span>Score</span></div><div style="margin-top:4px">Data Architecture &amp; Schema · DAS-ALTSCORE-001 · v1.0 · May 2026</div></div>
+  <div style="text-align:right">INTERNAL — Data Engineering &amp; ML<br>AltScore Technologies Private Limited<br>3-tier medallion · 40+ features · DPDP-compliant retention</div>
+</footer>
+
+<script>
+  const sections=document.querySelectorAll('.section');
+  const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible');}),{threshold:0.07});
+  sections.forEach(s=>obs.observe(s));
+  const dots=document.querySelectorAll('.nav-dot');
+  dots.forEach(d=>d.addEventListener('click',()=>{const t=document.getElementById(d.dataset.target);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}));
+  const navObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){dots.forEach(d=>d.classList.remove('active'));const i=Array.from(sections).indexOf(x.target);if(i>=0&&dots[i])dots[i].classList.add('active');}}),{threshold:0.4});
+  sections.forEach(s=>navObs.observe(s));
+</script>
+</body>
+</html>

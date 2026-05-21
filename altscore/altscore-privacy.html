@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Privacy &amp; DPDP Compliance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --accent: #c94b1f;
+    --accent2: #2b5e3f;
+    --accent3: #1a3a5c;
+    --muted: #7a7065;
+    --rule: #ccc4b4;
+    --tag-bg: #e8e0cf;
+    --code-bg: #1e1c18;
+    --code-text: #e8d8b0;
+    --gold: #c4890d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Lora', Georgia, serif; font-size: 16px; line-height: 1.75; }
+
+  .cover { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+  .cover-left { background: var(--ink); padding: 80px 60px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .cover-left::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px); pointer-events: none; }
+  .cover-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; }
+  .cover-title { font-family: 'Syne', sans-serif; font-size: clamp(44px, 6vw, 76px); font-weight: 800; line-height: 0.95; color: var(--paper); letter-spacing: -0.02em; }
+  .cover-title span { color: var(--gold); }
+  .cover-sub { font-family: 'DM Mono', monospace; font-size: 13px; color: rgba(245,240,232,0.5); line-height: 1.8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; }
+  .cover-right { background: var(--cream); padding: 80px 60px; display: flex; flex-direction: column; justify-content: center; gap: 32px; border-left: 4px solid var(--gold); }
+  .cover-stat { border-bottom: 1px solid var(--rule); padding-bottom: 24px; }
+  .cover-stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: var(--gold); line-height: 1; display: block; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-top: 4px; display: block; }
+  .stat-desc { font-size: 14px; color: var(--ink); margin-top: 6px; font-style: italic; }
+
+  .doc { max-width: 1100px; margin: 0 auto; padding: 80px 40px; }
+  .section { margin-bottom: 80px; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .section.visible { opacity: 1; transform: translateY(0); }
+  .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 40px; border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+  .section-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gold); letter-spacing: 0.1em; flex-shrink: 0; }
+  h2 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--ink); }
+  p { margin-bottom: 16px; color: #2a2620; }
+
+  .callout { background: var(--ink); color: var(--paper); padding: 32px 40px; margin: 32px 0; border-left: 6px solid var(--gold); }
+  .callout p { font-size: 17px; font-style: italic; line-height: 1.6; color: var(--paper); }
+  .callout .attr { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.15em; margin-top: 12px; display: block; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 32px 0; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; margin: 32px 0; }
+
+  .card { background: var(--cream); border: 1px solid var(--rule); padding: 28px; }
+  .card.gold { border-top: 4px solid var(--gold); }
+  .card.green { border-top: 4px solid var(--accent2); }
+  .card.blue { border-top: 4px solid var(--accent3); }
+  .card.red { border-top: 4px solid var(--accent); }
+  .card-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
+  .card h3 { font-size: 16px; margin-bottom: 8px; }
+  .card p { font-size: 14px; line-height: 1.6; color: #4a4540; margin: 0; }
+  .card ul { list-style: none; padding: 0; margin: 8px 0 0 0; }
+  .card ul li { font-size: 13px; padding: 3px 0 3px 16px; position: relative; color: #3a352d; line-height: 1.5; }
+  .card ul li::before { content: '→'; position: absolute; left: 0; color: var(--muted); font-size: 11px; top: 5px; }
+
+  .doc-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+  .doc-table th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-align: left; padding: 12px 16px; background: var(--ink); color: var(--paper); }
+  .doc-table td { padding: 12px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; }
+  .doc-table tr:nth-child(even) td { background: var(--cream); }
+  .doc-table tr:hover td { background: #e8dfc8; }
+
+  .risk-high { color: var(--accent); font-weight: 600; }
+  .risk-med  { color: #b07a20; font-weight: 600; }
+  .risk-low  { color: var(--accent2); font-weight: 600; }
+
+  .flow { display: flex; flex-direction: column; gap: 0; margin: 32px 0; }
+  .flow-step { display: grid; grid-template-columns: 200px 1fr; border: 1px solid var(--rule); margin-bottom: -1px; }
+  .flow-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 20px; background: var(--gold); color: white; display: flex; align-items: center; }
+  .flow-label.v2 { background: #a37010; }
+  .flow-label.v3 { background: #7a5208; }
+  .flow-label.v4 { background: #54380a; }
+  .flow-label.v5 { background: #2e2005; }
+  .flow-content { padding: 16px 20px; background: var(--cream); font-size: 13px; color: #2a2620; line-height: 1.6; }
+
+  .data-class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 32px 0; }
+  .dc-card { border: 1px solid var(--rule); padding: 20px; background: var(--cream); }
+  .dc-card.c1 { border-top: 4px solid var(--accent); }
+  .dc-card.c2 { border-top: 4px solid var(--gold); }
+  .dc-card.c3 { border-top: 4px solid var(--accent2); }
+  .dc-card.c4 { border-top: 4px solid var(--accent3); }
+  .dc-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .dc-class { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: block; }
+  .dc-card ul { list-style: none; padding: 0; margin: 0; }
+  .dc-card ul li { font-size: 12px; padding: 2px 0 2px 14px; position: relative; color: #3a352d; }
+  .dc-card ul li::before { content: '·'; position: absolute; left: 0; color: var(--gold); font-weight: bold; top: 0; }
+
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 64px 0; }
+  .sidenav { position: fixed; left: 24px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+  .nav-dot { width: 8px; height: 8px; background: var(--rule); cursor: pointer; transition: all 0.3s; position: relative; }
+  .nav-dot:hover, .nav-dot.active { background: var(--gold); transform: scale(1.5); }
+  .nav-dot::after { content: attr(data-label); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); white-space: nowrap; opacity: 0; transition: opacity 0.2s; background: var(--paper); padding: 2px 8px; border: 1px solid var(--rule); }
+  .nav-dot:hover::after { opacity: 1; }
+
+  .doc-footer { background: var(--ink); color: rgba(245,240,232,0.5); padding: 40px; display: flex; justify-content: space-between; align-items: center; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .doc-footer .ft-brand { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--paper); }
+  .doc-footer .ft-brand span { color: var(--gold); }
+
+  @media (max-width: 768px) {
+    .cover { grid-template-columns: 1fr; }
+    .two-col, .three-col, .data-class-grid { grid-template-columns: 1fr; }
+    .sidenav { display: none; }
+    .flow-step { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+
+<nav class="sidenav" id="sidenav">
+  <div class="nav-dot active" data-label="Cover" onclick="scrollTo('cover')"></div>
+  <div class="nav-dot" data-label="Principles" onclick="scrollTo('principles')"></div>
+  <div class="nav-dot" data-label="Data Map" onclick="scrollTo('datamap')"></div>
+  <div class="nav-dot" data-label="Roles" onclick="scrollTo('roles')"></div>
+  <div class="nav-dot" data-label="Consent" onclick="scrollTo('consent')"></div>
+  <div class="nav-dot" data-label="Minimization" onclick="scrollTo('minimization')"></div>
+  <div class="nav-dot" data-label="Retention" onclick="scrollTo('retention')"></div>
+  <div class="nav-dot" data-label="Rights" onclick="scrollTo('rights')"></div>
+  <div class="nav-dot" data-label="DPDP Map" onclick="scrollTo('dpdp')"></div>
+  <div class="nav-dot" data-label="Breach" onclick="scrollTo('breach')"></div>
+  <div class="nav-dot" data-label="Vendors" onclick="scrollTo('vendors')"></div>
+</nav>
+
+<!-- COVER -->
+<div class="cover" id="cover">
+  <div class="cover-left">
+    <div><div class="cover-label">Privacy &amp; Data Protection — PDP-ALTSCORE-001</div></div>
+    <div>
+      <div class="cover-title">Privacy &amp;<br><span>DPDP</span></div>
+      <div style="height:24px"></div>
+      <div style="font-family:'Lora',serif; font-size:18px; color:rgba(245,240,232,0.7); font-style:italic; line-height:1.5;">
+        Data protection design, DPDP Act 2023 compliance mapping, consent lifecycle, and data subject rights for AltScore.
+      </div>
+    </div>
+    <div class="cover-sub">
+      <div>DOCUMENT / PDP-ALTSCORE-001</div>
+      <div>STATUS / DRAFT FOR REVIEW</div>
+      <div>VERSION / 1.0 — MAY 2026</div>
+      <div style="margin-top:12px; color:rgba(245,240,232,0.3);">Companion to PRD-ALTSCORE-001 · Confidential</div>
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat">
+      <span class="stat-num">DPDP 2023</span>
+      <span class="stat-label">Primary compliance framework</span>
+      <div class="stat-desc">Digital Personal Data Protection Act 2023 — full compliance required before pilot launch</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">7 years</span>
+      <span class="stat-label">Consent record retention</span>
+      <div class="stat-desc">Cryptographically signed consent records retained for regulatory audit</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">72 hours</span>
+      <span class="stat-label">Breach notification SLA</span>
+      <div class="stat-desc">Notification to Data Protection Board within 72 hours of confirmed personal data breach</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">Zero PII</span>
+      <span class="stat-label">In ML scoring pipeline</span>
+      <div class="stat-desc">Privacy by design: pseudonymization before any ML feature computation</div>
+    </div>
+  </div>
+</div>
+
+<main class="doc">
+
+  <!-- 01 PRINCIPLES -->
+  <div class="section" id="principles">
+    <div class="section-header">
+      <span class="section-num">01 —</span>
+      <h2>Privacy Design Principles</h2>
+    </div>
+    <p>AltScore processes personal data about retailers — small business owners who have never engaged with a formal data processor before. The platform's legitimacy depends on being worthy of their trust. Privacy is not a legal checkbox; it is a product value.</p>
+
+    <div class="callout">
+      <p>Every retailer whose data AltScore processes is a person, not a data point. They have a right to know what we hold, why we hold it, and to stop us holding it. The platform is designed so that exercising any of these rights is a simple, dignified experience — not an obstacle course.</p>
+      <span class="attr">PRIVACY DESIGN PRINCIPLE — ALTSCORE</span>
+    </div>
+
+    <div class="three-col">
+      <div class="card gold">
+        <span class="card-tag">Principle 01</span>
+        <h3>Privacy by Design</h3>
+        <p>Privacy controls are built into the data architecture, not bolted on afterward. Pseudonymization, data minimization, and consent gating are enforced at the infrastructure layer — a developer cannot bypass them even if they try.</p>
+      </div>
+      <div class="card green">
+        <span class="card-tag">Principle 02</span>
+        <h3>Purpose Limitation</h3>
+        <p>Data collected for credit scoring cannot be used for any other purpose — marketing, profiling, product recommendations — without a new, explicit consent. Purpose is fixed at collection time and verified on every processing event.</p>
+      </div>
+      <div class="card blue">
+        <span class="card-tag">Principle 03</span>
+        <h3>Data Minimization</h3>
+        <p>We collect only what we need to compute the credit score. The ERP extraction scope is contractually fixed. Fields outside the defined scope are technically blocked from extraction, not just policy-excluded.</p>
+      </div>
+      <div class="card red">
+        <span class="card-tag">Principle 04</span>
+        <h3>Consent is Real</h3>
+        <p>Consent is informed, specific, and freely given. Retailers are not forced to consent as a condition of using a service they depend on. Refusal of consent has no commercial consequence managed by AltScore.</p>
+      </div>
+      <div class="card gold">
+        <span class="card-tag">Principle 05</span>
+        <h3>Accessible Rights</h3>
+        <p>The right to access, correct, port, and erase personal data is available via the same WhatsApp channel used for consent — no app download, no portal login, no paper form required.</p>
+      </div>
+      <div class="card green">
+        <span class="card-tag">Principle 06</span>
+        <h3>Accountability</h3>
+        <p>A named Data Protection Officer (DPO) is accountable for DPDP Act compliance. Every data processing activity is documented. The Records of Processing Activities (ROPA) is reviewed quarterly and filed with the DPO.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 02 DATA MAP -->
+  <div class="section" id="datamap">
+    <div class="section-header">
+      <span class="section-num">02 —</span>
+      <h2>Personal Data Inventory &amp; Classification</h2>
+    </div>
+    <p>All personal data processed by AltScore is classified into four tiers. Classification determines storage controls, access restrictions, retention periods, and subject rights applicability.</p>
+
+    <div class="data-class-grid">
+      <div class="dc-card c1">
+        <div class="dc-title">Class 1 — Highly Sensitive Personal Data</div>
+        <span class="dc-class">Maximum protection required · Pseudonymized before any processing</span>
+        <ul>
+          <li>Retailer GST number (business identity, links to tax records)</li>
+          <li>Retailer mobile phone number</li>
+          <li>Shop address (geolocation-precise)</li>
+          <li>Distributor bank account details (excluded from extraction but present in ERP)</li>
+        </ul>
+      </div>
+      <div class="dc-card c2">
+        <div class="dc-title">Class 2 — Sensitive Business Data</div>
+        <span class="dc-class">Encrypted at rest · Role-gated access · Aggregated in outputs</span>
+        <ul>
+          <li>Invoice values and payment amounts</li>
+          <li>Payment delay history (individual transaction level)</li>
+          <li>SKU-level purchase data (reveals business strategy)</li>
+          <li>Credit terms agreed with distributor</li>
+          <li>AltScore value and risk band (directly affects creditworthiness)</li>
+          <li>Probability of Default estimate</li>
+        </ul>
+      </div>
+      <div class="dc-card c3">
+        <div class="dc-title">Class 3 — Business Operational Data</div>
+        <span class="dc-class">Standard encryption · Limited access · Retained per policy</span>
+        <ul>
+          <li>Retailer shop name and trade category</li>
+          <li>Distributor name and region</li>
+          <li>Order frequency patterns (aggregated monthly)</li>
+          <li>Behavioral feature values (40+ computed signals)</li>
+          <li>SHAP reason codes (categorical, not raw values)</li>
+        </ul>
+      </div>
+      <div class="dc-card c4">
+        <div class="dc-title">Class 4 — System &amp; Audit Data</div>
+        <span class="dc-class">Standard controls · Audit-grade retention · Read-only to most roles</span>
+        <ul>
+          <li>Consent records (grant, revocation, scope)</li>
+          <li>API access logs (lender_id, timestamp, response band)</li>
+          <li>ERP ingestion metadata (batch_id, record_count)</li>
+          <li>Model version stamps on score outputs</li>
+          <li>Grievance records</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Data Flow Map</h3>
+    <table class="doc-table">
+      <thead><tr><th>Data Flow</th><th>From</th><th>To</th><th>Personal Data Involved</th><th>Legal Basis</th><th>Consent Required</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>ERP → AltScore Bronze Lake</td>
+          <td>Distributor ERP (Tally / SAP B1)</td>
+          <td>AltScore S3/ADLS Bronze</td>
+          <td>Retailer GST, phone, invoice history, payment data</td>
+          <td>Legitimate interest (distributor) + retailer consent</td>
+          <td><span class="risk-high">Yes — retailer consent gating</span></td>
+        </tr>
+        <tr>
+          <td>Bronze → Silver Feature Pipeline</td>
+          <td>Bronze Lake (raw data)</td>
+          <td>Silver Feature Store (pseudonymized)</td>
+          <td>UUID-referenced behavioral aggregates only; no PII</td>
+          <td>Same consent as collection</td>
+          <td>No new consent — covered by original</td>
+        </tr>
+        <tr>
+          <td>Silver → Gold Score Store</td>
+          <td>Feature Store</td>
+          <td>Score Store (PostgreSQL)</td>
+          <td>UUID, score, PD estimate, reason codes, credit limit</td>
+          <td>Same consent as collection</td>
+          <td>No new consent — covered by original</td>
+        </tr>
+        <tr>
+          <td>Score API → NBFC Lender</td>
+          <td>Score Store via API</td>
+          <td>NBFC credit system</td>
+          <td>Score, risk band, reason codes, recommended limit</td>
+          <td>Retailer consent (lender named in consent scope)</td>
+          <td><span class="risk-high">Yes — lender must be named in consent</span></td>
+        </tr>
+        <tr>
+          <td>WhatsApp → Consent Store</td>
+          <td>Retailer (via WhatsApp)</td>
+          <td>Consent records database</td>
+          <td>Phone number, consent decision, timestamp</td>
+          <td>N/A — this IS the consent collection event</td>
+          <td>N/A — this is the consent</td>
+        </tr>
+        <tr>
+          <td>AltScore → Distributor Dashboard</td>
+          <td>Feature Store + Score Store</td>
+          <td>Distributor web portal</td>
+          <td>Retailer risk banding (aggregated view of own network only)</td>
+          <td>Data partnership agreement</td>
+          <td>Covered by data partnership agreement terms</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 03 ROLES -->
+  <div class="section" id="roles">
+    <div class="section-header">
+      <span class="section-num">03 —</span>
+      <h2>Data Controller &amp; Processor Roles</h2>
+    </div>
+
+    <p>The DPDP Act 2023 creates distinct obligations for Data Fiduciaries (controllers) and Data Processors. AltScore operates in different roles depending on the data flow — this must be clearly defined for both regulatory compliance and contractual clarity.</p>
+
+    <div class="two-col" style="margin:32px 0;">
+      <div style="background:var(--ink); color:var(--paper); padding:32px; border-top:4px solid var(--gold);">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--gold); margin-bottom:16px;">ALTSCORE AS DATA FIDUCIARY</div>
+        <div style="font-family:'Syne',sans-serif; font-size:20px; font-weight:700; margin-bottom:16px; line-height:1.3;">For Retailer Personal Data</div>
+        <p style="font-size:14px; color:rgba(245,240,232,0.8); line-height:1.7; margin-bottom:16px;">AltScore determines the purpose and means of processing retailer personal data. AltScore is the Data Fiduciary for all retailer data processed through the platform — regardless of the fact that data originates from the distributor's ERP.</p>
+        <div style="font-family:'DM Mono',monospace; font-size:12px; color:var(--gold);">Obligations: consent, purpose limitation, accuracy, storage limitation, data subject rights, breach notification.</div>
+      </div>
+      <div style="background:var(--cream); padding:32px; border:1px solid var(--rule); border-top:4px solid var(--accent2);">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--accent2); margin-bottom:16px;">ALTSCORE AS DATA PROCESSOR</div>
+        <div style="font-family:'Syne',sans-serif; font-size:20px; font-weight:700; margin-bottom:16px; line-height:1.3;">For Distributor Business Data</div>
+        <p style="font-size:14px; color:#3a352d; line-height:1.7; margin-bottom:16px;">The distributor's ERP data (their own business records, retailer relationships, commercial terms) is the distributor's data. AltScore processes it on the distributor's behalf under the data partnership agreement.</p>
+        <div style="font-family:'DM Mono',monospace; font-size:12px; color:var(--accent2);">Obligations: process only as instructed, implement appropriate security, assist with data subject requests, deletion on termination.</div>
+      </div>
+    </div>
+
+    <h3>Third-Party Data Sharing — Role Summary</h3>
+    <table class="doc-table">
+      <thead><tr><th>Party</th><th>Role vis-à-vis AltScore</th><th>Data Shared</th><th>Legal Instrument</th><th>Sub-processor Agreement</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Distributor</strong></td><td>Data Provider + AltScore is processor of their business data; distributor facilitates retailer data collection</td><td>ERP transaction data, retailer master</td><td>Data Partnership Agreement (DPA)</td><td>N/A — distributor is data provider, not processor</td></tr>
+        <tr><td><strong>NBFC Lender</strong></td><td>Authorized data recipient — receives scores within consent scope</td><td>Score, risk band, reason codes, credit limit</td><td>Lender API Agreement + Data Sharing Schedule</td><td>NBFC signs as independent fiduciary for their credit decisions</td></tr>
+        <tr><td><strong>Cloud Provider (AWS/Azure)</strong></td><td>Sub-processor — provides infrastructure</td><td>All data at rest and in transit on their infrastructure</td><td>Cloud Provider DPA (AWS DPA / Microsoft DPA)</td><td>Yes — standard cloud provider DPA executed</td></tr>
+        <tr><td><strong>WhatsApp (Meta)</strong></td><td>Communication channel only — no data storage by Meta permitted beyond message delivery</td><td>Consent message content, phone number routing</td><td>WhatsApp Business API terms + DPA</td><td>WhatsApp Business API DPA reviewed by legal</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 04 CONSENT -->
+  <div class="section" id="consent">
+    <div class="section-header">
+      <span class="section-num">04 —</span>
+      <h2>Consent Lifecycle</h2>
+    </div>
+
+    <p>Under the DPDP Act 2023, consent must be: free, specific, informed, unconditional, and unambiguous. AltScore's consent design is built around these five requirements — not just the letter of the law, but the spirit.</p>
+
+    <h3>Consent Journey — WhatsApp First</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-label">Step 1 — Invite</div>
+        <div class="flow-content"><strong>Distributor introduces AltScore to retailer.</strong> Distributor sends a first message via their own channel: "I'm sharing data about our relationship with AltScore to help you get a working capital loan. They'll contact you to ask your permission." This framing ensures the consent request arrives with a trusted reference.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-label v2">Step 2 — Notice</div>
+        <div class="flow-content"><strong>AltScore sends consent notice via WhatsApp in retailer's preferred language.</strong> The notice includes: (a) what data will be processed — specifically, their purchase and payment history with their distributor; (b) why — to compute a credit score for loan applications; (c) who will see the score — named NBFC partner(s); (d) for how long — 12 months, renewable; (e) their rights — access, correction, erasure, portability, and how to exercise them (reply "RIGHTS" to this message); (f) what happens if they say no — nothing, they continue as normal, no loss of distributor relationship.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-label v3">Step 3 — Decision</div>
+        <div class="flow-content"><strong>Retailer replies with a clear, unambiguous affirmative.</strong> Accepted responses: "Yes", "Haan", "OK", or pressing a pre-built WhatsApp Quick Reply button. Any ambiguous response is treated as non-consent. Silence is treated as non-consent. Retailers can take as long as they need — no expiring consent request windows.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-label v4">Step 4 — Record</div>
+        <div class="flow-content"><strong>Consent record created and cryptographically signed.</strong> Fields: retailer_id (phone hash + GST), distributor_id, consent_scope (list of named lenders), language, channel, timestamp (ISO 8601 UTC), consent_text_version, digital_signature (ECDSA P-256). Record is immutable — no updates, only new records (revocations create a new record of type "revocation"). Stored with 7-year retention.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-label v5">Step 5 — Confirmation</div>
+        <div class="flow-content"><strong>Retailer receives confirmation and a summary of their rights.</strong> WhatsApp message: "You've given your permission. We'll use your purchase history with [Distributor Name] to create a credit score. To see your data, change your mind, or ask questions, reply 'RIGHTS' or call [number]." This message is retained as part of the consent evidence chain.</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Consent Revocation</h3>
+    <div class="two-col">
+      <div class="card gold">
+        <span class="card-tag">How to Revoke</span>
+        <h3>Multiple Revocation Channels</h3>
+        <ul>
+          <li>Reply "STOP" or "Nahi" to any AltScore WhatsApp message</li>
+          <li>Call the AltScore consent helpline (IVR option 1)</li>
+          <li>Via distributor (distributor can revoke on retailer's behalf with authorization)</li>
+          <li>Via AltScore's web consent portal (if retailer has portal access)</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <span class="card-tag">What Happens on Revocation</span>
+        <h3>Immediate Effect — Prospective Only</h3>
+        <ul>
+          <li>Data processing halted within 1 hour of revocation</li>
+          <li>Score queries return "CONSENT_REVOKED" for that retailer</li>
+          <li>Existing scores invalidated in score store</li>
+          <li>Lender notified of revocation within 24 hours</li>
+          <li>Historical data retained per retention schedule (required for audit); not used for new scores</li>
+          <li>Revocation does not affect the retailer's relationship with the distributor</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Consent Scope Management</h3>
+    <table class="doc-table">
+      <thead><tr><th>Scenario</th><th>Consent Requirement</th><th>Process</th></tr></thead>
+      <tbody>
+        <tr><td>New lender added to AltScore platform</td><td>New consent required from each retailer before their score is shared with the new lender</td><td>New consent notice sent via WhatsApp; separate consent record per lender</td></tr>
+        <tr><td>Existing lender changes name (merger/acquisition)</td><td>Legal review: if same regulatory entity, existing consent survives; if new entity, new consent required</td><td>Legal sign-off required; DPO decision documented</td></tr>
+        <tr><td>New data field added to extraction scope</td><td>Material scope expansion requires new consent — existing consent is invalidated for the new field</td><td>New consent notice with updated data scope; prior consent records amended to reflect scope version</td></tr>
+        <tr><td>Processing purpose expanded (e.g., insurance underwriting)</td><td>New purpose requires new consent — existing consent is purpose-limited to credit scoring</td><td>New consent flow launched for new purpose; strictly separated from credit scoring consent</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 05 MINIMIZATION -->
+  <div class="section" id="minimization">
+    <div class="section-header">
+      <span class="section-num">05 —</span>
+      <h2>Data Minimization &amp; Purpose Limitation</h2>
+    </div>
+
+    <div class="callout">
+      <p>The test for every field in the AltScore data pipeline is: "Can we compute the credit score without this field?" If the answer is yes, we do not collect it. If the answer changes over time, we revisit the collection scope — not the data minimization principle.</p>
+      <span class="attr">DATA MINIMIZATION TEST — ALTSCORE</span>
+    </div>
+
+    <h3>Minimization by Layer</h3>
+    <table class="doc-table">
+      <thead><tr><th>Layer</th><th>Data Held</th><th>Minimization Applied</th><th>Justification for Retention</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Bronze (Raw)</strong></td>
+          <td>Raw ERP extract: retailer GST, phone, invoice records, payment records</td>
+          <td>Fields outside defined extraction scope blocked at connector level; bank account numbers never extracted</td>
+          <td>Audit lineage requires traceable source records; immutable for 2 years active, then cold archive for 5 additional years</td>
+        </tr>
+        <tr>
+          <td><strong>Silver (Features)</strong></td>
+          <td>40+ computed behavioral signals, indexed by UUID (no PII)</td>
+          <td>PII replaced with UUID before feature computation; invoice-level records aggregated to monthly/quarterly summaries; individual invoice amounts not retained in Silver</td>
+          <td>Feature computation requires aggregated signals; raw invoice amounts not needed at this layer</td>
+        </tr>
+        <tr>
+          <td><strong>Gold (Scores)</strong></td>
+          <td>UUID, score value, risk band, PD estimate, reason codes, credit limit, model_version, generated_at</td>
+          <td>No PII in score store; reason codes are categorical labels, not raw feature values; exact numeric feature values not stored</td>
+          <td>Score history needed for: lender portfolio monitoring, model validation, grievance resolution</td>
+        </tr>
+        <tr>
+          <td><strong>API Response</strong></td>
+          <td>Score, risk band, PD, credit limit, reason codes, data_freshness_days</td>
+          <td>Exact feature values never returned; only categorical reason codes; lender receives only what they need for underwriting decision</td>
+          <td>Lender requires score and limit for credit decision; no additional fields served without documented use case</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:32px;">Purpose Limitation Controls</h3>
+    <div class="three-col">
+      <div class="card gold">
+        <span class="card-tag">Permitted Purpose</span>
+        <h3>Credit Scoring Only</h3>
+        <p>Retailer behavioral data may only be used to compute and serve the AltScore credit intelligence product. No other use permitted without new consent.</p>
+      </div>
+      <div class="card red">
+        <span class="card-tag">Prohibited Uses</span>
+        <h3>Explicitly Forbidden</h3>
+        <ul>
+          <li>Marketing or advertising targeting</li>
+          <li>Retailer behavioral profiling for brands/OEMs</li>
+          <li>Resale or licensing of raw distributor data</li>
+          <li>Insurance underwriting (without separate consent)</li>
+          <li>Employee background checks</li>
+          <li>Any processing not stated in the consent notice</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <span class="card-tag">Technical Enforcement</span>
+        <h3>Not Just Policy</h3>
+        <ul>
+          <li>Purpose tag on every data access event logged</li>
+          <li>Data warehouse access requires purpose justification in ticket</li>
+          <li>API scope prevents purpose drift at API layer</li>
+          <li>Quarterly purpose compliance audit by DPO</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 06 RETENTION -->
+  <div class="section" id="retention">
+    <div class="section-header">
+      <span class="section-num">06 —</span>
+      <h2>Data Retention &amp; Deletion Policy</h2>
+    </div>
+
+    <table class="doc-table">
+      <thead><tr><th>Data Type</th><th>Active Retention</th><th>Archive Retention</th><th>Deletion Trigger</th><th>Deletion Method</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Raw ERP Data (Bronze)</strong></td>
+          <td>2 years from ingestion</td>
+          <td>5 additional years (cold storage, encrypted)</td>
+          <td>7 years from ingestion OR consent revocation + end of legal hold period</td>
+          <td>Cryptographic erasure (CMK deletion renders data unreadable)</td>
+        </tr>
+        <tr>
+          <td><strong>Behavioral Features (Silver)</strong></td>
+          <td>Duration of active consent + 6 months</td>
+          <td>3 years (anonymized aggregate only)</td>
+          <td>Consent revocation (pseudonymized features retained for model validation in anonymized form)</td>
+          <td>UUID mapping deleted → features become orphaned and non-re-identifiable</td>
+        </tr>
+        <tr>
+          <td><strong>Score Records (Gold)</strong></td>
+          <td>Duration of active consent + 12 months</td>
+          <td>5 years (for lender audit purposes)</td>
+          <td>Retailer erasure request + end of lender regulatory hold</td>
+          <td>Record soft-deleted from active tables; archived with access controls; hard deletion at end of archive period</td>
+        </tr>
+        <tr>
+          <td><strong>Consent Records</strong></td>
+          <td>7 years from last action (grant/revocation)</td>
+          <td>Indefinite (regulatory obligation)</td>
+          <td>No deletion — consent records are audit evidence</td>
+          <td>N/A — consent records are never deleted</td>
+        </tr>
+        <tr>
+          <td><strong>API Access Logs</strong></td>
+          <td>2 years active</td>
+          <td>5 additional years</td>
+          <td>7 years from generation</td>
+          <td>Automated log lifecycle policy (S3 Lifecycle / ADLS Lifecycle)</td>
+        </tr>
+        <tr>
+          <td><strong>Grievance Records</strong></td>
+          <td>7 years from closure</td>
+          <td>N/A</td>
+          <td>7 years from closure</td>
+          <td>Soft deletion with DPO sign-off</td>
+        </tr>
+        <tr>
+          <td><strong>WhatsApp Consent Messages</strong></td>
+          <td>Metadata retained 7 years; message content not stored on AltScore systems beyond confirmation receipt</td>
+          <td>N/A</td>
+          <td>7 years for metadata</td>
+          <td>WhatsApp message content deleted on delivery; AltScore retains only consent_decision and timestamp</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:32px;">Deletion Workflow</h3>
+    <div class="two-col">
+      <div class="card gold">
+        <span class="card-tag">Standard Deletion (Consent Revocation)</span>
+        <h3>Automated + Verified</h3>
+        <ul>
+          <li>Processing lock applied within 1 hour (automated)</li>
+          <li>Deletion ticket created in data ops queue</li>
+          <li>Bronze CMK scheduled for deletion at end of retention period</li>
+          <li>UUID mapping removed → Silver features orphaned</li>
+          <li>Score records moved to archive partition</li>
+          <li>Deletion confirmed to retailer in writing within 30 days</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <span class="card-tag">Erasure Request (Right to Erasure)</span>
+        <h3>DPO-Supervised</h3>
+        <ul>
+          <li>Request received via WhatsApp / helpline / portal</li>
+          <li>Identity verification (GST + OTP)</li>
+          <li>DPO reviews for legal hold obligations (active loan → lender notified; hold until loan closure)</li>
+          <li>Deletion executed on confirmed scope</li>
+          <li>Written confirmation to retailer within 30 days</li>
+          <li>Deletion record retained for 7 years (paradoxically — deletion proof is an audit obligation)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 07 RIGHTS -->
+  <div class="section" id="rights">
+    <div class="section-header">
+      <span class="section-num">07 —</span>
+      <h2>Data Subject Rights</h2>
+    </div>
+    <p>Under the DPDP Act 2023, Data Principals (retailers) have the following rights. AltScore's obligation is to make these rights practical for a small retailer in Tier-3 India — not just legally available.</p>
+
+    <table class="doc-table">
+      <thead><tr><th>Right</th><th>What It Means for AltScore</th><th>How Retailer Exercises It</th><th>AltScore SLA</th><th>Exceptions</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Right to Information</strong></td>
+          <td>Retailer can ask what data AltScore holds about them, why, and who has seen it</td>
+          <td>Reply "RIGHTS" to any AltScore WhatsApp message; automated response with data summary</td>
+          <td>Automated response within 24 hours; detailed report within 15 days</td>
+          <td>None</td>
+        </tr>
+        <tr>
+          <td><strong>Right to Correction</strong></td>
+          <td>Retailer can request correction of inaccurate personal data (e.g., wrong phone number in system)</td>
+          <td>Reply "CORRECT" with details; data ops team reviews and corrects within 15 days</td>
+          <td>15 days from verified request</td>
+          <td>Immutable audit records cannot be "corrected" — a new correction record is added</td>
+        </tr>
+        <tr>
+          <td><strong>Right to Erasure</strong></td>
+          <td>Retailer can request deletion of all personal data. Subject to active loan holds and audit obligations.</td>
+          <td>Reply "DELETE" to AltScore; DPO-supervised deletion process</td>
+          <td>Confirmation within 30 days; deletion within 30 days of confirmation</td>
+          <td>Active loan: data held until loan closure + 5 years. Legal hold. Consent records never deleted.</td>
+        </tr>
+        <tr>
+          <td><strong>Right to Portability</strong></td>
+          <td>Retailer can request a machine-readable export of all their data</td>
+          <td>Reply "EXPORT" to AltScore; JSON export delivered securely within 15 days</td>
+          <td>15 days from verified request</td>
+          <td>Model weights and internal decision logic not included (trade secret)</td>
+        </tr>
+        <tr>
+          <td><strong>Right to Nominate</strong></td>
+          <td>Retailer can nominate a person to exercise rights on their behalf (e.g., spouse, business partner)</td>
+          <td>Submit nomination via helpline; verified by OTP to retailer's registered phone</td>
+          <td>Nomination processed within 7 days</td>
+          <td>Nominator must verify identity; retailer's own OTP required to authorize nomination</td>
+        </tr>
+        <tr>
+          <td><strong>Right to Withdraw Consent</strong></td>
+          <td>Retailer can revoke consent at any time, without consequence</td>
+          <td>Reply "STOP" to any AltScore message; call helpline; web portal</td>
+          <td>Processing locked within 1 hour; full revocation within 24 hours</td>
+          <td>Revocation is prospective — does not undo processing already completed</td>
+        </tr>
+        <tr>
+          <td><strong>Right to Grievance Redressal</strong></td>
+          <td>Retailer can file a complaint about their score or data handling; right of escalation to DPO and then Data Protection Board</td>
+          <td>Via WhatsApp grievance flow; or directly to DPO at dpo@altscore.in</td>
+          <td>Acknowledgement within 24 hours; resolution within 7 days; escalation to DPO at Day 7</td>
+          <td>If unsatisfied with DPO decision, retailer can escalate to Data Protection Board</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 08 DPDP MAP -->
+  <div class="section" id="dpdp">
+    <div class="section-header">
+      <span class="section-num">08 —</span>
+      <h2>DPDP Act 2023 — Compliance Map</h2>
+    </div>
+    <p>Mapping of every material DPDP Act 2023 provision to AltScore's implementation approach. This mapping is reviewed quarterly by the DPO and updated as the Act's rules are notified by the Central Government.</p>
+
+    <table class="doc-table">
+      <thead><tr><th>DPDP Act Section</th><th>Provision</th><th>AltScore Implementation</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Section 4</td><td>Grounds for processing personal data — consent required for non-exempt purposes</td><td>WhatsApp consent flow with full notice; cryptographically signed consent record; purpose-limited to credit scoring</td><td><span class="risk-low">Implemented</span></td></tr>
+        <tr><td>Section 5</td><td>Notice — must be provided in English or any language in the Eighth Schedule</td><td>Consent notice available in English, Hindi, and 8 regional languages; language selected by retailer</td><td><span class="risk-med">Hindi + English live; regional languages Month 3</span></td></tr>
+        <tr><td>Section 6</td><td>Consent must be free, specific, informed, unconditional, and unambiguous</td><td>Separate consent per lender; purpose specific; no pre-ticked boxes; no bundling with distributor relationship</td><td><span class="risk-low">Implemented by design</span></td></tr>
+        <tr><td>Section 8(1)</td><td>Data Fiduciary must ensure accuracy and completeness of personal data</td><td>Data quality dashboard flags inaccuracies; correction right via WhatsApp; ERP anomaly detection</td><td><span class="risk-low">Implemented</span></td></tr>
+        <tr><td>Section 8(7)</td><td>Retain personal data only for as long as necessary</td><td>Automated retention schedule with CMK deletion; per-layer retention policy documented above</td><td><span class="risk-low">Policy defined; automated enforcement Month 2</span></td></tr>
+        <tr><td>Section 9</td><td>Processing of personal data of children — additional restrictions</td><td>Retailers are businesses (B2B); individual consumer data not processed; age verification not applicable to GST-registered entities</td><td><span class="risk-low">Out of scope by product design</span></td></tr>
+        <tr><td>Section 11</td><td>Right to information about processing</td><td>"RIGHTS" WhatsApp command; automated data summary; detailed report within 15 days</td><td><span class="risk-med">Automated summary live; detailed report Month 2</span></td></tr>
+        <tr><td>Section 12</td><td>Right to correction and erasure</td><td>WhatsApp "CORRECT" and "DELETE" commands; DPO-supervised deletion workflow; 30-day SLA</td><td><span class="risk-med">Workflow designed; implementation Month 2</span></td></tr>
+        <tr><td>Section 13</td><td>Right to grievance redressal</td><td>WhatsApp grievance flow; DPO escalation; Data Protection Board escalation path</td><td><span class="risk-low">Implemented</span></td></tr>
+        <tr><td>Section 17</td><td>Significant Data Fiduciary — additional obligations if designated</td><td>Monitor regulatory notification; DPO and DPIA obligations pre-implemented as a matter of best practice regardless of designation</td><td><span class="risk-med">Monitoring — designation criteria TBD by Government</span></td></tr>
+        <tr><td>Section 40</td><td>Penalties — up to ₹250 crore per breach of consent / purpose limitation obligations</td><td>Legal risk mapped; compliance program proportionate to penalty exposure; DPO accountable</td><td><span class="risk-high">High-priority compliance — DPO appointed Month 1</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 09 BREACH -->
+  <div class="section" id="breach">
+    <div class="section-header">
+      <span class="section-num">09 —</span>
+      <h2>Data Breach Response</h2>
+    </div>
+
+    <p>The DPDP Act 2023 requires notification to the Data Protection Board and affected Data Principals "as soon as possible" and "in such form and manner as may be prescribed." Until rules are notified, AltScore adopts the 72-hour standard used in GDPR as a conservative baseline.</p>
+
+    <div class="two-col">
+      <div class="card gold">
+        <span class="card-tag">What Constitutes a Breach</span>
+        <h3>Personal Data Breach Definition</h3>
+        <ul>
+          <li>Unauthorized access to retailer PII (GST, phone, address)</li>
+          <li>Unauthorized disclosure of AltScore values or PD estimates to a party outside consent scope</li>
+          <li>Loss of encrypted data where key compromise is confirmed or suspected</li>
+          <li>Accidental exposure of retailer data to a different lender's environment</li>
+          <li>Ransomware affecting systems that hold personal data (even if encrypted data not confirmed accessed)</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <span class="card-tag">What Does NOT Constitute a Breach</span>
+        <h3>Exclusions</h3>
+        <ul>
+          <li>Loss of anonymized aggregate data (no re-identification risk)</li>
+          <li>Service outage that does not expose data (availability incident, not breach)</li>
+          <li>Internal access by authorized personnel acting within RBAC scope</li>
+          <li>ERP schema drift causing data quarantine (no exposure event)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Breach Notification Content (Pre-approved Template)</h3>
+    <table class="doc-table">
+      <thead><tr><th>Recipient</th><th>Channel</th><th>SLA</th><th>Required Content</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Data Protection Board</strong></td><td>Official Board portal / registered email</td><td>Within 72 hours of breach confirmation</td><td>Nature of breach, categories of data, approx. number of data principals affected, likely consequences, measures taken</td></tr>
+        <tr><td><strong>Affected Retailers</strong></td><td>WhatsApp (primary); SMS fallback</td><td>Within 72 hours of Board notification</td><td>What happened (simple language), what data was involved, what we are doing, what they should do, DPO contact</td></tr>
+        <tr><td><strong>Affected NBFC Lenders</strong></td><td>Email to NBFC CISO + Legal</td><td>Within 24 hours of breach confirmation</td><td>Scope of breach relevant to their data, actions taken, next update timeline</td></tr>
+        <tr><td><strong>Affected Distributors</strong></td><td>Email to distributor contact</td><td>Within 24 hours of breach confirmation</td><td>Whether their data is in scope, what AltScore is doing, contact for questions</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 10 VENDORS -->
+  <div class="section" id="vendors">
+    <div class="section-header">
+      <span class="section-num">10 —</span>
+      <h2>Vendor &amp; Third-Party Data Management</h2>
+    </div>
+    <p>Every vendor that touches AltScore personal data must be assessed, contracted, and monitored. The DPO maintains a Vendor Risk Register reviewed quarterly.</p>
+
+    <h3>Vendor Assessment Criteria</h3>
+    <div class="three-col">
+      <div class="card gold">
+        <span class="card-tag">Before Onboarding</span>
+        <h3>Due Diligence</h3>
+        <ul>
+          <li>Security questionnaire (based on CSA CAIQ)</li>
+          <li>Privacy policy review by legal</li>
+          <li>DPA negotiated and signed before data access</li>
+          <li>Sub-processor list reviewed</li>
+          <li>Breach notification obligation confirmed in DPA</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <span class="card-tag">Contractual Requirements</span>
+        <h3>DPA Minimum Terms</h3>
+        <ul>
+          <li>Process only on AltScore documented instructions</li>
+          <li>Implement appropriate technical and organizational security measures</li>
+          <li>Notify AltScore of a breach within 24 hours</li>
+          <li>Assist with data subject rights requests</li>
+          <li>Delete or return all data on contract termination</li>
+          <li>No sub-processing without prior written consent</li>
+        </ul>
+      </div>
+      <div class="card blue">
+        <span class="card-tag">Ongoing Monitoring</span>
+        <h3>Annual Review</h3>
+        <ul>
+          <li>Annual vendor security review</li>
+          <li>Review latest security certifications (SOC 2, ISO 27001)</li>
+          <li>Check for regulatory enforcement actions against vendor</li>
+          <li>Verify sub-processor list has not changed without approval</li>
+          <li>Confirm DPA is still current with any updated processing scope</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Current Sub-Processor Registry</h3>
+    <table class="doc-table">
+      <thead><tr><th>Sub-Processor</th><th>Role</th><th>Data Accessed</th><th>Location</th><th>DPA Status</th><th>Certification</th></tr></thead>
+      <tbody>
+        <tr><td>AWS / Azure (primary cloud)</td><td>Infrastructure provider — compute, storage, networking</td><td>All data at rest and in transit on their infrastructure</td><td>India region (ap-south-1 / Central India)</td><td>Standard cloud provider DPA — executed</td><td>SOC 2, ISO 27001, PCI DSS</td></tr>
+        <tr><td>WhatsApp Business API (Meta)</td><td>Consent and communication channel</td><td>Phone number routing; message delivery metadata</td><td>Meta global infrastructure</td><td>WhatsApp Business API DPA — under legal review</td><td>Meta security certifications reviewed annually</td></tr>
+        <tr><td>MLflow (hosted / self-managed)</td><td>ML experiment tracking and model artifact storage</td><td>Model artifacts (no personal data in model files)</td><td>Same cloud as primary (India region)</td><td>N/A — self-managed deployment</td><td>N/A — internal deployment</td></tr>
+        <tr><td>Airflow (self-managed)</td><td>Pipeline orchestration</td><td>Pipeline metadata — no personal data in Airflow itself</td><td>Same cloud (India region)</td><td>N/A — self-managed</td><td>N/A</td></tr>
+        <tr><td>SIEM Provider (TBD)</td><td>Security monitoring and audit log analysis</td><td>Audit log data — contains pseudonymized retailer UUIDs and API access metadata</td><td>India region preferred; alternative: EU with adequacy</td><td>DPA required before onboarding</td><td>SOC 2 Type II required</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer class="doc-footer">
+  <div>
+    <div class="ft-brand">Alt<span>Score</span> · Privacy</div>
+    <div style="margin-top:6px;">PDP-ALTSCORE-001 · v1.0 · May 2026</div>
+  </div>
+  <div style="text-align:right;">
+    <div>CONFIDENTIAL — INTERNAL USE ONLY</div>
+    <div style="margin-top:4px;">Companion to PRD-ALTSCORE-001</div>
+  </div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('.section');
+  const dots = document.querySelectorAll('.nav-dot');
+  const sectionIds = ['principles','datamap','roles','consent','minimization','retention','rights','dpdp','breach','vendors'];
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = sectionIds.indexOf(entry.target.id);
+        if (idx >= 0) { dots.forEach(d => d.classList.remove('active')); dots[idx + 1]?.classList.add('active'); }
+      }
+    });
+  }, { threshold: 0.1 });
+  sections.forEach(s => observer.observe(s));
+  const coverObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) { dots.forEach(d => d.classList.remove('active')); dots[0].classList.add('active'); }
+  }, { threshold: 0.3 });
+  coverObserver.observe(document.getElementById('cover'));
+  window.scrollTo = function(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+</script>
+</body>
+</html>

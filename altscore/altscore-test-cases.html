@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Test Cases</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --accent: #c94b1f;
+    --accent2: #2b5e3f;
+    --accent3: #1a3a5c;
+    --muted: #7a7065;
+    --rule: #ccc4b4;
+    --tag-bg: #e8e0cf;
+    --code-bg: #1e1c18;
+    --code-text: #e8d8b0;
+    --pass: #2b5e3f;
+    --fail: #c94b1f;
+    --warn: #b07a20;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Lora', Georgia, serif; font-size: 16px; line-height: 1.75; }
+
+  .cover { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+  .cover-left { background: var(--ink); padding: 80px 60px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .cover-left::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px); pointer-events: none; }
+  .cover-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--accent2); text-transform: uppercase; }
+  .cover-title { font-family: 'Syne', sans-serif; font-size: clamp(48px, 6vw, 80px); font-weight: 800; line-height: 0.95; color: var(--paper); letter-spacing: -0.02em; }
+  .cover-title span { color: var(--accent2); }
+  .cover-sub { font-family: 'DM Mono', monospace; font-size: 13px; color: rgba(245,240,232,0.5); line-height: 1.8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; }
+  .cover-right { background: var(--cream); padding: 80px 60px; display: flex; flex-direction: column; justify-content: center; gap: 32px; border-left: 4px solid var(--accent2); }
+  .cover-stat { border-bottom: 1px solid var(--rule); padding-bottom: 24px; }
+  .cover-stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 40px; font-weight: 800; color: var(--accent2); line-height: 1; display: block; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-top: 4px; display: block; }
+  .stat-desc { font-size: 14px; color: var(--ink); margin-top: 6px; font-style: italic; }
+
+  .doc { max-width: 1100px; margin: 0 auto; padding: 80px 40px; }
+  .section { margin-bottom: 80px; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .section.visible { opacity: 1; transform: translateY(0); }
+  .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 40px; border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+  .section-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent2); letter-spacing: 0.1em; flex-shrink: 0; }
+  h2 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--ink); }
+  p { margin-bottom: 16px; color: #2a2620; }
+
+  .callout { background: var(--ink); color: var(--paper); padding: 32px 40px; margin: 32px 0; border-left: 6px solid var(--accent2); }
+  .callout p { font-size: 17px; font-style: italic; line-height: 1.6; color: var(--paper); }
+  .callout .attr { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent2); letter-spacing: 0.15em; margin-top: 12px; display: block; }
+
+  .doc-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+  .doc-table th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-align: left; padding: 10px 14px; background: var(--ink); color: var(--paper); }
+  .doc-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; }
+  .doc-table tr:nth-child(even) td { background: var(--cream); }
+  .doc-table tr:hover td { background: #e8dfc8; }
+
+  .tc-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .pass { color: var(--pass); font-weight: 700; font-family: 'DM Mono', monospace; font-size: 11px; }
+  .fail-label { color: var(--fail); font-weight: 700; font-family: 'DM Mono', monospace; font-size: 11px; }
+  .auto { background: var(--accent2); color: white; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 6px; letter-spacing: 0.05em; }
+  .manual { background: var(--warn); color: white; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 6px; letter-spacing: 0.05em; }
+  .p0 { color: var(--accent); font-weight: 700; }
+  .p1 { color: var(--warn); font-weight: 700; }
+  .p2 { color: var(--accent2); font-weight: 700; }
+
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 64px 0; }
+  .sidenav { position: fixed; left: 24px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+  .nav-dot { width: 8px; height: 8px; background: var(--rule); cursor: pointer; transition: all 0.3s; position: relative; }
+  .nav-dot:hover, .nav-dot.active { background: var(--accent2); transform: scale(1.5); }
+  .nav-dot::after { content: attr(data-label); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); white-space: nowrap; opacity: 0; transition: opacity 0.2s; background: var(--paper); padding: 2px 8px; border: 1px solid var(--rule); }
+  .nav-dot:hover::after { opacity: 1; }
+
+  .doc-footer { background: var(--ink); color: rgba(245,240,232,0.5); padding: 40px; display: flex; justify-content: space-between; align-items: center; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .doc-footer .ft-brand { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--paper); }
+  .doc-footer .ft-brand span { color: var(--accent2); }
+
+  .suite-header { background: var(--ink); color: var(--paper); padding: 16px 20px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin: 32px 0 0 0; display: flex; justify-content: space-between; align-items: center; }
+  .suite-count { font-family: 'DM Mono', monospace; font-size: 12px; color: rgba(245,240,232,0.5); }
+
+  @media (max-width: 768px) {
+    .cover { grid-template-columns: 1fr; }
+    .sidenav { display: none; }
+  }
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+
+<nav class="sidenav" id="sidenav">
+  <div class="nav-dot active" data-label="Cover" onclick="scrollTo('cover')"></div>
+  <div class="nav-dot" data-label="Approach" onclick="scrollTo('approach')"></div>
+  <div class="nav-dot" data-label="ERP / Ingestion" onclick="scrollTo('erp')"></div>
+  <div class="nav-dot" data-label="Consent" onclick="scrollTo('consent')"></div>
+  <div class="nav-dot" data-label="Feature Pipeline" onclick="scrollTo('features')"></div>
+  <div class="nav-dot" data-label="ML Model" onclick="scrollTo('model')"></div>
+  <div class="nav-dot" data-label="Score API" onclick="scrollTo('api')"></div>
+  <div class="nav-dot" data-label="Guardrails" onclick="scrollTo('guardrails')"></div>
+  <div class="nav-dot" data-label="Security" onclick="scrollTo('security')"></div>
+  <div class="nav-dot" data-label="Compliance" onclick="scrollTo('compliance')"></div>
+  <div class="nav-dot" data-label="E2E" onclick="scrollTo('e2e')"></div>
+</nav>
+
+<!-- COVER -->
+<div class="cover" id="cover">
+  <div class="cover-left">
+    <div><div class="cover-label">Test Case Specification — TCS-ALTSCORE-001</div></div>
+    <div>
+      <div class="cover-title">Test<br><span>Cases</span></div>
+      <div style="height:24px"></div>
+      <div style="font-family:'Lora',serif; font-size:18px; color:rgba(245,240,232,0.7); font-style:italic; line-height:1.5;">
+        Functional, model quality, API, guardrail, security, and end-to-end test cases derived from the AltScore PRD.
+      </div>
+    </div>
+    <div class="cover-sub">
+      <div>DOCUMENT / TCS-ALTSCORE-001</div>
+      <div>STATUS / DRAFT FOR REVIEW</div>
+      <div>VERSION / 1.0 — MAY 2026</div>
+      <div style="margin-top:12px; color:rgba(245,240,232,0.3);">Companion to PRD-ALTSCORE-001 · Confidential</div>
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat">
+      <span class="stat-num">9</span>
+      <span class="stat-label">Test suites</span>
+      <div class="stat-desc">ERP, Consent, Features, Model, API, Guardrails, Security, Compliance, E2E</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">80%+</span>
+      <span class="stat-label">Automation target</span>
+      <div class="stat-desc">Functional and API tests automated in CI/CD; ML and fairness tests in nightly pipeline</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">PRD-gated</span>
+      <span class="stat-label">Each test mapped to a PRD requirement</span>
+      <div class="stat-desc">Every phase gate (P0–P5) has a corresponding test that must pass before advancing</div>
+    </div>
+  </div>
+</div>
+
+<main class="doc">
+
+  <!-- 01 APPROACH -->
+  <div class="section" id="approach">
+    <div class="section-header">
+      <span class="section-num">01 —</span>
+      <h2>Testing Approach &amp; Conventions</h2>
+    </div>
+    <p>This document specifies test cases for the AltScore platform organized by system layer. Each test case references the PRD requirement it validates. Tests are labelled <span class="auto">AUTO</span> (automated in CI/CD or nightly pipeline) or <span class="manual">MANUAL</span> (human or specialist execution required).</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin:32px 0;">
+      <div style="background:var(--cream); border:1px solid var(--rule); padding:24px; border-top:4px solid var(--accent);">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Priority</div>
+        <div style="font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:8px;">P0 — Blocking</div>
+        <p style="font-size:13px; margin:0; color:#4a4540;">Must pass before any phase gate advance. Failure blocks the build/release.</p>
+      </div>
+      <div style="background:var(--cream); border:1px solid var(--rule); padding:24px; border-top:4px solid var(--warn);">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Priority</div>
+        <div style="font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:8px;">P1 — Required</div>
+        <p style="font-size:13px; margin:0; color:#4a4540;">Must pass before production. Failure raises a blocker ticket with 48h resolution SLA.</p>
+      </div>
+      <div style="background:var(--cream); border:1px solid var(--rule); padding:24px; border-top:4px solid var(--accent2);">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Priority</div>
+        <div style="font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:8px;">P2 — Recommended</div>
+        <p style="font-size:13px; margin:0; color:#4a4540;">Best practice coverage. Failure raises a normal ticket; does not block release.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p>Test IDs are stable — they do not change when test details are updated. Each test maps to exactly one PRD requirement (Feature, Guardrail, PDLC Gate, or Risk item). Coverage tracking is maintained in a separate test management system linked to this document.</p>
+      <span class="attr">TEST MANAGEMENT CONVENTION</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 02 ERP / INGESTION -->
+  <div class="section" id="erp">
+    <div class="section-header">
+      <span class="section-num">02 —</span>
+      <h2>ERP Connector &amp; Data Ingestion</h2>
+    </div>
+    <p>Tests covering the ERP Connector SDK, data ingestion pipeline, and retailer identity resolution layer. PRD reference: Section 05, Layer 1 features.</p>
+
+    <div class="suite-header">ERP-01 — Connector Functional Tests <span class="suite-count">8 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Test Name</th><th>Input</th><th>Expected Output</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">ERP-01-01</td>
+          <td>Tally Prime — Successful data extraction</td>
+          <td>Tally Prime instance with 100 retailer ledgers, 24 months of invoices</td>
+          <td>Structured JSON batch with all required fields per schema</td>
+          <td>Zero missing required fields; schema validates 100%; batch signed correctly</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-01-02</td>
+          <td>SAP B1 — Successful data extraction</td>
+          <td>SAP Business One instance with standard FMCG distributor schema</td>
+          <td>Structured JSON batch; field mapping correct for SAP B1 nomenclature</td>
+          <td>Field mapping table applied correctly; invoice amounts match source records within ₹1 tolerance</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-01-03</td>
+          <td>CSV export — Successful ingestion</td>
+          <td>CSV file per AltScore template specification (header row, UTF-8, required columns)</td>
+          <td>Parsed and ingested batch equivalent to API-based extraction</td>
+          <td>All rows parsed; date format normalized; currency values correctly parsed</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-01-04</td>
+          <td>Incremental delta sync — only new records fetched</td>
+          <td>Full initial sync completed; 20 new invoices added to ERP; delta sync triggered</td>
+          <td>Only the 20 new records ingested; no duplicates of previously synced records</td>
+          <td>Batch contains exactly 20 new records; watermark timestamp correctly updated</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-01-05</td>
+          <td>Malformed ERP data — quarantine and alert</td>
+          <td>Batch with 5% of records having null invoice amounts and negative payment delays</td>
+          <td>Malformed records quarantined; clean records ingested; alert triggered</td>
+          <td>Quarantine count matches malformed record count; alert delivered within 5 minutes; clean records visible in Bronze layer</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-01-06</td>
+          <td>Retailer identity resolution — GST deduplication</td>
+          <td>Same retailer present in two distributor batches with identical GST, different shop names</td>
+          <td>Retailer resolved to single entity; both distributor relationships recorded</td>
+          <td>Single UUID assigned; both distributor_id relationships present in entity graph</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-01-07</td>
+          <td>Retailer identity resolution — fuzzy match (no GST)</td>
+          <td>Retailer with same phone number but slightly different shop name across two distributors</td>
+          <td>Fuzzy match score computed; above threshold → merged; below → flagged for manual review</td>
+          <td>Merge decisions are deterministic for same input; below-threshold cases reach manual review queue</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-01-08</td>
+          <td>ERP schema version change — graceful handling</td>
+          <td>Tally ERP upgraded; column names changed in invoice table</td>
+          <td>Connector detects schema drift; ingestion halted for that distributor; alert raised</td>
+          <td>No data ingested from mismatched schema; alert includes schema diff; other distributors unaffected</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="suite-header">ERP-02 — Data Quality Dashboard Tests <span class="suite-count">4 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Test Name</th><th>Input</th><th>Expected Output</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">ERP-02-01</td>
+          <td>Completeness score computed correctly</td>
+          <td>Distributor batch with 30% of retailer records missing payment dates</td>
+          <td>Completeness score = 70%; status = "Low Confidence"</td>
+          <td>Score computed correctly; "Low Confidence" badge shown in distributor dashboard; scoring blocked for affected retailers</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-02-02</td>
+          <td>Data freshness indicator — stale sync alert</td>
+          <td>Last sync was 8 days ago; no new batches received</td>
+          <td>Freshness indicator shows "Stale (8 days)"; alert sent to distributor contact</td>
+          <td>Alert generated after 3-day gap; escalation alert after 7-day gap; scores marked with freshness_days correctly</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-02-03</td>
+          <td>Anomaly flag — bulk payment recording</td>
+          <td>100 retailer payments all recorded on the same day with the same amount</td>
+          <td>Anomaly flag raised; batch quarantined for review before feature computation</td>
+          <td>Anomaly detected and flagged; feature pipeline does not process flagged batch until review complete</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ERP-02-04</td>
+          <td>Duplicate invoice detection</td>
+          <td>Same invoice_id appearing twice in a batch</td>
+          <td>Duplicate removed; one record retained; dedup count logged</td>
+          <td>Exactly one record per invoice_id in Bronze layer; dedup event logged with original count</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 03 CONSENT -->
+  <div class="section" id="consent">
+    <div class="section-header">
+      <span class="section-num">03 —</span>
+      <h2>Consent Management</h2>
+    </div>
+    <p>Tests for the DPDP-compliant consent flow — grant, revocation, audit trail, and scope enforcement. PRD reference: Section 05, Layer 1 — Consent Management Portal; Section 08 — DPDP Act compliance.</p>
+
+    <div class="suite-header">CON-01 — Consent Flow Tests <span class="suite-count">7 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Test Name</th><th>Scenario</th><th>Expected Outcome</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">CON-01-01</td>
+          <td>Retailer consent grant — WhatsApp flow</td>
+          <td>Retailer receives consent request via WhatsApp; reads purpose statement; responds "Yes"</td>
+          <td>Consent record created with: retailer_id, distributor_id, timestamp, scope, channel="whatsapp", cryptographic signature</td>
+          <td>Consent record exists; signature validates; all required fields populated; retailer data processing unlocked</td>
+          <td class="p0">P0</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">CON-01-02</td>
+          <td>Retailer consent revocation — immediate data lock</td>
+          <td>Retailer sends revocation request</td>
+          <td>Consent revocation record created; data processing for this retailer halted within 1 hour; score API returns "consent_revoked" for this retailer</td>
+          <td>Processing lock applied within 1 hour; API returns correct error code; data is not deleted immediately (retention policy applies)</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">CON-01-03</td>
+          <td>Score request without retailer consent — blocked</td>
+          <td>Lender requests score for retailer_id with no consent record</td>
+          <td>API returns HTTP 403 with error code "CONSENT_REQUIRED"</td>
+          <td>No score computed or returned; audit log entry created; error code matches specification</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">CON-01-04</td>
+          <td>Consent scope enforcement — lender not in scope</td>
+          <td>Retailer consented only to NBFC_A; NBFC_B requests score for same retailer</td>
+          <td>API returns 403 "CONSENT_SCOPE_MISMATCH" for NBFC_B; NBFC_A score request succeeds</td>
+          <td>Strict per-lender consent scope enforced; no leakage between lenders</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">CON-01-05</td>
+          <td>Consent audit trail completeness</td>
+          <td>Grant, two processing events, one scope update, one revocation for a single retailer</td>
+          <td>Audit trail contains all 5 events in chronological order with correct timestamps and signatures</td>
+          <td>Audit log is complete; all signatures valid; no gaps between events; retrievable via compliance API</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">CON-01-06</td>
+          <td>Consent expiry — auto-renewal reminder</td>
+          <td>Consent record approaching 12-month expiry (30 days out)</td>
+          <td>Renewal reminder sent to retailer via WhatsApp; if no renewal by expiry, consent treated as revoked</td>
+          <td>Reminder sent 30 days before expiry; second reminder 7 days before; data lock applied at expiry if not renewed</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">CON-01-07</td>
+          <td>Consent in Hindi — purpose statement comprehension test</td>
+          <td>WhatsApp consent flow presented in Hindi to retailer who selected Hindi preference</td>
+          <td>Full consent flow in Hindi; purpose statement, data scope, and revocation instructions all translated accurately</td>
+          <td>Back-translation reviewed and approved by native Hindi speaker; no ambiguous or truncated phrases</td>
+          <td class="p1">P1</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 04 FEATURE PIPELINE -->
+  <div class="section" id="features">
+    <div class="section-header">
+      <span class="section-num">04 —</span>
+      <h2>Feature Pipeline</h2>
+    </div>
+    <p>Tests validating the computation of the 40+ behavioral signals from raw ERP data. PRD reference: Section 07 — AI Engine Feature Design.</p>
+
+    <div class="suite-header">FP-01 — Feature Computation Correctness <span class="suite-count">10 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Feature</th><th>Test Scenario</th><th>Expected Value</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">FP-01-01</td>
+          <td>Avg. payment delay (days)</td>
+          <td>Retailer with 10 invoices; payment delays of [0,2,5,7,3,0,4,1,6,2] days</td>
+          <td>avg_payment_delay = 3.0 days</td>
+          <td>Computed value within ±0.01 of expected; null invoices excluded from computation</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-02</td>
+          <td>P90 payment delay</td>
+          <td>Same retailer as FP-01-01</td>
+          <td>p90_payment_delay = 6.3 days (numpy-style interpolation)</td>
+          <td>Value within ±0.1 of expected; consistent across pipeline runs (deterministic)</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-03</td>
+          <td>Order frequency (monthly)</td>
+          <td>Retailer with orders on: Jan 5, Jan 20, Feb 3, Feb 28, Mar 15 (5 orders in 3 months)</td>
+          <td>monthly_order_frequency = 1.67 orders/month</td>
+          <td>±0.05 tolerance; partial-month handling documented and applied consistently</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-04</td>
+          <td>12-month GMV trend slope</td>
+          <td>Retailer GMV growing linearly from ₹50K/month to ₹80K/month over 12 months</td>
+          <td>gmv_trend_slope = positive (≈ +2500/month); upward trend label = True</td>
+          <td>Slope sign correct; OLS regression applied; R² reported alongside slope</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-05</td>
+          <td>Seasonal demand elasticity</td>
+          <td>Retailer with 3x GMV spike in Oct–Nov vs. monthly average</td>
+          <td>seasonal_spike_ratio = 3.0; festival_months = ['Oct', 'Nov'] identified</td>
+          <td>Spike ratio computed correctly; festival months correctly identified via calendar mapping</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-06</td>
+          <td>Return rate</td>
+          <td>Retailer with 200 invoices; 8 return/credit notes</td>
+          <td>return_rate = 4.0%</td>
+          <td>Rate computed as (returns / invoices) × 100; only valid return credit notes counted (not internal distributor adjustments)</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-07</td>
+          <td>Distributor tenure (months)</td>
+          <td>First invoice date: Jan 2019; scoring date: May 2026</td>
+          <td>distributor_tenure_months = 88</td>
+          <td>Date arithmetic correct; handles leap years; uses first_invoice_date not first_sync_date</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-08</td>
+          <td>Cold-start retailer — insufficient data</td>
+          <td>Retailer with only 4 months of data (below 6-month threshold)</td>
+          <td>Feature set marked "insufficient_data"; retailer routed to rules-based conservative limit path</td>
+          <td>No ML model score issued; rules-based credit limit returned with flag; lender API response includes cold_start=true</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-09</td>
+          <td>Croston's method — sparse retailer</td>
+          <td>Retailer with orders only in Oct–Nov each year (seasonal agri-input shop); 3-year history</td>
+          <td>Intermittent demand model applied; order frequency not penalized; seasonal pattern recognized</td>
+          <td>Croston's method triggered (verified by model selection log); feature values reflect seasonal pattern; retailer not scored as "inactive"</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">FP-01-10</td>
+          <td>Feature pipeline — determinism</td>
+          <td>Same input data ingested twice; feature pipeline run twice independently</td>
+          <td>Identical feature values on both runs</td>
+          <td>All 40+ features match exactly between runs (no randomness in feature computation); hash of feature output file matches</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 05 ML MODEL -->
+  <div class="section" id="model">
+    <div class="section-header">
+      <span class="section-num">05 —</span>
+      <h2>ML Model Quality &amp; Fairness</h2>
+    </div>
+    <p>Tests validating model performance, explainability, fairness, and drift detection. These tests run in the nightly ML evaluation pipeline and must pass before any model version is promoted to production. PRD reference: PDLC Phase 02 gate criteria, Section 10 metrics.</p>
+
+    <div class="suite-header">ML-01 — Model Performance Tests <span class="suite-count">6 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Test Name</th><th>Dataset</th><th>Metric</th><th>Pass Threshold</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">ML-01-01</td>
+          <td>AUROC on holdout set</td>
+          <td>Stratified 20% holdout from NBFC partner repayment data (min. 1,000 samples)</td>
+          <td>Area Under ROC Curve</td>
+          <td class="p0"><span class="p0">≥ 0.72 · P0</span></td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-01-02</td>
+          <td>KS Statistic on holdout set</td>
+          <td>Same holdout as ML-01-01</td>
+          <td>Kolmogorov-Smirnov statistic (separation between default / non-default score distributions)</td>
+          <td class="p0"><span class="p0">≥ 0.35 · P0</span></td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-01-03</td>
+          <td>Precision-Recall at Band boundaries</td>
+          <td>Holdout set; segment by risk band A/B/C/D</td>
+          <td>Default rate within each band must be monotonically increasing A→D</td>
+          <td>Band D default rate &gt; Band C &gt; Band B &gt; Band A; no band inversions</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-01-04</td>
+          <td>Score calibration — predicted PD vs. actual default rate</td>
+          <td>90-day repayment data from pilot Phase 04 (500 retailers)</td>
+          <td>Mean predicted PD vs. observed default rate per decile</td>
+          <td>Predicted PD within ±2% of actual default rate across all deciles; Brier score computed and reported</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-01-05</td>
+          <td>Reason code coverage</td>
+          <td>Full holdout set</td>
+          <td>% of scores with ≥3 positive and ≥2 negative SHAP reason codes above threshold</td>
+          <td>≥ 95% of scores have complete reason code set; no "unknown" reason codes in production</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-01-06</td>
+          <td>Reason code lender acceptance rate</td>
+          <td>Lender credit officer survey after 60-day pilot (n ≥ 20 officers)</td>
+          <td>% of reason codes rated "makes sense / useful" by credit officers</td>
+          <td>≥ 70% acceptance rate; specific rejected codes documented for model team review</td>
+          <td class="p1">P1</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="suite-header">ML-02 — Fairness &amp; Bias Tests <span class="suite-count">5 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Test Name</th><th>Cohort Segments</th><th>Metric</th><th>Pass Threshold</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">ML-02-01</td>
+          <td>Geographic score parity — state-level</td>
+          <td>Retailers grouped by state (min. 30 retailers per state); compare score distributions</td>
+          <td>Mean score difference between highest and lowest-scoring states for equivalent GMV/payment behavior profiles</td>
+          <td>Score divergence ≤ 15% for matched cohorts; geography not a direct feature — confirm via SHAP</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-02-02</td>
+          <td>Tier-2 vs. Tier-3 city score parity</td>
+          <td>Retailers in Tier-2 vs. Tier-3 cities with matched behavioral profiles</td>
+          <td>Score distribution comparison; disparate impact ratio</td>
+          <td>Disparate impact ratio ≥ 0.80 (80% rule); no statistically significant score gap at p &lt; 0.05</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-02-03</td>
+          <td>Gender proxy bias test</td>
+          <td>Retailers grouped by inferred gender of shop owner (via name analysis); compared for matched behavioral profiles</td>
+          <td>Score distribution comparison; mean score gap</td>
+          <td>Mean score gap ≤ 10 points for matched behavioral cohorts; gender proxy not in top-10 SHAP features</td>
+          <td class="p0">P0</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-02-04</td>
+          <td>Industry / trade category parity</td>
+          <td>FMCG retailers vs. auto parts vs. general trade retailers with matched GMV and payment profiles</td>
+          <td>Score distribution comparison across categories</td>
+          <td>No single category penalized &gt;15% vs. equivalent-behavior cohorts; SKU category not a direct feature</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">ML-02-05</td>
+          <td>Model drift — PSI monthly check</td>
+          <td>Live score distribution vs. training baseline score distribution</td>
+          <td>Population Stability Index (PSI)</td>
+          <td>PSI &lt; 0.1 (stable); PSI 0.1–0.2 (monitor, alert); PSI &gt; 0.2 (model refresh triggered, alert to Risk team)</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 06 SCORE API -->
+  <div class="section" id="api">
+    <div class="section-header">
+      <span class="section-num">06 —</span>
+      <h2>Score API</h2>
+    </div>
+    <p>Tests for the AltScore REST API — functional correctness, performance, error handling, and contract adherence. PRD reference: Section 05, Layer 3 — AltScore API; Section 10 metrics (API latency p95 &lt;2s).</p>
+
+    <div class="suite-header">API-01 — Functional Tests <span class="suite-count">8 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Scenario</th><th>Request</th><th>Expected Response</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">API-01-01</td>
+          <td>Happy path — Band A retailer</td>
+          <td>POST /v1/score with valid GST, authorized lender, working_capital purpose</td>
+          <td>HTTP 200; altscore ∈ [750–900]; risk_band = "A"; recommended_limit ≤ 30% of 6-month GMV</td>
+          <td>All response fields present and typed correctly per API spec; score_version included; generated_at within 30s of request</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-01-02</td>
+          <td>Happy path — Band D retailer</td>
+          <td>POST /v1/score with high-risk retailer profile (chronic late payer, declining GMV)</td>
+          <td>HTTP 200; altscore ∈ [300–499]; risk_band = "D"; recommended_limit = 0 or minimal conservative amount</td>
+          <td>Score in correct band range; reason codes correctly identify negative signals</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-01-03</td>
+          <td>Invalid retailer ID format</td>
+          <td>POST /v1/score with malformed GST string ("NOT_A_GST")</td>
+          <td>HTTP 400; error_code = "INVALID_RETAILER_ID"; no score computed</td>
+          <td>Input validation fires before any DB lookup; error message does not expose internal details</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-01-04</td>
+          <td>Retailer not found in system</td>
+          <td>POST /v1/score with valid GST format but unknown retailer</td>
+          <td>HTTP 404; error_code = "RETAILER_NOT_FOUND"</td>
+          <td>404 returned; no score or profile data leaked; response time &lt; 500ms (fast fail)</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-01-05</td>
+          <td>Stale data warning in response</td>
+          <td>Score request for retailer whose last ERP sync was 15 days ago</td>
+          <td>HTTP 200; data_freshness_days = 15; warning flag in response</td>
+          <td>Freshness days accurate; warning included; score still returned (not blocked) but freshness prominently surfaced</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-01-06</td>
+          <td>Requested limit capped at GMV ceiling</td>
+          <td>Lender requests score with requested_limit = ₹10L for retailer with 6-month GMV = ₹5L</td>
+          <td>recommended_limit = ₹1.5L (30% of ₹5L); warning: "limit_capped_to_gmv_ceiling"</td>
+          <td>Hard ceiling enforced; cannot be overridden via API parameters; ceiling logic documented in response</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-01-07</td>
+          <td>Rate limit enforcement</td>
+          <td>101 requests in 60 seconds from same lender API key</td>
+          <td>First 100: HTTP 200; request 101: HTTP 429 "RATE_LIMIT_EXCEEDED"</td>
+          <td>Rate limit fires at correct threshold; Retry-After header included in 429 response; limit resets correctly after window</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-01-08</td>
+          <td>Unauthorized lender token</td>
+          <td>POST /v1/score with expired JWT</td>
+          <td>HTTP 401; error_code = "TOKEN_EXPIRED"</td>
+          <td>No score returned; no retailer data leaked; event logged in audit trail</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="suite-header">API-02 — Performance Tests <span class="suite-count">3 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Test Name</th><th>Load Profile</th><th>Target Metric</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">API-02-01</td>
+          <td>Single score request latency</td>
+          <td>Single warm request to pre-scored retailer (cache hit scenario)</td>
+          <td>p50, p95, p99 latency</td>
+          <td>p50 &lt; 500ms; p95 &lt; 2000ms; p99 &lt; 3000ms (PRD SLA: p95 &lt; 2s)</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-02-02</td>
+          <td>Sustained load test</td>
+          <td>50 concurrent lenders; 10 req/sec each; 5-minute sustained load</td>
+          <td>Error rate; p95 latency; throughput</td>
+          <td>Error rate &lt; 0.1%; p95 latency &lt; 2s throughout; no memory leak (stable heap over 5 min)</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">API-02-03</td>
+          <td>Cache miss — cold score computation</td>
+          <td>Score request for retailer not in cache (forces model inference)</td>
+          <td>End-to-end latency including model inference</td>
+          <td>p95 &lt; 3s for cache miss (documented exception to 2s SLA with lender communication); inference time logged separately</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 07 GUARDRAILS -->
+  <div class="section" id="guardrails">
+    <div class="section-header">
+      <span class="section-num">07 —</span>
+      <h2>Guardrail Tests</h2>
+    </div>
+    <p>Tests validating the six guardrails defined in PRD Section 08. These tests are critical — guardrail failures represent either lender risk or retailer harm.</p>
+
+    <div class="suite-header">GR-01 — Score Gaming Prevention <span class="suite-count">4 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Attack Pattern</th><th>Input Simulation</th><th>Expected Detection</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">GR-01-01</td>
+          <td>Sudden order volume spike</td>
+          <td>Retailer with 12-month average of 5 orders/month suddenly places 25 orders in Month 13 (immediately before scoring event)</td>
+          <td>Isolation Forest flags as anomaly; score reflects pre-spike baseline, not inflated Month 13</td>
+          <td>Anomaly flag = True; score band unchanged vs. pre-spike baseline ±1 band; alert generated</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">GR-01-02</td>
+          <td>Order inflation + return gaming</td>
+          <td>Retailer places large orders; subsequently returns 80% of goods; net purchase = normal level</td>
+          <td>Return rate counter-signal reduces score benefit of inflated gross orders</td>
+          <td>High return rate correctly penalizes score; net purchase GMV computed correctly; Isolation Forest detects pattern</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">GR-01-03</td>
+          <td>60-day look-back window enforcement</td>
+          <td>Retailer games orders in Month 1; scoring event in Month 2 (within look-back); scoring event in Month 3 (outside look-back)</td>
+          <td>Month 2 score: anomaly flag present; Month 3 score: flag cleared if behavior normalized</td>
+          <td>Look-back window correctly applied; flag lifecycle (raise → clear) works as expected</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">GR-01-04</td>
+          <td>Payment behavior — ungameable confirmation</td>
+          <td>Retailer makes early payments for 2 months to improve score; history shows 3-year pattern of late payments</td>
+          <td>Score improvement is modest and bounded; 3-year payment history outweighs 2-month recent behavior</td>
+          <td>Score change ≤ 1 band; long-term payment history weight ≥ 60% of payment signal per SHAP analysis</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="suite-header">GR-02 — Affordability &amp; Limit Guardrails <span class="suite-count">3 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Scenario</th><th>Input</th><th>Expected Behavior</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">GR-02-01</td>
+          <td>30% GMV ceiling — hard cap</td>
+          <td>Retailer with 6-month GMV = ₹4L; lender requests limit of ₹2L</td>
+          <td>recommended_limit = ₹1.2L (30% of ₹4L); cannot be overridden via API</td>
+          <td>API parameter manipulation (e.g., inflated requested_limit) does not bypass ceiling; ceiling enforced server-side</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">GR-02-02</td>
+          <td>Seasonal limit adjustment</td>
+          <td>Same retailer scored in Oct (festival quarter) vs. Feb (lean quarter)</td>
+          <td>Oct limit = higher; Feb limit = lower; both ≤ 30% GMV ceiling for respective trailing 6 months</td>
+          <td>Limit varies sensibly with seasonal GMV; ceiling constraint always satisfied; seasonal structuring documented in response</td>
+          <td class="p1">P1</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">GR-02-03</td>
+          <td>Lender manual override audit trail</td>
+          <td>NBFC credit officer overrides recommended limit upward (within lender policy)</td>
+          <td>Override recorded in audit log with officer_id, original_limit, override_limit, justification_text, timestamp</td>
+          <td>Audit entry immutable; override amount tracked in portfolio monitoring; alert to risk team if override &gt; 20% above recommended</td>
+          <td class="p1">P1</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="suite-header">GR-03 — Grievance Redressal <span class="suite-count">3 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Scenario</th><th>Input</th><th>Expected Outcome</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">GR-03-01</td>
+          <td>Retailer files grievance — acknowledgement SLA</td>
+          <td>Retailer submits grievance via WhatsApp ("my score seems wrong")</td>
+          <td>Acknowledgement sent within 24 hours; case assigned to review team; 7-day resolution SLA starts</td>
+          <td>Acknowledgement timestamp ≤ 24h from submission; case_id issued; SLA timer correctly started</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">GR-03-02</td>
+          <td>Grievance — score corrected after review</td>
+          <td>Manual review finds data error in distributor ERP; correct data increases score by 1 band</td>
+          <td>Score corrected; retailer notified; lender notified of score refresh; correction logged in audit trail</td>
+          <td>All three notifications sent; audit trail shows original_score, correction_reason, new_score; lender notified within 1 hour of correction</td>
+          <td class="p1">P1</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">GR-03-03</td>
+          <td>Grievance SLA breach — escalation</td>
+          <td>Grievance not resolved within 7 days</td>
+          <td>Escalation alert generated; sent to team lead; retailer notified of delay with updated resolution commitment</td>
+          <td>Escalation fires at Day 7 (not Day 8); retailer communication sent; escalation rate tracked in guardrail health metrics</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 08 SECURITY TESTS -->
+  <div class="section" id="security">
+    <div class="section-header">
+      <span class="section-num">08 —</span>
+      <h2>Security Tests</h2>
+    </div>
+    <p>Security test cases derived from the Security Architecture document (SAR-ALTSCORE-001). These tests are run as part of the pre-release security gate and periodically in production.</p>
+
+    <div class="suite-header">SEC-01 — Authentication &amp; Authorization <span class="suite-count">6 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Test Name</th><th>Scenario</th><th>Expected Result</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">SEC-01-01</td>
+          <td>Cross-lender data isolation</td>
+          <td>NBFC_A token used to request score for retailer that only NBFC_B has been granted access to</td>
+          <td>HTTP 403 "CONSENT_SCOPE_MISMATCH"; zero NBFC_B data in response</td>
+          <td>Row-level security enforced; no data leakage; audit event logged</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">SEC-01-02</td>
+          <td>JWT replay attack</td>
+          <td>Valid JWT captured and replayed after revocation</td>
+          <td>HTTP 401 "TOKEN_REVOKED"</td>
+          <td>Revocation list checked on every request; no grace period; replay blocked within 1 second of revocation</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">SEC-01-03</td>
+          <td>Brute-force account lock</td>
+          <td>5 failed login attempts in 10 minutes for distributor portal</td>
+          <td>Account locked; unlock email sent to registered address; audit alert generated</td>
+          <td>Lock fires after exactly 5 failures (not 4, not 6); unlock flow verified; alert delivered within 2 minutes</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">SEC-01-04</td>
+          <td>SQL injection via API parameters</td>
+          <td>retailer_id parameter contains SQL injection payload ("' OR 1=1 --")</td>
+          <td>HTTP 400 "INVALID_RETAILER_ID"; no database query executed</td>
+          <td>Input validation fires before DB layer; parameterized queries confirmed via code review; no 500 error</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">SEC-01-05</td>
+          <td>ERP connector mTLS — certificate mismatch</td>
+          <td>Connector presents expired or wrong client certificate</td>
+          <td>Connection rejected at TLS handshake; no data accepted; alert raised</td>
+          <td>Rejection at TLS layer (not application layer); error logged with distributor_id and certificate details</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">SEC-01-06</td>
+          <td>Admin four-eyes access control</td>
+          <td>Admin user attempts to access raw retailer PII without a second admin approval</td>
+          <td>Access denied; approval workflow triggered; access only granted after second admin approves</td>
+          <td>No self-approval possible; approval workflow enforced technically; all admin accesses in audit log</td>
+          <td class="p0">P0</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 09 COMPLIANCE -->
+  <div class="section" id="compliance">
+    <div class="section-header">
+      <span class="section-num">09 —</span>
+      <h2>Regulatory Compliance Tests</h2>
+    </div>
+    <p>Tests validating the regulatory compliance controls defined in PRD Section 08 — Regulatory Compliance Map.</p>
+
+    <div class="suite-header">REG-01 — DPDP Act &amp; RBI Compliance <span class="suite-count">5 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Regulation</th><th>Test Scenario</th><th>Expected Outcome</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">REG-01-01</td>
+          <td>DPDP Act — Right to Erasure</td>
+          <td>Retailer requests deletion of all their data after consent revocation</td>
+          <td>PII deleted from all active systems within 30 days; aggregated/anonymized features may be retained per policy; deletion confirmed in writing</td>
+          <td>Deletion completed within 30 days; deletion audit record created; score not retrievable after deletion; anonymized feature aggregate retained correctly</td>
+          <td class="p0">P0</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">REG-01-02</td>
+          <td>DPDP Act — Data Portability</td>
+          <td>Retailer requests a copy of all data held about them</td>
+          <td>Machine-readable export (JSON) delivered within 15 days containing all retailer-specific records</td>
+          <td>Export contains: consent records, score history, feature summary, processing events; no other retailer data included; delivered securely</td>
+          <td class="p1">P1</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">REG-01-03</td>
+          <td>RBI FLDG — Reason codes on every decision</td>
+          <td>100 consecutive score API responses sampled from production</td>
+          <td>100% of responses contain ≥1 positive and ≥1 negative reason code</td>
+          <td>Zero responses with empty reason_codes; codes map to RBI-recognized reason categories</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">REG-01-04</td>
+          <td>Breach notification SLA — 72-hour test</td>
+          <td>Simulated P1 security incident (tabletop exercise)</td>
+          <td>Incident declared; notification to Data Protection Board initiated within 72 hours; notification template approved by legal</td>
+          <td>Tabletop exercise completed within time limit; notification template reviewed and approved; runbook updated post-exercise</td>
+          <td class="p0">P0</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">REG-01-05</td>
+          <td>No payment card data in pipeline</td>
+          <td>Audit scan of Bronze, Silver, and Gold data lake layers for PAN, card number, CVV patterns</td>
+          <td>Zero matches for card data regex patterns across all data lake partitions</td>
+          <td>DLP scan returns zero findings; scan run quarterly; ERP extraction scope confirmed to exclude card fields</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 10 E2E -->
+  <div class="section" id="e2e">
+    <div class="section-header">
+      <span class="section-num">10 —</span>
+      <h2>End-to-End Journeys</h2>
+    </div>
+    <p>Full-stack integration tests covering the complete user journeys defined in the PRD — from distributor onboarding through to lender disbursement decision. These tests run in the staging environment before every release.</p>
+
+    <div class="suite-header">E2E-01 — Core Journey Tests <span class="suite-count">4 tests</span></div>
+    <table class="doc-table">
+      <thead><tr><th>Test ID</th><th>Journey</th><th>Steps</th><th>Expected Outcome</th><th>Pass Criteria</th><th>Priority</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">E2E-01-01</td>
+          <td>Full new retailer onboarding to first score</td>
+          <td>1. Distributor onboarded; ERP connected. 2. Retailer data ingested. 3. Consent obtained via WhatsApp. 4. Features computed. 5. Score issued via API to lender.</td>
+          <td>Score returned within 48 hours of distributor connection; all pipeline stages logged; consent trail complete</td>
+          <td>Score API returns valid response; all audit events present; feature completeness ≥ 80%; no data escaping consent scope</td>
+          <td class="p0">P0</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">E2E-01-02</td>
+          <td>Retailer consent revocation — data processing halt</td>
+          <td>1. Retailer has active consent and live score. 2. Retailer revokes consent. 3. Lender attempts score query 1 hour later.</td>
+          <td>Score query returns 403 CONSENT_REVOKED; no new data processed; existing score invalidated in score store</td>
+          <td>Processing halt within 1 hour; API error code correct; audit trail complete; no score returned post-revocation</td>
+          <td class="p0">P0</td><td><span class="auto">AUTO</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">E2E-01-03</td>
+          <td>Shadow mode pilot — AltScore vs. NBFC manual judgment</td>
+          <td>1. 100 retailers scored by AltScore in shadow mode. 2. NBFC credit officers make independent judgment. 3. Rank ordering compared.</td>
+          <td>AltScore correctly rank-orders risk in ≥ 75% of cases vs. NBFC officer judgment (PRD PDLC Phase 03 gate)</td>
+          <td>Agreement rate ≥ 75%; disagreements documented and reviewed with NBFC team; model adjustments logged</td>
+          <td class="p0">P0</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+        <tr>
+          <td class="tc-id">E2E-01-04</td>
+          <td>Live lending pilot — 90-day repayment tracking</td>
+          <td>1. 500 retailers scored and loans disbursed (Bands A and B). 2. 90-day repayment outcomes collected. 3. Predicted PD vs. actual default rate compared.</td>
+          <td>Actual 90-day default rate ≤ predicted PD + 2% for each risk band (PRD PDLC Phase 04 gate)</td>
+          <td>Per-band analysis completed; PSI stable; if gate not met, model refresh triggered before Phase 05 advance</td>
+          <td class="p0">P0</td><td><span class="manual">MANUAL</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer class="doc-footer">
+  <div>
+    <div class="ft-brand">Alt<span>Score</span> · Test Cases</div>
+    <div style="margin-top:6px;">TCS-ALTSCORE-001 · v1.0 · May 2026</div>
+  </div>
+  <div style="text-align:right;">
+    <div>CONFIDENTIAL — INTERNAL USE ONLY</div>
+    <div style="margin-top:4px;">Companion to PRD-ALTSCORE-001</div>
+  </div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('.section');
+  const dots = document.querySelectorAll('.nav-dot');
+  const sectionIds = ['approach','erp','consent','features','model','api','guardrails','security','compliance','e2e'];
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = sectionIds.indexOf(entry.target.id);
+        if (idx >= 0) { dots.forEach(d => d.classList.remove('active')); dots[idx + 1]?.classList.add('active'); }
+      }
+    });
+  }, { threshold: 0.1 });
+  sections.forEach(s => observer.observe(s));
+  const coverObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) { dots.forEach(d => d.classList.remove('active')); dots[0].classList.add('active'); }
+  }, { threshold: 0.3 });
+  coverObserver.observe(document.getElementById('cover'));
+  window.scrollTo = function(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+</script>
+</body>
+</html>

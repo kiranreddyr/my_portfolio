@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Guardrails Design Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --accent: #c94b1f;
+    --accent2: #2b5e3f;
+    --accent3: #1a3a5c;
+    --muted: #7a7065;
+    --rule: #ccc4b4;
+    --tag-bg: #e8e0cf;
+    --code-bg: #1e1c18;
+    --code-text: #e8d8b0;
+    --gold: #c4890d;
+    --purple: #5a2d82;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Lora', Georgia, serif; font-size: 16px; line-height: 1.75; }
+
+  .cover { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+  .cover-left { background: var(--ink); padding: 80px 60px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .cover-left::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px); pointer-events: none; }
+  .cover-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .2em; color: var(--accent2); text-transform: uppercase; }
+  .cover-title { font-family: 'Syne', sans-serif; font-size: clamp(44px,6vw,76px); font-weight: 800; line-height: .95; color: var(--paper); letter-spacing: -.02em; }
+  .cover-title span { color: var(--accent2); }
+  .cover-sub { font-family: 'DM Mono', monospace; font-size: 13px; color: rgba(245,240,232,.5); line-height: 1.8; border-top: 1px solid rgba(255,255,255,.1); padding-top: 24px; }
+  .cover-right { background: var(--cream); padding: 80px 60px; display: flex; flex-direction: column; justify-content: center; gap: 32px; border-left: 4px solid var(--accent2); }
+  .cover-stat { border-bottom: 1px solid var(--rule); padding-bottom: 24px; }
+  .cover-stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: var(--accent2); line-height: 1; display: block; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .15em; color: var(--muted); text-transform: uppercase; margin-top: 4px; display: block; }
+  .stat-desc { font-size: 14px; color: var(--ink); margin-top: 6px; font-style: italic; }
+
+  .doc { max-width: 1100px; margin: 0 auto; padding: 80px 40px; }
+  .section { margin-bottom: 80px; opacity: 0; transform: translateY(20px); transition: opacity .6s, transform .6s; }
+  .section.visible { opacity: 1; transform: none; }
+  .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 40px; border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+  .section-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent2); letter-spacing: .1em; flex-shrink: 0; }
+  h2 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -.02em; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+  h4 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 8px; letter-spacing: .02em; }
+  p { margin-bottom: 16px; color: #2a2620; }
+
+  .callout { background: var(--ink); color: var(--paper); padding: 32px 40px; margin: 32px 0; border-left: 6px solid var(--accent2); }
+  .callout p { font-size: 17px; font-style: italic; line-height: 1.6; color: var(--paper); margin: 0; }
+  .callout .attr { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent2); letter-spacing: .15em; margin-top: 12px; display: block; }
+
+  .doc-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+  .doc-table th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; text-align: left; padding: 10px 14px; background: var(--ink); color: var(--paper); }
+  .doc-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; }
+  .doc-table tr:nth-child(even) td { background: var(--cream); }
+  .doc-table tr:hover td { background: #e8dfc8; }
+
+  /* ── GUARDRAIL BLOCK ── */
+  .gr-block { border: 1px solid var(--rule); margin-bottom: 48px; }
+  .gr-header { display: grid; grid-template-columns: 56px 1fr auto; gap: 0; }
+  .gr-num { background: var(--accent2); color: white; font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; display: flex; align-items: center; justify-content: center; min-height: 80px; }
+  .gr-title-block { padding: 20px 24px; background: var(--ink); }
+  .gr-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--paper); line-height: 1.2; }
+  .gr-subtitle { font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(245,240,232,.5); letter-spacing: .1em; margin-top: 4px; }
+  .gr-risk-badge { padding: 20px 24px; background: var(--ink); display: flex; align-items: center; }
+  .gr-body { display: grid; grid-template-columns: 1fr 1fr; }
+  .gr-col { padding: 24px; border-right: 1px solid var(--rule); background: var(--cream); }
+  .gr-col:last-child { border-right: none; }
+  .gr-col-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: block; }
+  .gr-col p { font-size: 13px; color: #3a352d; line-height: 1.6; margin-bottom: 12px; }
+  .gr-col ul { list-style: none; padding: 0; margin: 0; }
+  .gr-col ul li { font-size: 13px; padding: 4px 0 4px 16px; position: relative; color: #3a352d; line-height: 1.5; }
+  .gr-col ul li::before { content: '→'; position: absolute; left: 0; color: var(--muted); font-size: 11px; top: 6px; }
+  .gr-metrics { padding: 20px 24px; background: var(--paper); border-top: 1px solid var(--rule); display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background-color: var(--rule); }
+  .gr-metric { background: var(--paper); padding: 16px; text-align: center; }
+  .gr-metric-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent2); display: block; line-height: 1; }
+  .gr-metric-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 4px; display: block; line-height: 1.3; }
+  .gr-escalation { padding: 16px 24px; border-top: 1px solid var(--rule); background: var(--cream); }
+  .gr-escalation-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: block; }
+  .esc-steps { display: flex; gap: 0; }
+  .esc-step { flex: 1; padding: 10px 14px; border: 1px solid var(--rule); border-right: none; font-size: 12px; color: #3a352d; background: var(--paper); position: relative; }
+  .esc-step:last-child { border-right: 1px solid var(--rule); }
+  .esc-step::after { content: '→'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 14px; z-index: 1; background: var(--paper); padding: 0 1px; }
+  .esc-step:last-child::after { display: none; }
+  .esc-step-num { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--accent); display: block; letter-spacing: .1em; margin-bottom: 2px; }
+
+  .risk-high { color: var(--accent); font-weight: 700; font-family: 'DM Mono', monospace; font-size: 11px; }
+  .risk-med  { color: var(--gold); font-weight: 700; font-family: 'DM Mono', monospace; font-size: 11px; }
+  .risk-low  { color: var(--accent2); font-weight: 700; font-family: 'DM Mono', monospace; font-size: 11px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 32px 0; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin: 32px 0; }
+  .card { background: var(--cream); border: 1px solid var(--rule); padding: 24px; }
+  .card.green { border-top: 4px solid var(--accent2); }
+  .card.red { border-top: 4px solid var(--accent); }
+  .card.blue { border-top: 4px solid var(--accent3); }
+  .card.gold { border-top: 4px solid var(--gold); }
+  .card-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
+  .card h3 { font-size: 15px; margin-bottom: 8px; }
+  .card p { font-size: 13px; color: #4a4540; margin: 0; line-height: 1.6; }
+  .card ul { list-style: none; padding: 0; margin: 8px 0 0 0; }
+  .card ul li { font-size: 12px; padding: 2px 0 2px 14px; position: relative; color: #3a352d; }
+  .card ul li::before { content: '·'; position: absolute; left: 0; color: var(--accent2); font-weight: bold; }
+
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 64px 0; }
+  .sidenav { position: fixed; left: 24px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+  .nav-dot { width: 8px; height: 8px; background: var(--rule); cursor: pointer; transition: all .3s; position: relative; }
+  .nav-dot:hover, .nav-dot.active { background: var(--accent2); transform: scale(1.5); }
+  .nav-dot::after { content: attr(data-label); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); white-space: nowrap; opacity: 0; transition: opacity .2s; background: var(--paper); padding: 2px 8px; border: 1px solid var(--rule); }
+  .nav-dot:hover::after { opacity: 1; }
+  .doc-footer { background: var(--ink); color: rgba(245,240,232,.5); padding: 40px; display: flex; justify-content: space-between; align-items: center; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .1em; }
+  .doc-footer .ft-brand { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--paper); }
+  .doc-footer .ft-brand span { color: var(--accent2); }
+
+  @media (max-width: 768px) {
+    .cover { grid-template-columns: 1fr; }
+    .gr-body, .two-col, .three-col { grid-template-columns: 1fr; }
+    .gr-header { grid-template-columns: 56px 1fr; }
+    .gr-risk-badge { display: none; }
+    .gr-metrics { grid-template-columns: 1fr 1fr; }
+    .esc-steps { flex-direction: column; }
+    .esc-step { border-right: 1px solid var(--rule); border-bottom: none; }
+    .esc-step::after { content: '↓'; right: auto; left: 50%; top: auto; bottom: -12px; transform: translateX(-50%); }
+    .sidenav { display: none; }
+  }
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+
+<nav class="sidenav" id="sidenav">
+  <div class="nav-dot active" data-label="Cover" onclick="scrollTo('cover')"></div>
+  <div class="nav-dot" data-label="Philosophy" onclick="scrollTo('philosophy')"></div>
+  <div class="nav-dot" data-label="Architecture" onclick="scrollTo('architecture')"></div>
+  <div class="nav-dot" data-label="GR-1 Fairness" onclick="scrollTo('gr1')"></div>
+  <div class="nav-dot" data-label="GR-2 Gaming" onclick="scrollTo('gr2')"></div>
+  <div class="nav-dot" data-label="GR-3 Explainability" onclick="scrollTo('gr3')"></div>
+  <div class="nav-dot" data-label="GR-4 Affordability" onclick="scrollTo('gr4')"></div>
+  <div class="nav-dot" data-label="GR-5 Data Quality" onclick="scrollTo('gr5')"></div>
+  <div class="nav-dot" data-label="GR-6 Model Lifecycle" onclick="scrollTo('gr6')"></div>
+  <div class="nav-dot" data-label="Health Dashboard" onclick="scrollTo('health')"></div>
+  <div class="nav-dot" data-label="Governance" onclick="scrollTo('governance')"></div>
+</nav>
+
+<!-- COVER -->
+<div class="cover" id="cover">
+  <div class="cover-left">
+    <div><div class="cover-label">Guardrails Design Plan — GRD-ALTSCORE-001</div></div>
+    <div>
+      <div class="cover-title">Guardrails<br><span>Design</span></div>
+      <div style="height:24px"></div>
+      <div style="font-family:'Lora',serif; font-size:18px; color:rgba(245,240,232,.7); font-style:italic; line-height:1.5;">
+        Full implementation specification for the six AI guardrails governing the AltScore credit intelligence engine.
+      </div>
+    </div>
+    <div class="cover-sub">
+      <div>DOCUMENT / GRD-ALTSCORE-001</div>
+      <div>STATUS / DRAFT FOR REVIEW</div>
+      <div>VERSION / 1.0 — MAY 2026</div>
+      <div style="margin-top:12px; color:rgba(245,240,232,.3);">Companion to PRD-ALTSCORE-001 · Confidential</div>
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat">
+      <span class="stat-num">6</span>
+      <span class="stat-label">Guardrails</span>
+      <div class="stat-desc">Fairness · Gaming · Explainability · Affordability · Data Quality · Model Lifecycle</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">Hard-coded</span>
+      <span class="stat-label">Not configurable at runtime</span>
+      <div class="stat-desc">Credit limit ceiling and fairness thresholds cannot be overridden via API — enforced at infrastructure level</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">3-tier</span>
+      <span class="stat-label">Escalation model per guardrail</span>
+      <div class="stat-desc">Monitor → Alert → Freeze. Every guardrail has a defined escalation path with named owners</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">Quarterly</span>
+      <span class="stat-label">Guardrail health review</span>
+      <div class="stat-desc">All six guardrails reviewed jointly by Product, Risk, ML, and Legal each quarter</div>
+    </div>
+  </div>
+</div>
+
+<main class="doc">
+
+  <!-- 01 PHILOSOPHY -->
+  <div class="section" id="philosophy">
+    <div class="section-header">
+      <span class="section-num">01 —</span>
+      <h2>Guardrail Philosophy</h2>
+    </div>
+    <p>AltScore makes credit decisions that affect livelihoods. An incorrectly low score denies a retailer credit they deserve. An incorrectly high score sends a lender's capital into a loan that defaults. Guardrails exist to bound the harm in both directions — and to ensure the system remains trustworthy even as it scales.</p>
+
+    <div class="callout">
+      <p>A guardrail is not a fallback for when the model fails. It is a structural constraint that the model must operate within — always. If the model's output would violate a guardrail, the guardrail wins. Not sometimes. Every time.</p>
+      <span class="attr">GUARDRAIL DESIGN PRINCIPLE — ALTSCORE</span>
+    </div>
+
+    <div class="three-col">
+      <div class="card green">
+        <span class="card-tag">Design Choice</span>
+        <h3>Guardrails are Infrastructure, Not Policy</h3>
+        <p>Guardrail logic is enforced at the API and pipeline layers — not in a policy document. A developer cannot ship code that bypasses the affordability ceiling, for example, even accidentally. The ceiling is a hard code constraint with no configuration toggle.</p>
+      </div>
+      <div class="card red">
+        <span class="card-tag">Design Choice</span>
+        <h3>Fail Safe, Not Fail Open</h3>
+        <p>If a guardrail check fails to execute (due to system error), the scoring pipeline returns a conservative fallback — not an unguarded score. A missing anomaly detection result causes the request to be flagged for review, not silently passed through.</p>
+      </div>
+      <div class="card blue">
+        <span class="card-tag">Design Choice</span>
+        <h3>Transparent Guardrail Activation</h3>
+        <p>When a guardrail modifies or blocks a score, this is surfaced to the lender in the API response — not hidden. The lender knows whether a limit was capped, a score was held for review, or an anomaly was flagged. No silent interventions.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">The Six Guardrails — Overview</h3>
+    <table class="doc-table">
+      <thead><tr><th>#</th><th>Guardrail</th><th>What It Protects Against</th><th>Who It Protects</th><th>Implementation Layer</th><th>Failure Mode if Absent</th></tr></thead>
+      <tbody>
+        <tr><td><strong>GR-1</strong></td><td>Fairness &amp; Bias</td><td>Systematic under-scoring of a demographic or geographic cohort</td><td>Retailers; AltScore regulatory standing</td><td>Post-scoring audit; training pipeline</td><td>Discriminatory credit access; DPDP + RBI enforcement risk</td></tr>
+        <tr><td><strong>GR-2</strong></td><td>Score Gaming Prevention</td><td>Retailer behavioral manipulation to inflate score before scoring event</td><td>Lender (credit risk); AltScore model integrity</td><td>Pre-scoring anomaly detection; feature design</td><td>Over-lending to manipulated profiles → excess defaults</td></tr>
+        <tr><td><strong>GR-3</strong></td><td>Explainability &amp; Right to Reason</td><td>Opaque credit decisions with no actionable feedback</td><td>Retailer; lender (compliance); AltScore (RBI FLDG)</td><td>Score API response layer; SHAP pipeline</td><td>RBI non-compliance; retailer harm with no recourse; lender liability</td></tr>
+        <tr><td><strong>GR-4</strong></td><td>Affordability &amp; Limit Ceiling</td><td>Over-lending beyond a retailer's realistic repayment capacity</td><td>Retailer (debt trap); lender (credit loss)</td><td>Score API response layer; hard-coded limit logic</td><td>Retailer over-indebtedness; elevated default rates; lender loss</td></tr>
+        <tr><td><strong>GR-5</strong></td><td>Data Quality &amp; Provenance</td><td>Corrupt or low-quality ERP data generating unreliable scores</td><td>Lender; retailer; AltScore model performance</td><td>Ingestion pipeline; feature pipeline; score API</td><td>Scores driven by garbage data; systemic scoring errors; audit failure</td></tr>
+        <tr><td><strong>GR-6</strong></td><td>Model Lifecycle Governance</td><td>Silent model degradation, drift, or unauthorized model changes</td><td>Lender (credit risk); AltScore (model integrity)</td><td>MLOps monitoring layer; model registry</td><td>Scores become increasingly unreliable; default rates creep above predictions undetected</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 02 ARCHITECTURE -->
+  <div class="section" id="architecture">
+    <div class="section-header">
+      <span class="section-num">02 —</span>
+      <h2>Guardrail Architecture</h2>
+    </div>
+    <p>Guardrails are applied at three distinct points in the scoring pipeline. Each point has different characteristics — pre-scoring checks block computation before it starts; post-scoring checks evaluate the output before it is served; and continuous monitoring checks run asynchronously on accumulated data.</p>
+
+    <div style="margin:32px 0;">
+      <div style="background:var(--ink); color:var(--paper); padding:16px 24px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:-1px; display:flex; justify-content:space-between;">
+        <span>Guardrail Execution Pipeline</span>
+        <span style="color:rgba(245,240,232,.4);">Score Request → Response</span>
+      </div>
+
+      <!-- Pipeline row -->
+      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); border-top:none;">
+        <div style="background:var(--cream); padding:20px 16px; border-top:4px solid var(--accent3);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent3); margin-bottom:8px;">STEP 1 — PRE-SCORE</div>
+          <div style="font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:8px;">Consent &amp; Quality Gate</div>
+          <div style="font-size:12px; color:#4a4540; line-height:1.5;">Consent check · Data freshness · Completeness score · Cold-start flag</div>
+          <div style="margin-top:10px; font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);">GR-3 · GR-5</div>
+        </div>
+        <div style="background:var(--cream); padding:20px 16px; border-top:4px solid var(--accent);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;">STEP 2 — PRE-SCORE</div>
+          <div style="font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:8px;">Anomaly Detection</div>
+          <div style="font-size:12px; color:#4a4540; line-height:1.5;">Isolation Forest · Velocity spike check · 60-day look-back window</div>
+          <div style="margin-top:10px; font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);">GR-2</div>
+        </div>
+        <div style="background:var(--cream); padding:20px 16px; border-top:4px solid var(--accent2);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent2); margin-bottom:8px;">STEP 3 — SCORE</div>
+          <div style="font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:8px;">Model Inference</div>
+          <div style="font-size:12px; color:#4a4540; line-height:1.5;">XGBoost · SHAP reason codes · Model version stamped</div>
+          <div style="margin-top:10px; font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);">GR-3 · GR-6</div>
+        </div>
+        <div style="background:var(--cream); padding:20px 16px; border-top:4px solid var(--gold);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">STEP 4 — POST-SCORE</div>
+          <div style="font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:8px;">Limit Guardrail</div>
+          <div style="font-size:12px; color:#4a4540; line-height:1.5;">30% GMV ceiling · Seasonal adjustment · Override audit</div>
+          <div style="margin-top:10px; font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);">GR-4</div>
+        </div>
+        <div style="background:var(--cream); padding:20px 16px; border-top:4px solid var(--purple);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--purple); margin-bottom:8px;">ASYNC — CONTINUOUS</div>
+          <div style="font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:8px;">Fairness &amp; Drift Monitor</div>
+          <div style="font-size:12px; color:#4a4540; line-height:1.5;">Cohort parity · PSI/KS · PD calibration · Bias audit</div>
+          <div style="margin-top:10px; font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);">GR-1 · GR-6</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Guardrail Failure Response Matrix</h3>
+    <table class="doc-table">
+      <thead><tr><th>Guardrail Check</th><th>Check Fails to Execute</th><th>Check Triggers (Threshold Breached)</th><th>Override Possible?</th></tr></thead>
+      <tbody>
+        <tr><td>Consent check</td><td>Score blocked — fail safe</td><td>Score blocked, 403 returned</td><td>No — hard block</td></tr>
+        <tr><td>Data completeness check</td><td>Score served with "low_confidence" flag</td><td>Score served with "low_confidence" flag; limit capped at conservative minimum</td><td>No — flag is always surfaced</td></tr>
+        <tr><td>Anomaly detection (Isolation Forest)</td><td>Score marked "review_required" — not blocked, flagged</td><td>Score returned with anomaly_flag=true; lender notified; review queue entry created</td><td>Lender can accept with acknowledgment; audit logged</td></tr>
+        <tr><td>SHAP reason codes</td><td>Score blocked — reason codes are mandatory (RBI FLDG)</td><td>N/A — either codes generate or score is blocked</td><td>No — regulatory requirement</td></tr>
+        <tr><td>Affordability ceiling (30% GMV)</td><td>Score blocked — ceiling cannot be skipped</td><td>Recommended limit capped; warning surfaced in response</td><td>No API override; lender manual override via dashboard + audit trail</td></tr>
+        <tr><td>Fairness audit (async)</td><td>Alert to ML team; audit rescheduled</td><td>Alert to Risk + ML; model freeze if divergence &gt;15%</td><td>No — model freeze requires DPO + CTO sign-off to lift</td></tr>
+        <tr><td>PSI / model drift check (async)</td><td>Alert to ML Ops; drift check rescheduled</td><td>PSI &gt; 0.2 → model refresh triggered; scoring continues with current model during refresh</td><td>No auto-override; manual override with Risk team sign-off only</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GR-1 FAIRNESS -->
+  <div class="section" id="gr1">
+    <div class="section-header">
+      <span class="section-num">03 —</span>
+      <h2>GR-1 · Fairness &amp; Bias Guardrail</h2>
+    </div>
+
+    <div class="gr-block">
+      <div class="gr-header">
+        <div class="gr-num">1</div>
+        <div class="gr-title-block">
+          <div class="gr-title">Fairness &amp; Bias Guardrail</div>
+          <div class="gr-subtitle">PROTECTS AGAINST: Systemic under-scoring of geographic or demographic cohorts · WHEN: Quarterly audit + trigger-based</div>
+        </div>
+        <div class="gr-risk-badge">
+          <span style="background:var(--accent); color:white; font-family:'DM Mono',monospace; font-size:11px; padding:6px 14px; letter-spacing:.05em;">RISK: HIGH</span>
+        </div>
+      </div>
+      <div class="gr-body">
+        <div class="gr-col">
+          <span class="gr-col-label">Design Rationale</span>
+          <p>Credit models trained on historical data inherit the biases of past lending decisions. If NBFCs historically avoided lending to retailers in certain states or trade categories, the training data will show higher "defaults" for those cohorts — not because those retailers are riskier, but because they were never given credit to repay. This creates a self-fulfilling exclusion loop. The fairness guardrail exists to detect and break this loop.</p>
+          <p>Geography is explicitly excluded as a direct feature. But indirect geographic signals (seasonal patterns, SKU categories, distributor tenure norms) can still encode regional bias. The guardrail tests outcomes, not just inputs.</p>
+        </div>
+        <div class="gr-col">
+          <span class="gr-col-label">Implementation Specification</span>
+          <ul>
+            <li><strong>Cohort definitions:</strong> State (28 states + 8 UTs), district tier (1/2/3/4), trade category (FMCG / auto parts / general trade / agri-input / pharma), gender proxy (name-based inference — used only for audit, never as a feature)</li>
+            <li><strong>Matched cohort construction:</strong> For each audit, retailers are binned by behavioral similarity (GMV range × payment delay band × tenure band). Score distributions compared within bins across cohort segments.</li>
+            <li><strong>Disparate impact test:</strong> Adverse Impact Ratio = (fraction of cohort A receiving Band A/B) ÷ (fraction of reference cohort receiving Band A/B). Threshold: AIR ≥ 0.80 required.</li>
+            <li><strong>Geography exclusion verification:</strong> Geography-related features (state, district) must not appear in top-20 SHAP features globally. If they do, feature removal and model retraining is mandatory.</li>
+            <li><strong>Audit frequency:</strong> Quarterly scheduled; also triggered if any cohort's score distribution shifts &gt;10% vs. prior quarter.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gr-metrics">
+        <div class="gr-metric"><span class="gr-metric-val">≥ 0.80</span><span class="gr-metric-label">Adverse Impact Ratio threshold (80% rule)</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">≤ 15%</span><span class="gr-metric-label">Max score gap for matched behavioral cohorts</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">p &lt; .05</span><span class="gr-metric-label">Statistical significance required before escalation</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">Quarterly</span><span class="gr-metric-label">Minimum audit cadence</span></div>
+      </div>
+      <div class="gr-escalation">
+        <span class="gr-escalation-label">Escalation Path</span>
+        <div class="esc-steps">
+          <div class="esc-step"><span class="esc-step-num">L1 — DETECT</span>Quarterly audit finds AIR &lt; 0.80 for any cohort. ML team notified. Root cause investigation begins. Score continues serving.</div>
+          <div class="esc-step"><span class="esc-step-num">L2 — ALERT</span>Root cause identified within 2 weeks. If bias confirmed (not data artifact), Risk + Legal + Product alerted. Retraining plan initiated.</div>
+          <div class="esc-step"><span class="esc-step-num">L3 — FREEZE</span>Score divergence confirmed &gt;15% for matched cohort. <strong>Model frozen for affected cohort.</strong> Rules-based conservative limit applied until model retrained.</div>
+          <div class="esc-step"><span class="esc-step-num">L4 — NOTIFY</span>If cohort &gt;1,000 retailers affected: NBFC lenders notified; DPO informed; board-level briefing. Remediated model validated on fairness metrics before re-deployment.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GR-2 GAMING -->
+  <div class="section" id="gr2">
+    <div class="section-header">
+      <span class="section-num">04 —</span>
+      <h2>GR-2 · Score Gaming Prevention</h2>
+    </div>
+
+    <div class="gr-block">
+      <div class="gr-header">
+        <div class="gr-num" style="background:var(--accent);">2</div>
+        <div class="gr-title-block">
+          <div class="gr-title">Score Gaming Prevention</div>
+          <div class="gr-subtitle">PROTECTS AGAINST: Retailers artificially inflating behavioral signals before scoring event · WHEN: Every score request</div>
+        </div>
+        <div class="gr-risk-badge">
+          <span style="background:var(--accent); color:white; font-family:'DM Mono',monospace; font-size:11px; padding:6px 14px; letter-spacing:.05em;">RISK: HIGH</span>
+        </div>
+      </div>
+      <div class="gr-body">
+        <div class="gr-col">
+          <span class="gr-col-label">Gaming Attack Vectors</span>
+          <ul>
+            <li><strong>Order velocity inflation:</strong> Retailer places unusually large orders in the 30–60 days before a scoring event to increase GMV and order frequency signals</li>
+            <li><strong>Return suppression:</strong> Retailer accepts delivery of ordered goods (not returning them as usual) to reduce return rate signal during look-back window</li>
+            <li><strong>Payment timing manipulation:</strong> Retailer pays invoices unusually early for 1–2 months before scoring to reduce payment delay signal</li>
+            <li><strong>Collusion with distributor:</strong> Distributor records fake invoices or early payments on behalf of retailer in exchange for kickback</li>
+          </ul>
+        </div>
+        <div class="gr-col">
+          <span class="gr-col-label">Detection Mechanisms</span>
+          <ul>
+            <li><strong>Isolation Forest (primary):</strong> Unsupervised anomaly detector trained on 12 months of historical behavior per retailer. Flags samples where order velocity, payment timing, or return rate deviates &gt;3σ from the retailer's own baseline. Contamination parameter set at 5% (top 5% most anomalous are flagged).</li>
+            <li><strong>60-day look-back window:</strong> Scoring event evaluates behavior over a rolling 60-day window. Manipulation must be sustained for 2 full months — not just 1–2 weeks — to influence the window meaningfully.</li>
+            <li><strong>Return rate counter-signal:</strong> Order inflation is often paired with low returns (retailer keeps goods they don't need). This unusual combination (high GMV + abnormally low return rate vs. baseline) is a gaming signature.</li>
+            <li><strong>Long-term history dominance:</strong> Payment delay signal weights 3-year history vs. recent 60-day behavior at approximately 70:30. Short-term manipulation cannot overcome multi-year payment patterns.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gr-metrics">
+        <div class="gr-metric"><span class="gr-metric-val">&gt;3σ</span><span class="gr-metric-label">Order velocity spike threshold for anomaly flag</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">≥ 80%</span><span class="gr-metric-label">Gaming detection recall (test-set requirement)</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">60 days</span><span class="gr-metric-label">Minimum manipulation window to meaningfully influence score</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">70:30</span><span class="gr-metric-label">Long-term vs. short-term weight in payment signal</span></div>
+      </div>
+      <div class="gr-escalation">
+        <span class="gr-escalation-label">Escalation Path</span>
+        <div class="esc-steps">
+          <div class="esc-step"><span class="esc-step-num">L1 — FLAG</span>Isolation Forest flags retailer. Score returned with anomaly_flag=true. Lender notified via API response. Review queue entry auto-created.</div>
+          <div class="esc-step"><span class="esc-step-num">L2 — REVIEW</span>Data ops reviews flagged retailer within 48h. If manipulation confirmed: score updated to pre-manipulation baseline. Lender informed of correction.</div>
+          <div class="esc-step"><span class="esc-step-num">L3 — LOCK</span>If collusion with distributor is suspected: distributor data quarantined pending investigation. Scores for all that distributor's retailers marked "under review".</div>
+          <div class="esc-step"><span class="esc-step-num">L4 — TERMINATE</span>If distributor fraud confirmed: data partnership terminated per contract; retailer scores based solely on any cross-distributor data available.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GR-3 EXPLAINABILITY -->
+  <div class="section" id="gr3">
+    <div class="section-header">
+      <span class="section-num">05 —</span>
+      <h2>GR-3 · Explainability &amp; Right to Reason</h2>
+    </div>
+
+    <div class="gr-block">
+      <div class="gr-header">
+        <div class="gr-num" style="background:var(--accent3);">3</div>
+        <div class="gr-title-block">
+          <div class="gr-title">Explainability &amp; Right to Reason</div>
+          <div class="gr-subtitle">PROTECTS AGAINST: Opaque credit decisions with no actionable feedback · WHEN: Every score request · RBI FLDG requirement</div>
+        </div>
+        <div class="gr-risk-badge">
+          <span style="background:var(--gold); color:white; font-family:'DM Mono',monospace; font-size:11px; padding:6px 14px; letter-spacing:.05em;">RISK: MEDIUM</span>
+        </div>
+      </div>
+      <div class="gr-body">
+        <div class="gr-col">
+          <span class="gr-col-label">Design Rationale</span>
+          <p>RBI FLDG guidelines require reason codes for credit decisions made using algorithmic scoring. The DPDP Act gives data principals the right to understand decisions made about them. And practically: a retailer told "your score is 580" with no explanation cannot do anything with that information. A retailer told "your score would improve if your payment delays reduced below 10 days" has an actionable goal.</p>
+          <p>Explainability serves three distinct audiences: the lender (credit decision audit), the retailer (understanding and appeal), and the regulator (compliance evidence). The reason code design must work for all three — without exposing the exact feature weights that would allow model gaming.</p>
+        </div>
+        <div class="gr-col">
+          <span class="gr-col-label">Implementation Specification</span>
+          <ul>
+            <li><strong>SHAP values computed:</strong> TreeSHAP computed on every score inference. Produces a SHAP value per feature indicating contribution to the final score (positive or negative).</li>
+            <li><strong>Reason code mapping:</strong> SHAP values mapped to 24 categorical reason codes (12 positive, 12 negative). Mapping uses absolute SHAP value threshold (top contributing features selected). Raw SHAP numbers never exposed.</li>
+            <li><strong>Mandatory output:</strong> Every score response must include ≥3 positive and ≥2 negative reason codes. If SHAP computation fails, score is blocked — not served without codes.</li>
+            <li><strong>Retailer-facing translations:</strong> All 24 reason codes have plain-language translations in English and Hindi (regional languages in Phase 2). Translations reviewed by native speakers and plain-language accessibility testers.</li>
+            <li><strong>Grievance integration:</strong> Reason codes are the basis for the retailer grievance flow. If a retailer disputes a negative reason code, the grievance is routed to the correct team with the SHAP evidence attached.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gr-metrics">
+        <div class="gr-metric"><span class="gr-metric-val">100%</span><span class="gr-metric-label">Score responses with complete reason codes</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">≥ 3 + 2</span><span class="gr-metric-label">Minimum positive + negative codes per response</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">≥ 70%</span><span class="gr-metric-label">Lender acceptance rate for reason codes (target)</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">24</span><span class="gr-metric-label">Total categorical reason codes in v1 taxonomy</span></div>
+      </div>
+      <div class="gr-escalation">
+        <span class="gr-escalation-label">Escalation Path</span>
+        <div class="esc-steps">
+          <div class="esc-step"><span class="esc-step-num">L1 — DETECT</span>SHAP computation fails for a request. Score blocked with error "EXPLAINABILITY_UNAVAILABLE". ML Ops alerted within 5 minutes.</div>
+          <div class="esc-step"><span class="esc-step-num">L2 — INVESTIGATE</span>If SHAP failure rate &gt;0.1% in any 1-hour window: engineering incident declared. Root cause investigation. Affected lenders notified of score service degradation.</div>
+          <div class="esc-step"><span class="esc-step-num">L3 — ESCALATE</span>If lender acceptance rate of reason codes drops below 60% in quarterly survey: reason code taxonomy reviewed with NBFC partners. Taxonomy update cycle initiated.</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Reason Code Taxonomy (v1)</h3>
+    <div class="two-col">
+      <div>
+        <h4 style="color:var(--accent2); margin-bottom:12px;">✦ Positive Reason Codes</h4>
+        <table class="doc-table">
+          <thead><tr><th>Code</th><th>Plain Language (EN)</th><th>Plain Language (HI)</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">consistent_order_freq</td><td>Regular buying pattern</td><td>नियमित खरीद</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">low_payment_delay</td><td>Pays invoices on time</td><td>समय पर भुगतान</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">growing_basket_size</td><td>Business is growing</td><td>व्यवसाय बढ़ रहा है</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">low_return_rate</td><td>Low product returns</td><td>कम वापसी</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">long_distributor_tenure</td><td>Long relationship with supplier</td><td>लंबा व्यापार संबंध</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">strong_gmv_trend</td><td>Strong sales momentum</td><td>मजबूत बिक्री</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">zero_delay_rate_high</td><td>Frequently pays ahead of due date</td><td>अक्सर जल्दी भुगतान</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">seasonal_recovery</td><td>Business rebounds well after slow seasons</td><td>मंदी के बाद अच्छी वापसी</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h4 style="color:var(--accent); margin-bottom:12px;">✦ Negative Reason Codes</h4>
+        <table class="doc-table">
+          <thead><tr><th>Code</th><th>Plain Language (EN)</th><th>Plain Language (HI)</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">payment_delay_high</td><td>Often pays invoices late</td><td>अक्सर देर से भुगतान</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">p90_delay_gt_15days</td><td>Sometimes very late on payments</td><td>कभी-कभी बहुत देर</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">declining_gmv</td><td>Sales have been falling</td><td>बिक्री घट रही है</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">high_return_rate</td><td>High product return rate</td><td>अधिक वापसी</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">order_gap_detected</td><td>Gaps in buying activity</td><td>खरीद में रुकावट</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">partial_payment_freq</td><td>Often pays only part of invoices</td><td>अक्सर आंशिक भुगतान</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">seasonal_gap_deep</td><td>Long slow season with low activity</td><td>लंबी मंदी</td></tr>
+            <tr><td style="font-family:'DM Mono',monospace; font-size:11px;">data_insufficient</td><td>Not enough history to score fully</td><td>पर्याप्त इतिहास नहीं</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GR-4 AFFORDABILITY -->
+  <div class="section" id="gr4">
+    <div class="section-header">
+      <span class="section-num">06 —</span>
+      <h2>GR-4 · Affordability &amp; Limit Ceiling</h2>
+    </div>
+
+    <div class="gr-block">
+      <div class="gr-header">
+        <div class="gr-num" style="background:var(--gold);">4</div>
+        <div class="gr-title-block">
+          <div class="gr-title">Affordability &amp; Credit Limit Ceiling</div>
+          <div class="gr-subtitle">PROTECTS AGAINST: Over-lending beyond retailer repayment capacity · WHEN: Every score request · Hard-coded ceiling</div>
+        </div>
+        <div class="gr-risk-badge">
+          <span style="background:var(--gold); color:white; font-family:'DM Mono',monospace; font-size:11px; padding:6px 14px; letter-spacing:.05em;">RISK: MEDIUM</span>
+        </div>
+      </div>
+      <div class="gr-body">
+        <div class="gr-col">
+          <span class="gr-col-label">Ceiling Logic</span>
+          <p><strong>Primary ceiling: 30% of trailing 6-month GMV.</strong> Rationale: a retailer's working capital need is bounded by their stock-turn cycle. A retailer with ₹5L/month GMV needs approximately ₹1–2L in working capital (stock cycle of 2–4 weeks). At 30% of 6-month GMV (≈ 5% of annual GMV), the limit is conservative enough to prevent over-indebtedness while being meaningful for the average kirana's festival-season need.</p>
+          <p><strong>Seasonal adjustment:</strong> The ceiling is computed on the trailing 6 months at scoring time. Scoring in October uses April–September GMV. If this under-represents the festival quarter, lenders can request a seasonal-adjusted limit — which uses the highest 6-month trailing window in the past 24 months instead.</p>
+          <p><strong>Additional affordability check:</strong> Where bureau data is available via Account Aggregator (v2), existing NBFC exposure is checked against the proposed limit. Total formal credit exposure should not exceed 40% of annualised GMV.</p>
+        </div>
+        <div class="gr-col">
+          <span class="gr-col-label">Implementation Specification</span>
+          <ul>
+            <li><strong>Ceiling enforcement layer:</strong> Applied in the Score API service, post-model-inference. The model may produce a recommended limit; the ceiling clamps it. Model output is never served directly without passing through the ceiling layer.</li>
+            <li><strong>Hard-coded constant:</strong> The 30% ceiling is a compile-time constant, not a configurable parameter. Any change requires a code change, PR review, deployment, and Risk team sign-off — not a config toggle.</li>
+            <li><strong>API transparency:</strong> If ceiling is applied, the response includes: limit_source="gmv_ceiling", gmv_6m_trailing, ceiling_applied=true. Lenders always know when the ceiling, not the model, determined the limit.</li>
+            <li><strong>Lender manual override:</strong> Lender can set a higher limit via the dashboard with a documented justification. Override is capped at 150% of the GMV ceiling. Override creates an immutable audit record. All overriding lenders receive a monthly override performance report (default rates on overridden loans vs. non-overridden).</li>
+            <li><strong>Zero-GMV cold-start:</strong> Retailers with insufficient GMV history receive a conservative fixed starting limit (₹25,000) regardless of model score. This prevents the ceiling from being infinite for retailers with no computable GMV baseline.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gr-metrics">
+        <div class="gr-metric"><span class="gr-metric-val">30%</span><span class="gr-metric-label">Of trailing 6-month GMV — primary ceiling</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">40%</span><span class="gr-metric-label">Max total formal credit as % of annualised GMV (v2)</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">150%</span><span class="gr-metric-label">Max lender manual override as % of GMV ceiling</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">₹25K</span><span class="gr-metric-label">Conservative cold-start limit (no GMV history)</span></div>
+      </div>
+      <div class="gr-escalation">
+        <span class="gr-escalation-label">Escalation Path</span>
+        <div class="esc-steps">
+          <div class="esc-step"><span class="esc-step-num">L1 — MONITOR</span>Monthly report: % of limits capped by ceiling vs. model recommendation; override rate per lender; default rate on overridden loans.</div>
+          <div class="esc-step"><span class="esc-step-num">L2 — ALERT</span>If override default rate &gt;2× non-override default rate for any lender: Risk team alerts that lender's override policy is generating adverse selection. Lender briefed.</div>
+          <div class="esc-step"><span class="esc-step-num">L3 — REVIEW</span>If ceiling threshold itself appears miscalibrated (e.g., 90-day default rates consistently higher than model predicts for Band A/B), ceiling tightened in next model release with Risk team approval.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GR-5 DATA QUALITY -->
+  <div class="section" id="gr5">
+    <div class="section-header">
+      <span class="section-num">07 —</span>
+      <h2>GR-5 · Data Quality &amp; Provenance</h2>
+    </div>
+
+    <div class="gr-block">
+      <div class="gr-header">
+        <div class="gr-num" style="background:var(--accent3);">5</div>
+        <div class="gr-title-block">
+          <div class="gr-title">Data Quality &amp; Provenance Guardrail</div>
+          <div class="gr-subtitle">PROTECTS AGAINST: Corrupt or low-quality ERP data generating unreliable scores · WHEN: Ingestion + every score request</div>
+        </div>
+        <div class="gr-risk-badge">
+          <span style="background:var(--gold); color:white; font-family:'DM Mono',monospace; font-size:11px; padding:6px 14px; letter-spacing:.05em;">RISK: MEDIUM</span>
+        </div>
+      </div>
+      <div class="gr-body">
+        <div class="gr-col">
+          <span class="gr-col-label">Completeness Score Computation</span>
+          <p>Every distributor's data batch receives a completeness score (0–100%) computed across five dimensions:</p>
+          <ul>
+            <li><strong>Invoice completeness:</strong> % of invoices with all required fields populated (date, amount, retailer_id, SKU category)</li>
+            <li><strong>Payment completeness:</strong> % of invoices with at least one associated payment record</li>
+            <li><strong>Temporal coverage:</strong> % of months in the last 24 months with at least 5 invoice records</li>
+            <li><strong>Retailer identity completeness:</strong> % of retailer records with GST or verified phone number</li>
+            <li><strong>Schema conformance:</strong> % of records matching expected data types and value ranges</li>
+          </ul>
+          <p style="margin-top:12px;">Overall completeness = weighted average of five dimensions. Weights: Invoice 30%, Payment 30%, Temporal 20%, Identity 10%, Schema 10%.</p>
+        </div>
+        <div class="gr-col">
+          <span class="gr-col-label">Quality Thresholds &amp; Actions</span>
+          <ul>
+            <li><strong>Completeness ≥ 70%:</strong> Full scoring permitted. Score serves without quality flag.</li>
+            <li><strong>Completeness 50–69%:</strong> Score served with low_confidence=true flag. Recommended limit capped at 50% of standard ceiling. Lender notified. Distributor prompted to improve data quality via dashboard.</li>
+            <li><strong>Completeness &lt; 50%:</strong> Scoring blocked for this distributor's retailers. Rules-based conservative limit applied if lender explicitly requests it. Distributor alerted with specific dimension breakdowns.</li>
+            <li><strong>Anomalous batch detected:</strong> Bulk payment recording, duplicate invoices, all-same-day transactions → batch quarantined; feature pipeline does not process until reviewed.</li>
+            <li><strong>Data freshness:</strong> If last sync &gt;7 days ago, data_freshness_days prominently surfaced in API response; &gt;14 days, low_confidence=true automatically applied.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gr-metrics">
+        <div class="gr-metric"><span class="gr-metric-val">≥ 70%</span><span class="gr-metric-label">Completeness score for full scoring eligibility</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">≤ 7 days</span><span class="gr-metric-label">Max acceptable data staleness for normal confidence</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">5 dims</span><span class="gr-metric-label">Completeness dimensions scored per distributor</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">100%</span><span class="gr-metric-label">Data lineage traceability (score → source record)</span></div>
+      </div>
+      <div class="gr-escalation">
+        <span class="gr-escalation-label">Escalation Path</span>
+        <div class="esc-steps">
+          <div class="esc-step"><span class="esc-step-num">L1 — NOTIFY</span>Completeness drops below 70%. Automated email to distributor contact with dimension breakdown and improvement guide. Score continues with low_confidence flag.</div>
+          <div class="esc-step"><span class="esc-step-num">L2 — INTERVENE</span>Completeness below 70% for 3 consecutive weeks. Customer success team contacts distributor directly. Data improvement plan agreed within 2 weeks.</div>
+          <div class="esc-step"><span class="esc-step-num">L3 — BLOCK</span>Completeness below 50%, or anomalous batch detected. Scoring blocked. Lenders informed. Data partnership review initiated.</div>
+          <div class="esc-step"><span class="esc-step-num">L4 — SUSPEND</span>No improvement in 30 days post block. Data partnership suspended. Retailers notified their scores are temporarily unavailable.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GR-6 MODEL LIFECYCLE -->
+  <div class="section" id="gr6">
+    <div class="section-header">
+      <span class="section-num">08 —</span>
+      <h2>GR-6 · Model Lifecycle Governance</h2>
+    </div>
+
+    <div class="gr-block">
+      <div class="gr-header">
+        <div class="gr-num" style="background:var(--purple);">6</div>
+        <div class="gr-title-block">
+          <div class="gr-title">Model Lifecycle Governance</div>
+          <div class="gr-subtitle">PROTECTS AGAINST: Silent model degradation and unauthorized model changes · WHEN: Continuous monitoring (monthly minimum)</div>
+        </div>
+        <div class="gr-risk-badge">
+          <span style="background:var(--accent2); color:white; font-family:'DM Mono',monospace; font-size:11px; padding:6px 14px; letter-spacing:.05em;">RISK: LOW (if followed)</span>
+        </div>
+      </div>
+      <div class="gr-body">
+        <div class="gr-col">
+          <span class="gr-col-label">Drift Monitoring Specification</span>
+          <ul>
+            <li><strong>Population Stability Index (PSI):</strong> Computed monthly by comparing the score distribution of the current live population vs. the training baseline distribution. PSI quantifies distribution shift across deciles. PSI &lt;0.10 = stable; 0.10–0.20 = monitor; &gt;0.20 = model refresh triggered.</li>
+            <li><strong>KS Statistic on live data:</strong> Kolmogorov-Smirnov statistic tracked monthly on the subset of retailers with known repayment outcomes (pilot + Phase 4 cohorts). If KS drops &gt;10 points vs. validation baseline, model refresh is triggered regardless of PSI.</li>
+            <li><strong>PD Calibration:</strong> Predicted probability of default vs. actual 90-day default rate tracked monthly for all retailers with resolved loan outcomes. Divergence &gt;3% triggers investigation.</li>
+            <li><strong>Feature drift:</strong> Individual feature distributions monitored for shift. If a top-5 SHAP feature drifts significantly (PSI &gt;0.2 at feature level), root cause is investigated — may indicate ERP data change, not model failure.</li>
+          </ul>
+        </div>
+        <div class="gr-col">
+          <span class="gr-col-label">Model Promotion Governance</span>
+          <ul>
+            <li><strong>Champion/Challenger framework:</strong> New model versions run in shadow mode for minimum 30 days, scoring real retailers without driving decisions. Shadow mode AUROC, KS, PSI, and fairness metrics compared to champion.</li>
+            <li><strong>Promotion gate:</strong> Challenger must exceed champion on AUROC by ≥0.01 and not degrade on KS, PSI, or any fairness metric. Requires sign-off from: ML Lead + Head of Risk.</li>
+            <li><strong>Rollback protocol:</strong> If promoted model causes AUROC to drop &gt;5% on next monthly evaluation, automatic rollback to previous champion. Rollback takes &lt;10 minutes (pre-baked previous model artifact).</li>
+            <li><strong>Emergency freeze:</strong> Any team member can trigger a model freeze via the ML Ops dashboard. Frozen model serves last pre-freeze scores from cache. Freeze must be reviewed by ML Lead + CTO within 4 hours.</li>
+            <li><strong>Version stamping:</strong> Every API response includes model_version. Enables exact reproducibility of any historical scoring decision for audit purposes.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gr-metrics">
+        <div class="gr-metric"><span class="gr-metric-val">&lt; 0.10</span><span class="gr-metric-label">PSI threshold for stable model</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">&gt; 0.20</span><span class="gr-metric-label">PSI threshold triggering model refresh</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">30 days</span><span class="gr-metric-label">Minimum shadow mode before champion promotion</span></div>
+        <div class="gr-metric"><span class="gr-metric-val">&lt; 10 min</span><span class="gr-metric-label">Rollback time to previous champion model</span></div>
+      </div>
+      <div class="gr-escalation">
+        <span class="gr-escalation-label">Escalation Path</span>
+        <div class="esc-steps">
+          <div class="esc-step"><span class="esc-step-num">L1 — MONITOR</span>PSI 0.10–0.20. ML team notified. Root cause investigation (data drift vs. model drift). Scoring continues with current model.</div>
+          <div class="esc-step"><span class="esc-step-num">L2 — REFRESH</span>PSI &gt;0.20 or KS drops &gt;10 pts. Model refresh initiated. Champion/challenger pipeline triggered with most recent training data. Scored under current model pending refresh.</div>
+          <div class="esc-step"><span class="esc-step-num">L3 — FREEZE</span>PD calibration divergence &gt;5% (model significantly under-predicting defaults). Model frozen. Conservative rules-based limits applied. NBFC lenders notified. Risk team + CTO on bridge.</div>
+          <div class="esc-step"><span class="esc-step-num">L4 — NOTIFY</span>If model freeze &gt;72 hours: lender SLA breach declared; lender communications per SLA breach playbook; regulatory notification assessed by Legal.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- HEALTH DASHBOARD -->
+  <div class="section" id="health">
+    <div class="section-header">
+      <span class="section-num">09 —</span>
+      <h2>Guardrail Health Dashboard</h2>
+    </div>
+    <p>All six guardrails are monitored on a unified health dashboard reviewed weekly by the Risk team and monthly by the full cross-functional guardrail committee (Product, Risk, ML, Legal, Engineering).</p>
+
+    <table class="doc-table">
+      <thead><tr><th>Guardrail</th><th>Primary Metric</th><th>Green (Healthy)</th><th>Amber (Watch)</th><th>Red (Action Required)</th><th>Current Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>GR-1 Fairness</strong></td><td>Adverse Impact Ratio (lowest cohort)</td><td>AIR ≥ 0.85</td><td>AIR 0.80–0.85</td><td>AIR &lt; 0.80 → model freeze for affected cohort</td><td style="font-family:'DM Mono',monospace; font-size:11px; color:var(--accent2);">PRE-LAUNCH</td></tr>
+        <tr><td><strong>GR-2 Gaming</strong></td><td>Anomaly detection recall on test set</td><td>Recall ≥ 85%</td><td>Recall 80–85%</td><td>Recall &lt; 80% → model review + threshold recalibration</td><td style="font-family:'DM Mono',monospace; font-size:11px; color:var(--accent2);">PRE-LAUNCH</td></tr>
+        <tr><td><strong>GR-3 Explainability</strong></td><td>% scores with complete reason codes</td><td>100%</td><td>99–100%</td><td>&lt; 99% → engineering incident declared</td><td style="font-family:'DM Mono',monospace; font-size:11px; color:var(--accent2);">PRE-LAUNCH</td></tr>
+        <tr><td><strong>GR-4 Affordability</strong></td><td>Override default rate vs. non-override</td><td>&lt; 1.5× non-override rate</td><td>1.5–2× non-override rate</td><td>&gt; 2× → lender override policy review triggered</td><td style="font-family:'DM Mono',monospace; font-size:11px; color:var(--accent2);">PRE-LAUNCH</td></tr>
+        <tr><td><strong>GR-5 Data Quality</strong></td><td>% distributors with completeness ≥ 70%</td><td>≥ 90% of distributors</td><td>80–90% of distributors</td><td>&lt; 80% → customer success escalation; data improvement program review</td><td style="font-family:'DM Mono',monospace; font-size:11px; color:var(--accent2);">PRE-LAUNCH</td></tr>
+        <tr><td><strong>GR-6 Model Lifecycle</strong></td><td>PSI (monthly)</td><td>PSI &lt; 0.10</td><td>PSI 0.10–0.20</td><td>PSI &gt; 0.20 → model refresh; &gt; 0.30 → model freeze</td><td style="font-family:'DM Mono',monospace; font-size:11px; color:var(--accent2);">PRE-LAUNCH</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GOVERNANCE -->
+  <div class="section" id="governance">
+    <div class="section-header">
+      <span class="section-num">10 —</span>
+      <h2>Guardrail Governance &amp; Change Control</h2>
+    </div>
+
+    <div class="two-col">
+      <div class="card green">
+        <span class="card-tag">Guardrail Committee</span>
+        <h3>Cross-Functional Ownership</h3>
+        <p>The Guardrail Committee meets monthly and is responsible for reviewing all guardrail health metrics, approving any threshold changes, and escalating model freeze decisions to leadership.</p>
+        <ul>
+          <li>Chair: Head of Risk</li>
+          <li>ML Lead (model performance + drift)</li>
+          <li>DPO / Legal Lead (fairness + regulatory)</li>
+          <li>Head of Product (retailer + lender experience)</li>
+          <li>Head of Engineering (implementation + reliability)</li>
+          <li>CISO (security guardrails observer)</li>
+        </ul>
+      </div>
+      <div class="card red">
+        <span class="card-tag">Change Control</span>
+        <h3>How Guardrails Can Change</h3>
+        <p>Guardrail thresholds and logic are not changed at individual discretion. The following change control applies:</p>
+        <ul>
+          <li>Threshold relaxation (e.g., raising affordability ceiling): requires Guardrail Committee approval + DPO sign-off + written risk assessment</li>
+          <li>Threshold tightening: Guardrail Committee approval only</li>
+          <li>New guardrail addition: Product + ML + Legal proposal → Committee review → implementation</li>
+          <li>Emergency threshold change: Head of Risk + CTO joint approval; Committee ratification at next meeting</li>
+          <li>All changes versioned in the Guardrail Change Log (maintained in this document's appendix)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Guardrail Change Log</h3>
+    <table class="doc-table">
+      <thead><tr><th>Version</th><th>Date</th><th>Guardrail</th><th>Change</th><th>Approved By</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="font-family:'DM Mono',monospace; font-size:11px;">v1.0</td>
+          <td>May 2026</td>
+          <td>All (initial)</td>
+          <td>Initial definition of all 6 guardrails and thresholds</td>
+          <td>Head of Risk + CTO + DPO</td>
+          <td>Pre-launch baseline; thresholds to be reviewed after first 90 days of live data</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer class="doc-footer">
+  <div>
+    <div class="ft-brand">Alt<span>Score</span> · Guardrails</div>
+    <div style="margin-top:6px;">GRD-ALTSCORE-001 · v1.0 · May 2026</div>
+  </div>
+  <div style="text-align:right;">
+    <div>CONFIDENTIAL — INTERNAL USE ONLY</div>
+    <div style="margin-top:4px;">Companion to PRD-ALTSCORE-001</div>
+  </div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('.section');
+  const dots = document.querySelectorAll('.nav-dot');
+  const sectionIds = ['philosophy','architecture','gr1','gr2','gr3','gr4','gr5','gr6','health','governance'];
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = sectionIds.indexOf(entry.target.id);
+        if (idx >= 0) { dots.forEach(d => d.classList.remove('active')); dots[idx+1]?.classList.add('active'); }
+      }
+    });
+  }, { threshold: 0.1 });
+  sections.forEach(s => observer.observe(s));
+  const coverObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { dots.forEach(d => d.classList.remove('active')); dots[0].classList.add('active'); }
+  }, { threshold: 0.3 });
+  coverObs.observe(document.getElementById('cover'));
+  window.scrollTo = id => document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' });
+</script>
+</body>
+</html>

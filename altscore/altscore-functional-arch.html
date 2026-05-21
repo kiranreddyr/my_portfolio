@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Functional Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c; --paper: #f5f0e8; --cream: #ede7d9;
+    --accent: #c94b1f; --accent2: #2b5e3f; --accent3: #1a3a5c;
+    --muted: #7a7065; --rule: #ccc4b4; --tag-bg: #e8e0cf;
+    --gold: #c4890d; --purple: #5a2d82;
+    --fa: #1a4a6e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--paper); color:var(--ink); font-family:'Lora',Georgia,serif; font-size:16px; line-height:1.75; }
+
+  .cover { min-height:100vh; display:grid; grid-template-columns:1fr 1fr; }
+  .cover-left { background:var(--ink); padding:80px 60px; display:flex; flex-direction:column; justify-content:space-between; position:relative; }
+  .cover-left::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px); pointer-events:none; }
+  .cover-label { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; color:var(--fa); text-transform:uppercase; }
+  .cover-title { font-family:'Syne',sans-serif; font-size:clamp(40px,5.5vw,72px); font-weight:800; line-height:.95; color:var(--paper); letter-spacing:-.02em; }
+  .cover-title span { color:var(--fa); }
+  .cover-sub { font-family:'DM Mono',monospace; font-size:13px; color:rgba(245,240,232,.5); line-height:1.8; border-top:1px solid rgba(255,255,255,.1); padding-top:24px; }
+  .cover-right { background:var(--cream); padding:80px 60px; display:flex; flex-direction:column; justify-content:center; gap:32px; border-left:4px solid var(--fa); }
+  .cover-stat { border-bottom:1px solid var(--rule); padding-bottom:24px; }
+  .cover-stat:last-child { border-bottom:none; padding-bottom:0; }
+  .stat-num { font-family:'Syne',sans-serif; font-size:34px; font-weight:800; color:var(--fa); line-height:1; display:block; }
+  .stat-label { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; color:var(--muted); text-transform:uppercase; margin-top:4px; display:block; }
+  .stat-desc { font-size:14px; color:var(--ink); margin-top:6px; font-style:italic; }
+
+  .doc { max-width:1100px; margin:0 auto; padding:80px 40px; }
+  .section { margin-bottom:80px; opacity:0; transform:translateY(20px); transition:opacity .6s,transform .6s; }
+  .section.visible { opacity:1; transform:none; }
+  .section-header { display:flex; align-items:baseline; gap:16px; margin-bottom:40px; border-bottom:2px solid var(--ink); padding-bottom:16px; }
+  .section-num { font-family:'DM Mono',monospace; font-size:12px; color:var(--fa); letter-spacing:.1em; flex-shrink:0; }
+  h2 { font-family:'Syne',sans-serif; font-size:32px; font-weight:700; letter-spacing:-.02em; }
+  h3 { font-family:'Syne',sans-serif; font-size:18px; font-weight:600; margin-bottom:12px; margin-top:32px; }
+  h4 { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:8px; letter-spacing:.02em; }
+  p { margin-bottom:16px; color:#2a2620; }
+
+  .callout { background:var(--ink); color:var(--paper); padding:32px 40px; margin:32px 0; border-left:6px solid var(--fa); }
+  .callout p { font-size:17px; font-style:italic; line-height:1.6; color:var(--paper); margin:0; }
+  .callout .attr { font-family:'DM Mono',monospace; font-size:11px; color:var(--fa); letter-spacing:.15em; margin-top:12px; display:block; }
+
+  .doc-table { width:100%; border-collapse:collapse; margin:24px 0; font-size:13px; }
+  .doc-table th { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.15em; text-transform:uppercase; text-align:left; padding:10px 14px; background:var(--ink); color:var(--paper); }
+  .doc-table td { padding:10px 14px; border-bottom:1px solid var(--rule); vertical-align:top; line-height:1.5; }
+  .doc-table tr:nth-child(even) td { background:var(--cream); }
+
+  /* Architecture diagram */
+  .arch-diagram { background:var(--ink); padding:48px; margin:32px 0; overflow-x:auto; }
+  .arch-layer { margin-bottom:20px; }
+  .arch-layer-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:rgba(245,240,232,.4); margin-bottom:10px; }
+  .arch-boxes { display:flex; gap:12px; flex-wrap:wrap; }
+  .arch-box { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); padding:14px 20px; font-family:'DM Mono',monospace; font-size:12px; color:var(--paper); flex:1; min-width:140px; }
+  .arch-box.highlight { background:rgba(26,74,110,.35); border-color:var(--fa); }
+  .arch-box.accent-box { background:rgba(201,75,31,.2); border-color:var(--accent); }
+  .arch-box.green-box { background:rgba(43,94,63,.25); border-color:var(--accent2); }
+  .arch-box-name { font-weight:500; font-size:12px; color:var(--paper); display:block; }
+  .arch-box-tech { font-size:10px; color:rgba(245,240,232,.45); margin-top:3px; display:block; }
+  .arch-arrow { display:flex; justify-content:center; align-items:center; padding:6px 0; }
+  .arch-arrow-line { height:2px; flex:1; background:rgba(255,255,255,.1); }
+  .arch-arrow-label { font-family:'DM Mono',monospace; font-size:10px; color:rgba(245,240,232,.35); padding:0 12px; white-space:nowrap; }
+  .arch-divider { border:none; border-top:1px solid rgba(255,255,255,.08); margin:16px 0; }
+
+  /* Domain service cards */
+  .service-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:32px 0; }
+  .svc-card { border:1px solid var(--rule); }
+  .svc-header { padding:18px 24px; border-bottom:1px solid var(--rule); display:flex; justify-content:space-between; align-items:center; }
+  .svc-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; }
+  .svc-tag { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:3px 10px; background:var(--tag-bg); color:var(--muted); }
+  .svc-tag.blue { background:#e0e8f0; color:var(--fa); }
+  .svc-tag.green { background:#e0f0e8; color:var(--accent2); }
+  .svc-tag.red { background:#fde8e0; color:var(--accent); }
+  .svc-tag.gold { background:#fdf0d8; color:var(--gold); }
+  .svc-body { padding:20px 24px; background:var(--cream); }
+  .svc-body p { font-size:13px; color:#3a352d; margin-bottom:10px; line-height:1.6; }
+  .svc-body ul { list-style:none; padding:0; margin:0; }
+  .svc-body ul li { font-size:12px; padding:3px 0 3px 14px; position:relative; color:#3a352d; }
+  .svc-body ul li::before { content:'→'; position:absolute; left:0; color:var(--muted); font-size:10px; top:5px; }
+  .svc-tech { padding:12px 24px; border-top:1px solid var(--rule); background:var(--paper); font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+
+  /* Data flow */
+  .flow-step { display:grid; grid-template-columns:48px 1fr; gap:20px; margin-bottom:28px; align-items:start; }
+  .flow-num { width:48px; height:48px; background:var(--fa); color:white; font-family:'Syne',sans-serif; font-size:18px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .flow-content h4 { font-size:14px; margin-bottom:6px; }
+  .flow-content p { font-size:13px; color:#3a352d; margin:0; line-height:1.6; }
+  .flow-connector { width:2px; height:20px; background:var(--rule); margin-left:23px; margin-bottom:4px; }
+
+  /* Interface table */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin:32px 0; }
+  .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin:32px 0; }
+  .card { background:var(--cream); border:1px solid var(--rule); padding:24px; }
+  .card.blue-top { border-top:4px solid var(--fa); }
+  .card.green-top { border-top:4px solid var(--accent2); }
+  .card.red-top { border-top:4px solid var(--accent); }
+  .card.gold-top { border-top:4px solid var(--gold); }
+  .card-tag { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; display:block; }
+  .card h3 { font-size:15px; margin-bottom:8px; margin-top:0; }
+  .card p { font-size:13px; color:#4a4540; margin:0; line-height:1.6; }
+  .card ul { list-style:none; padding:0; margin:8px 0 0 0; }
+  .card ul li { font-size:12px; padding:3px 0 3px 14px; position:relative; color:#3a352d; }
+  .card ul li::before { content:'·'; position:absolute; left:0; color:var(--fa); font-weight:bold; }
+
+  code { font-family:'DM Mono',monospace; font-size:12px; background:var(--tag-bg); padding:2px 6px; color:var(--fa); }
+  .divider { border:none; border-top:1px solid var(--rule); margin:64px 0; }
+  .sidenav { position:fixed; left:24px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:8px; z-index:100; }
+  .nav-dot { width:8px; height:8px; background:var(--rule); cursor:pointer; transition:all .3s; position:relative; }
+  .nav-dot:hover,.nav-dot.active { background:var(--fa); transform:scale(1.5); }
+  .nav-dot::after { content:attr(data-label); position:absolute; left:16px; top:50%; transform:translateY(-50%); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink); white-space:nowrap; opacity:0; transition:opacity .2s; background:var(--paper); padding:2px 8px; border:1px solid var(--rule); }
+  .nav-dot:hover::after { opacity:1; }
+  .doc-footer { background:var(--ink); color:rgba(245,240,232,.5); padding:40px; display:flex; justify-content:space-between; align-items:center; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; }
+  .doc-footer .ft-brand { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:var(--paper); }
+  .doc-footer .ft-brand span { color:var(--fa); }
+  @media(max-width:768px){ .cover{grid-template-columns:1fr;} .doc{padding:40px 20px;} .two-col,.three-col,.service-grid{grid-template-columns:1fr;} .sidenav{display:none;} }
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+<nav class="sidenav" id="sidenav">
+  <div class="nav-dot" data-label="Overview" data-target="s01"></div>
+  <div class="nav-dot" data-label="Domain Map" data-target="s02"></div>
+  <div class="nav-dot" data-label="System Diagram" data-target="s03"></div>
+  <div class="nav-dot" data-label="Services" data-target="s04"></div>
+  <div class="nav-dot" data-label="Data Flows" data-target="s05"></div>
+  <div class="nav-dot" data-label="Interfaces" data-target="s06"></div>
+  <div class="nav-dot" data-label="Events" data-target="s07"></div>
+  <div class="nav-dot" data-label="Error Handling" data-target="s08"></div>
+  <div class="nav-dot" data-label="Non-Functional" data-target="s09"></div>
+  <div class="nav-dot" data-label="Constraints" data-target="s10"></div>
+</nav>
+
+<div class="cover">
+  <div class="cover-left">
+    <div>
+      <div class="cover-label">AltScore Platform · Architecture</div>
+      <div style="height:40px"></div>
+      <div class="cover-title">Functional<br><span>Architecture</span></div>
+    </div>
+    <div class="cover-sub">
+      DOC-ID: FA-ALTSCORE-001<br>
+      Version: 1.0 · May 2026<br>
+      Classification: INTERNAL — Engineering &amp; Product<br>
+      Owner: Engineering, AltScore Technologies
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat">
+      <span class="stat-num">8</span>
+      <span class="stat-label">Core Domain Services</span>
+      <span class="stat-desc">ERP Ingestion · Feature Pipeline · Scoring · Consent · Score API · Audit · Notifications · Admin</span>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">5</span>
+      <span class="stat-label">External Integration Points</span>
+      <span class="stat-desc">Tally Prime · SAP B1 · WhatsApp Business API · NBFC Score API · Distributor Dashboard</span>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">3</span>
+      <span class="stat-label">Async Processing Tiers</span>
+      <span class="stat-desc">Real-time (API) · Near-real-time (Kafka) · Batch (Airflow)</span>
+    </div>
+  </div>
+</div>
+
+<div class="doc">
+
+  <!-- 01 Overview -->
+  <div class="section" id="s01">
+    <div class="section-header"><span class="section-num">01 —</span><h2>Overview &amp; Principles</h2></div>
+    <div class="callout">
+      <p>AltScore is a data pipeline and ML scoring platform. Its functional architecture separates concerns cleanly across ingestion, transformation, inference, and delivery — enabling each layer to evolve independently while preserving strong data lineage and consent enforcement at every boundary.</p>
+      <span class="attr">FA-ALTSCORE-001 · Architecture Charter</span>
+    </div>
+    <p>The system is structured around a <strong>medallion data lake</strong> (Bronze → Silver → Gold) as the single source of truth, with event-driven side-effects for notifications and audit. All cross-service communication uses well-defined contracts; no service reaches directly into another service's data store.</p>
+    <div class="three-col">
+      <div class="card blue-top"><span class="card-tag">Principle 1</span><h3>Consent at Every Boundary</h3><p>No data moves between layers or services without a consent check. The Consent Service is the authority; it is never bypassed.</p></div>
+      <div class="card green-top"><span class="card-tag">Principle 2</span><h3>Pseudonymization at Ingest</h3><p>PII (GST, phone) is replaced with stable UUIDs at the Bronze→Silver boundary. Downstream services never see raw identifiers.</p></div>
+      <div class="card red-top"><span class="card-tag">Principle 3</span><h3>Immutable Audit Trail</h3><p>Every score request, consent event, and data access is written to an append-only audit log. Nothing is deleted or updated in the audit store.</p></div>
+    </div>
+    <div class="three-col">
+      <div class="card gold-top"><span class="card-tag">Principle 4</span><h3>Fail-Safe Defaults</h3><p>On any service failure, the system returns a safe response (block, not allow). No score is served if consent cannot be verified.</p></div>
+      <div class="card blue-top"><span class="card-tag">Principle 5</span><h3>Stateless Services</h3><p>All API-tier services are stateless. State lives in PostgreSQL (transactional), Redis (cache), or the data lake (analytical). Services scale horizontally.</p></div>
+      <div class="card green-top"><span class="card-tag">Principle 6</span><h3>Schema-First Contracts</h3><p>All inter-service interfaces are defined by OpenAPI schemas or Avro schemas (Kafka topics). No untyped JSON payloads cross service boundaries.</p></div>
+    </div>
+  </div>
+
+  <!-- 02 Domain Map -->
+  <div class="section" id="s02">
+    <div class="section-header"><span class="section-num">02 —</span><h2>Domain Decomposition</h2></div>
+    <p>AltScore decomposes into eight bounded domains, each owned by a specific team. Domains communicate via well-defined APIs or Kafka topics — never by shared database tables.</p>
+    <table class="doc-table">
+      <thead><tr><th>Domain</th><th>Responsibility</th><th>Owning Team</th><th>Primary Storage</th><th>Key Consumers</th></tr></thead>
+      <tbody>
+        <tr><td><strong>ERP Ingestion</strong></td><td>Pull structured data from Tally Prime / SAP B1 / CSV via connector SDK. Validate, quarantine, write to Bronze layer.</td><td>Data Engineering</td><td>S3/ADLS Bronze bucket</td><td>Feature Pipeline</td></tr>
+        <tr><td><strong>Consent</strong></td><td>Manage retailer consent lifecycle (grant, revoke, scope). Single source of truth for all consent decisions.</td><td>Product Engineering</td><td>PostgreSQL (consent_records)</td><td>Score API, Feature Pipeline, Notifications</td></tr>
+        <tr><td><strong>Feature Pipeline</strong></td><td>Bronze→Silver pseudonymization, Silver feature engineering, Gold score features. Managed by Airflow + Spark + dbt.</td><td>Data Engineering / ML</td><td>S3/ADLS Silver + Gold</td><td>Scoring Engine</td></tr>
+        <tr><td><strong>Scoring Engine</strong></td><td>Load features, run XGBoost inference, compute SHAP codes, apply guardrails, write score to Gold store.</td><td>ML Engineering</td><td>PostgreSQL (scores), Redis (cache)</td><td>Score API</td></tr>
+        <tr><td><strong>Score API</strong></td><td>External-facing REST API for NBFC lenders. Auth, consent check, rate limiting, score retrieval, reason code delivery.</td><td>API Engineering</td><td>Redis (cache), PostgreSQL (read)</td><td>NBFC Partners</td></tr>
+        <tr><td><strong>Audit &amp; Compliance</strong></td><td>Append-only event logging for all score requests, consent changes, data access, admin actions. 7-year retention.</td><td>Security / Platform</td><td>S3 WORM + PostgreSQL (audit_log)</td><td>Legal, DPO, SIEM</td></tr>
+        <tr><td><strong>Notifications</strong></td><td>WhatsApp consent flows, score alerts to retailers, grievance acknowledgement. Stateless send-and-forget.</td><td>Product Engineering</td><td>None (stateless) + Kafka (outbox)</td><td>Retailers, Distributors</td></tr>
+        <tr><td><strong>Admin &amp; Operations</strong></td><td>Internal dashboard for distributor onboarding, model promotion, grievance management, compliance reports.</td><td>Ops / Engineering</td><td>PostgreSQL (admin_db)</td><td>Internal Staff</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 03 System Diagram -->
+  <div class="section" id="s03">
+    <div class="section-header"><span class="section-num">03 —</span><h2>System Architecture Diagram</h2></div>
+    <div class="arch-diagram">
+      <!-- External actors -->
+      <div class="arch-layer">
+        <div class="arch-layer-label">External Actors</div>
+        <div class="arch-boxes">
+          <div class="arch-box"><span class="arch-box-name">Tally Prime ERP</span><span class="arch-box-tech">REST/SDK · mTLS</span></div>
+          <div class="arch-box"><span class="arch-box-name">SAP Business One</span><span class="arch-box-tech">REST/SDK · mTLS</span></div>
+          <div class="arch-box"><span class="arch-box-name">CSV Upload</span><span class="arch-box-tech">SFTP / HTTPS</span></div>
+          <div class="arch-box"><span class="arch-box-name">NBFC Lenders</span><span class="arch-box-tech">Score API · JWT RS256</span></div>
+          <div class="arch-box"><span class="arch-box-name">Retailer (WhatsApp)</span><span class="arch-box-tech">WhatsApp Business API</span></div>
+          <div class="arch-box"><span class="arch-box-name">Distributor Dashboard</span><span class="arch-box-tech">Web · OIDC SSO</span></div>
+        </div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-line"></div><div class="arch-arrow-label">↓ mTLS / HTTPS / WhatsApp API ↓</div><div class="arch-arrow-line"></div></div>
+      <!-- API Gateway -->
+      <div class="arch-layer">
+        <div class="arch-layer-label">Gateway Layer</div>
+        <div class="arch-boxes">
+          <div class="arch-box highlight"><span class="arch-box-name">API Gateway</span><span class="arch-box-tech">AWS API GW / Kong · TLS 1.3 · Rate Limit · JWT Verify</span></div>
+          <div class="arch-box highlight"><span class="arch-box-name">ERP Connector Gateway</span><span class="arch-box-tech">FastAPI · mTLS · Payload Signing · Schema Validation</span></div>
+          <div class="arch-box highlight"><span class="arch-box-name">WhatsApp Webhook Handler</span><span class="arch-box-tech">FastAPI · HMAC Verify · Idempotent</span></div>
+        </div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-line"></div><div class="arch-arrow-label">↓ Internal HTTPS (service mesh) ↓</div><div class="arch-arrow-line"></div></div>
+      <!-- Core Services -->
+      <div class="arch-layer">
+        <div class="arch-layer-label">Core Application Services</div>
+        <div class="arch-boxes">
+          <div class="arch-box green-box"><span class="arch-box-name">Score API Service</span><span class="arch-box-tech">FastAPI · Redis · PostgreSQL RLS</span></div>
+          <div class="arch-box green-box"><span class="arch-box-name">Consent Service</span><span class="arch-box-tech">FastAPI · PostgreSQL · ECDSA Signing</span></div>
+          <div class="arch-box green-box"><span class="arch-box-name">ERP Ingestion Service</span><span class="arch-box-tech">Python · Spark · Quarantine Queue</span></div>
+          <div class="arch-box green-box"><span class="arch-box-name">Notification Service</span><span class="arch-box-tech">FastAPI · Kafka Outbox · WhatsApp API</span></div>
+          <div class="arch-box green-box"><span class="arch-box-name">Admin Service</span><span class="arch-box-tech">FastAPI · FIDO2 Auth · PostgreSQL</span></div>
+        </div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-line"></div><div class="arch-arrow-label">↓ Kafka Events + Airflow DAGs ↓</div><div class="arch-arrow-line"></div></div>
+      <!-- ML Pipeline -->
+      <div class="arch-layer">
+        <div class="arch-layer-label">ML &amp; Data Pipeline</div>
+        <div class="arch-boxes">
+          <div class="arch-box accent-box"><span class="arch-box-name">Feature Pipeline (Airflow)</span><span class="arch-box-tech">Spark · dbt · Bronze→Silver→Gold</span></div>
+          <div class="arch-box accent-box"><span class="arch-box-name">Scoring Engine</span><span class="arch-box-tech">XGBoost · Croston's · Isolation Forest · SHAP</span></div>
+          <div class="arch-box accent-box"><span class="arch-box-name">Guardrail Engine</span><span class="arch-box-tech">GR-1 through GR-6 · Fail-safe</span></div>
+          <div class="arch-box accent-box"><span class="arch-box-name">MLflow Registry</span><span class="arch-box-tech">Model versioning · SHA-256 WORM</span></div>
+        </div>
+      </div>
+      <div class="arch-divider"></div>
+      <!-- Storage -->
+      <div class="arch-layer">
+        <div class="arch-layer-label">Storage Layer</div>
+        <div class="arch-boxes">
+          <div class="arch-box"><span class="arch-box-name">S3/ADLS Data Lake</span><span class="arch-box-tech">Bronze · Silver · Gold · WORM</span></div>
+          <div class="arch-box"><span class="arch-box-name">PostgreSQL</span><span class="arch-box-tech">Scores · Consent · Audit · Admin · RLS</span></div>
+          <div class="arch-box"><span class="arch-box-name">Redis Cluster</span><span class="arch-box-tech">Score Cache · Session · Rate Limit</span></div>
+          <div class="arch-box"><span class="arch-box-name">Kafka</span><span class="arch-box-tech">Events · Outbox · Dead-letter</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 Services -->
+  <div class="section" id="s04">
+    <div class="section-header"><span class="section-num">04 —</span><h2>Service Specifications</h2></div>
+    <div class="service-grid">
+      <div class="svc-card">
+        <div class="svc-header"><span class="svc-name">Score API Service</span><span class="svc-tag blue">External-Facing</span></div>
+        <div class="svc-body">
+          <p>The only external-facing service that NBFC lenders call. Validates JWT, checks consent scope, enforces rate limits, retrieves score from cache or triggers synchronous scoring, then returns the AltScore response.</p>
+          <ul>
+            <li>Auth: JWT RS256 + per-lender client secret (header)</li>
+            <li>Consent: calls Consent Service on every request (cached 60s)</li>
+            <li>Score source: Redis cache (TTL 4h) → PostgreSQL fallback</li>
+            <li>Rate limit: 100 req/min per lender, 429 on breach</li>
+            <li>Returns: altscore, risk_band, pd, recommended_limit, reason_codes, data_freshness_days, score_version</li>
+            <li>Guardrail GR-3: blocks response if reason_codes missing</li>
+          </ul>
+        </div>
+        <div class="svc-tech">FastAPI · Python 3.11 · Redis · PostgreSQL (read replica)</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-header"><span class="svc-name">Consent Service</span><span class="svc-tag green">Internal Authority</span></div>
+        <div class="svc-body">
+          <p>Single source of truth for all retailer consent decisions. No other service stores consent state. Signs every consent record with ECDSA P-256 and persists immutably. Exposes synchronous consent-check endpoint consumed by Score API.</p>
+          <ul>
+            <li>Endpoints: grant, revoke, check, history, export</li>
+            <li>Signing: ECDSA P-256 on every consent record</li>
+            <li>Revocation: processing halt within 1 hour of request</li>
+            <li>Scope: per-lender named in consent artefact</li>
+            <li>Retention: consent records never deleted (7-year audit)</li>
+            <li>Emits: consent.granted, consent.revoked Kafka events</li>
+          </ul>
+        </div>
+        <div class="svc-tech">FastAPI · Python 3.11 · PostgreSQL (primary) · KMS for signing key</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-header"><span class="svc-name">ERP Ingestion Service</span><span class="svc-tag blue">Data Ingest</span></div>
+        <div class="svc-body">
+          <p>Receives structured ERP data from the connector SDK deployed at distributor sites. Validates schema, checks payload HMAC, runs completeness scoring, quarantines malformed records, writes clean records to Bronze layer.</p>
+          <ul>
+            <li>Auth: mTLS (per-distributor client cert) + API key</li>
+            <li>Validation: JSON schema enforcement + HMAC verification</li>
+            <li>Quarantine: malformed records → quarantine S3 prefix, alert Ops</li>
+            <li>Completeness: computes data_completeness_score (0–100)</li>
+            <li>Dedup: invoice-level idempotency on invoice_id + distributor_id</li>
+            <li>Emits: ingestion.batch.complete Kafka event (triggers pipeline)</li>
+          </ul>
+        </div>
+        <div class="svc-tech">FastAPI · Python 3.11 · Apache Spark · S3/ADLS (Bronze)</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-header"><span class="svc-name">Feature Pipeline</span><span class="svc-tag gold">Batch / Async</span></div>
+        <div class="svc-body">
+          <p>Orchestrated by Airflow. Runs Bronze → Silver (pseudonymization + normalization) and Silver → Gold (feature engineering) transformations on a nightly schedule or triggered by ingestion events.</p>
+          <ul>
+            <li>Bronze→Silver: GST/phone pseudonymization, schema normalization, outlier capping</li>
+            <li>Silver→Gold: 40+ feature computation via dbt + Spark</li>
+            <li>Deterministic: same inputs always produce same features</li>
+            <li>Lineage: dbt docs track every transformation step</li>
+            <li>SLA: Gold layer updated within 4 hours of ingestion event</li>
+            <li>Emits: pipeline.gold.ready Kafka event → Scoring Engine</li>
+          </ul>
+        </div>
+        <div class="svc-tech">Apache Airflow · Apache Spark · dbt Core · S3/ADLS</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-header"><span class="svc-name">Scoring Engine</span><span class="svc-tag red">ML Core</span></div>
+        <div class="svc-body">
+          <p>Triggered by pipeline.gold.ready events. Loads retailer features from Gold layer, routes to correct model (primary XGBoost or Croston's), applies Isolation Forest anomaly check, computes SHAP reason codes, runs guardrails GR-1 through GR-6, writes final score to Gold store.</p>
+          <ul>
+            <li>Model loading: from MLflow registry (SHA-256 verified)</li>
+            <li>Routing: 6-month threshold → XGBoost vs. cold-start fallback</li>
+            <li>Guardrails: hard-coded fail-safe per GRD-ALTSCORE-001</li>
+            <li>Score write: PostgreSQL + Redis cache invalidation</li>
+            <li>SHAP: TreeExplainer on every scored retailer</li>
+            <li>Emits: score.computed, score.blocked Kafka events</li>
+          </ul>
+        </div>
+        <div class="svc-tech">Python 3.11 · XGBoost 1.7 · SHAP · Isolation Forest · MLflow</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-header"><span class="svc-name">Notification Service</span><span class="svc-tag green">Async / Outbox</span></div>
+        <div class="svc-body">
+          <p>Consumes Kafka events and sends WhatsApp messages to retailers for consent flows, score alerts, and grievance responses. Uses outbox pattern to guarantee at-least-once delivery. Stateless — no notifications stored long-term.</p>
+          <ul>
+            <li>Triggers: consent.invite, grievance.ack, score.ready (opt-in)</li>
+            <li>Channel: WhatsApp Business API (primary), SMS fallback</li>
+            <li>Outbox: Kafka → outbox table → delivery confirmation</li>
+            <li>Idempotency: dedup on message_id to prevent duplicate sends</li>
+            <li>Language: Hindi + English templates (all 24 reason code translations)</li>
+            <li>No PII in message payloads beyond what retailer consented to receive</li>
+          </ul>
+        </div>
+        <div class="svc-tech">FastAPI · Python 3.11 · Kafka Consumer · WhatsApp Business API</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-header"><span class="svc-name">Audit &amp; Compliance Service</span><span class="svc-tag blue">Cross-Cutting</span></div>
+        <div class="svc-body">
+          <p>Receives audit events from all other services via Kafka. Writes append-only records to PostgreSQL audit_log and replicates to S3 WORM for 7-year retention. Exposes read-only query API for legal/compliance access.</p>
+          <ul>
+            <li>Events: score_requested, consent_granted/revoked, erp_ingested, admin_data_access, failed_auth, model_promoted, grievance_filed</li>
+            <li>Immutable: no UPDATE or DELETE on audit_log table (enforced at DB level)</li>
+            <li>WORM: daily export to S3 Object Lock for long-term retention</li>
+            <li>Query API: read-only, FIDO2-authenticated, for Legal/DPO use</li>
+            <li>SIEM: streams to external SIEM via Kafka connector</li>
+          </ul>
+        </div>
+        <div class="svc-tech">FastAPI · Python 3.11 · PostgreSQL (audit) · S3 Object Lock</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-header"><span class="svc-name">Admin Service</span><span class="svc-tag gold">Internal Only</span></div>
+        <div class="svc-body">
+          <p>Internal-only service for distributor onboarding, NBFC partner management, model promotion workflow, grievance case management, and compliance reporting. Requires FIDO2 hardware key + SSO for all access.</p>
+          <ul>
+            <li>Auth: FIDO2 WebAuthn + SAML 2.0 SSO (no passwords)</li>
+            <li>RBAC: 7 roles from SAR-ALTSCORE-001 matrix</li>
+            <li>Model promotion: two-person sign-off workflow</li>
+            <li>Grievance: SLA tracking, escalation triggers</li>
+            <li>Distributor onboarding: cert issuance, API key generation</li>
+            <li>All admin actions emitted to Audit Service</li>
+          </ul>
+        </div>
+        <div class="svc-tech">FastAPI · Python 3.11 · PostgreSQL · React admin UI</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 Data Flows -->
+  <div class="section" id="s05">
+    <div class="section-header"><span class="section-num">05 —</span><h2>Primary Data Flows</h2></div>
+
+    <h3>Flow A: ERP Ingestion to Score</h3>
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content"><h4>ERP Connector Sync</h4><p>Distributor's Tally Prime or SAP B1 connector SDK calls ERP Ingestion Service (<code>POST /v1/ingest/batch</code>) over mTLS. Payload is HMAC-signed with distributor's API key. Service validates schema, runs completeness scoring, deduplicates on invoice_id, writes clean records to Bronze S3 prefix.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content"><h4>Ingestion Event Published</h4><p>ERP Ingestion Service emits <code>ingestion.batch.complete</code> to Kafka topic with distributor_id, batch_id, record_count, completeness_score. Airflow DAG subscribes via sensor.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content"><h4>Feature Pipeline Runs</h4><p>Airflow triggers Bronze→Silver DAG: pseudonymizes GST/phone to UUIDs, normalizes schema across ERP types, applies outlier caps. Then triggers Silver→Gold DAG: computes all 40+ features via dbt + Spark. Lineage recorded in dbt docs.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-content"><h4>Consent Verified Before Scoring</h4><p>Before scoring a retailer, Scoring Engine calls Consent Service to verify active consent. If no consent or revoked: score is not computed; <code>score.blocked</code> event emitted; retailer flagged for consent outreach.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">5</div>
+      <div class="flow-content"><h4>Model Inference + Guardrails</h4><p>Scoring Engine loads features from Gold layer, routes to XGBoost or cold-start fallback, runs Isolation Forest anomaly check (GR-2), computes SHAP reason codes (GR-3), applies affordability ceiling (GR-4), validates data quality score (GR-5). Score written to PostgreSQL + Redis cache.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">6</div>
+      <div class="flow-content"><h4>Score Available for API</h4><p><code>score.computed</code> event emitted to Kafka. Score API Service cache is invalidated and populated with fresh score (TTL 4 hours). NBFC lender's next API call returns fresh result within p95 &lt; 2s.</p></div>
+    </div>
+
+    <h3 style="margin-top:48px">Flow B: NBFC Score API Request</h3>
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content"><h4>Lender Calls Score API</h4><p><code>POST /v1/score</code> with JWT RS256 bearer token + retailer_id. API Gateway validates JWT signature, enforces rate limit (100 req/min). Request forwarded to Score API Service.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content"><h4>Consent Scope Check</h4><p>Score API Service calls Consent Service: does the requesting lender appear in the retailer's active consent scope? If not → 403 Forbidden. Consent check result cached per (retailer_id, lender_id) for 60 seconds.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content"><h4>Score Retrieval</h4><p>Check Redis cache for retailer_id. Cache hit: return immediately (p50 &lt;100ms). Cache miss: query PostgreSQL score store (p95 &lt;500ms). If score older than 24h: return score with <code>data_freshness_days</code> warning. No score exists: return 404.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-content"><h4>Audit Event Written</h4><p>Every Score API call — hit, miss, or blocked — emits <code>score_requested</code> audit event to Kafka → Audit Service (async, non-blocking). Audit write failure does not block API response but triggers alerting.</p></div>
+    </div>
+
+    <h3 style="margin-top:48px">Flow C: Consent Grant (WhatsApp)</h3>
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content"><h4>Distributor Initiates</h4><p>Distributor sends consent invite from dashboard. Admin Service calls Notification Service: send WhatsApp invite to retailer's phone with distributor name, purpose, and rights summary.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content"><h4>Retailer Affirms</h4><p>Retailer responds "HAAN" (Yes) to WhatsApp message. WhatsApp webhook delivers message to Webhook Handler. Handler parses retailer_id, validates HMAC, calls Consent Service <code>POST /v1/consent/grant</code>.</p></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content"><h4>Consent Record Created</h4><p>Consent Service creates ECDSA P-256 signed consent record with retailer_id (UUID), purpose, lender_scope[], expiry, timestamp. Emits <code>consent.granted</code> Kafka event. Notification Service sends confirmation WhatsApp to retailer.</p></div>
+    </div>
+  </div>
+
+  <!-- 06 Interfaces -->
+  <div class="section" id="s06">
+    <div class="section-header"><span class="section-num">06 —</span><h2>Inter-Service Interfaces</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>From</th><th>To</th><th>Protocol</th><th>Contract</th><th>Auth</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>NBFC Lender</td><td>Score API Service</td><td>HTTPS REST</td><td>OpenAPI 3.1 (API-ALTSCORE-001)</td><td>JWT RS256</td><td>Rate-limited; audit on every call</td></tr>
+        <tr><td>ERP Connector SDK</td><td>ERP Ingestion Service</td><td>HTTPS REST</td><td>OpenAPI 3.1 (ERP schema)</td><td>mTLS + API key</td><td>HMAC payload signing required</td></tr>
+        <tr><td>WhatsApp Webhook</td><td>Webhook Handler</td><td>HTTPS POST</td><td>Meta Webhook format</td><td>HMAC-SHA256</td><td>Idempotent on message_id</td></tr>
+        <tr><td>Score API Service</td><td>Consent Service</td><td>Internal HTTPS</td><td>OpenAPI (internal)</td><td>mTLS service identity</td><td>60s consent cache on caller side</td></tr>
+        <tr><td>Scoring Engine</td><td>Consent Service</td><td>Internal HTTPS</td><td>OpenAPI (internal)</td><td>mTLS service identity</td><td>Blocks scoring if no consent</td></tr>
+        <tr><td>ERP Ingestion</td><td>Feature Pipeline</td><td>Kafka</td><td>Avro: ingestion.batch.complete</td><td>SASL/SCRAM</td><td>Airflow sensor consumes</td></tr>
+        <tr><td>Feature Pipeline</td><td>Scoring Engine</td><td>Kafka</td><td>Avro: pipeline.gold.ready</td><td>SASL/SCRAM</td><td>Triggers batch scoring run</td></tr>
+        <tr><td>All services</td><td>Audit Service</td><td>Kafka</td><td>Avro: audit_event schema</td><td>SASL/SCRAM</td><td>Fire-and-forget; DLQ on failure</td></tr>
+        <tr><td>Consent Service</td><td>Notification Service</td><td>Kafka</td><td>Avro: consent.granted / revoked</td><td>SASL/SCRAM</td><td>Triggers WhatsApp confirmation</td></tr>
+        <tr><td>Scoring Engine</td><td>Notification Service</td><td>Kafka</td><td>Avro: score.computed</td><td>SASL/SCRAM</td><td>Optional retailer score-ready alert</td></tr>
+        <tr><td>Admin Service</td><td>All Services</td><td>Internal HTTPS</td><td>OpenAPI (internal admin)</td><td>FIDO2 + SSO token</td><td>All admin actions audit-logged</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 07 Events -->
+  <div class="section" id="s07">
+    <div class="section-header"><span class="section-num">07 —</span><h2>Event Catalogue</h2></div>
+    <p>All asynchronous communication uses Kafka with Avro-schema topics. Every event schema is versioned in the schema registry. Consumers must handle at-least-once delivery via idempotent processing.</p>
+    <table class="doc-table">
+      <thead><tr><th>Event</th><th>Topic</th><th>Producer</th><th>Consumers</th><th>Retention</th></tr></thead>
+      <tbody>
+        <tr><td><code>ingestion.batch.complete</code></td><td>altscore.ingestion</td><td>ERP Ingestion Service</td><td>Feature Pipeline (Airflow sensor)</td><td>7 days</td></tr>
+        <tr><td><code>pipeline.gold.ready</code></td><td>altscore.pipeline</td><td>Feature Pipeline</td><td>Scoring Engine</td><td>7 days</td></tr>
+        <tr><td><code>score.computed</code></td><td>altscore.scores</td><td>Scoring Engine</td><td>Notification Service, Score API (cache invalidation)</td><td>30 days</td></tr>
+        <tr><td><code>score.blocked</code></td><td>altscore.scores</td><td>Scoring Engine / Guardrails</td><td>Audit Service, Notification Service</td><td>30 days</td></tr>
+        <tr><td><code>consent.granted</code></td><td>altscore.consent</td><td>Consent Service</td><td>Notification Service, Audit Service, Feature Pipeline</td><td>Indefinite</td></tr>
+        <tr><td><code>consent.revoked</code></td><td>altscore.consent</td><td>Consent Service</td><td>Scoring Engine (halt), Score API (invalidate), Audit Service</td><td>Indefinite</td></tr>
+        <tr><td><code>audit_event</code></td><td>altscore.audit</td><td>All services</td><td>Audit Service</td><td>7 years (S3 WORM)</td></tr>
+        <tr><td><code>grievance.filed</code></td><td>altscore.grievances</td><td>Score API Service</td><td>Audit Service, Admin Service (SLA timer), Notification Service</td><td>7 years</td></tr>
+        <tr><td><code>model.promoted</code></td><td>altscore.ml</td><td>Admin Service</td><td>Scoring Engine (reload), Audit Service</td><td>Indefinite</td></tr>
+        <tr><td><code>erp.anomaly.detected</code></td><td>altscore.anomaly</td><td>Scoring Engine (Isolation Forest)</td><td>Audit Service, Admin Service</td><td>90 days</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 08 Error Handling -->
+  <div class="section" id="s08">
+    <div class="section-header"><span class="section-num">08 —</span><h2>Error Handling &amp; Resilience</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>Failure Scenario</th><th>System Behaviour</th><th>Recovery Path</th></tr></thead>
+      <tbody>
+        <tr><td>Consent Service unreachable</td><td>Score API returns 503; score blocked (fail-safe). Redis consent cache (60s) absorbs brief outages.</td><td>Auto-retry 3× with backoff; circuit breaker opens at 50% failure rate</td></tr>
+        <tr><td>ERP Ingestion schema mismatch</td><td>Record quarantined to S3 quarantine prefix; batch continues for valid records; alert sent to Ops</td><td>Ops reviews quarantine, distributor SDK updated, records reprocessed</td></tr>
+        <tr><td>Airflow pipeline DAG failure</td><td>Feature Pipeline retries 3×; Gold layer not updated; Scoring Engine uses existing cached score with staleness flag</td><td>On-call engineer notified; manual DAG re-trigger via Admin Service</td></tr>
+        <tr><td>Scoring Engine model load failure</td><td>Score computation blocked; <code>score.blocked</code> event emitted; previous cached score served with warning</td><td>MLflow registry check; model artifact re-downloaded; SHA-256 re-verified</td></tr>
+        <tr><td>Redis cache failure</td><td>Score API falls back to PostgreSQL read replica; latency degrades but service remains available</td><td>Redis cluster auto-failover (Sentinel); cache warming on recovery</td></tr>
+        <tr><td>Kafka broker unavailable</td><td>Services use local transactional outbox; events queued locally and replayed on reconnect</td><td>Kafka auto-recovery; outbox drain; dead-letter queue for failed events</td></tr>
+        <tr><td>WhatsApp API downtime</td><td>Notification Service queues messages in outbox; retries with exponential backoff up to 24h</td><td>SMS fallback triggered after 30-min WhatsApp outage</td></tr>
+        <tr><td>SHAP computation failure</td><td>Guardrail GR-3: score blocked entirely. No score without reason codes (RBI FLDG). <code>score.blocked</code> emitted.</td><td>ML engineer investigation; model re-run triggered once resolved</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 09 Non-Functional -->
+  <div class="section" id="s09">
+    <div class="section-header"><span class="section-num">09 —</span><h2>Non-Functional Requirements</h2></div>
+    <div class="two-col">
+      <div>
+        <h3 style="margin-top:0">Performance Targets</h3>
+        <table class="doc-table">
+          <thead><tr><th>Operation</th><th>p50</th><th>p95</th><th>p99</th></tr></thead>
+          <tbody>
+            <tr><td>Score API (cache hit)</td><td>&lt;100ms</td><td>&lt;300ms</td><td>&lt;500ms</td></tr>
+            <tr><td>Score API (cache miss)</td><td>&lt;500ms</td><td>&lt;2s</td><td>&lt;3s</td></tr>
+            <tr><td>Consent check</td><td>&lt;50ms</td><td>&lt;200ms</td><td>&lt;400ms</td></tr>
+            <tr><td>ERP batch ingest (10K records)</td><td>&lt;30s</td><td>&lt;90s</td><td>&lt;5min</td></tr>
+            <tr><td>Feature pipeline (full run)</td><td>—</td><td>&lt;4h</td><td>&lt;6h</td></tr>
+            <tr><td>Scoring (1K retailers)</td><td>—</td><td>&lt;30min</td><td>&lt;1h</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Availability &amp; Scalability</h3>
+        <table class="doc-table">
+          <thead><tr><th>Dimension</th><th>Target</th></tr></thead>
+          <tbody>
+            <tr><td>Score API uptime</td><td>99.9% monthly</td></tr>
+            <tr><td>Consent Service uptime</td><td>99.95% (critical path)</td></tr>
+            <tr><td>Concurrent lenders</td><td>50 simultaneous at 100 req/min each</td></tr>
+            <tr><td>Max retailers scored</td><td>500K per nightly batch</td></tr>
+            <tr><td>ERP batches/day</td><td>1,000+ distributor syncs</td></tr>
+            <tr><td>Horizontal scaling</td><td>All API services auto-scale on CPU &gt;70%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 Constraints -->
+  <div class="section" id="s10">
+    <div class="section-header"><span class="section-num">10 —</span><h2>Architectural Constraints</h2></div>
+    <p>The following constraints are non-negotiable. Any proposed change to the architecture that would violate these requires explicit sign-off from the Head of Engineering + DPO + Head of Risk.</p>
+    <table class="doc-table">
+      <thead><tr><th>#</th><th>Constraint</th><th>Rationale</th><th>Owner</th></tr></thead>
+      <tbody>
+        <tr><td>C-01</td><td>No PII (GST, phone) may cross the Bronze→Silver boundary in raw form</td><td>DPDP Act 2023; privacy-by-design</td><td>DPO</td></tr>
+        <tr><td>C-02</td><td>Consent must be verified on every Score API call; no bypass</td><td>DPDP Act; fail-safe design</td><td>DPO + Engineering</td></tr>
+        <tr><td>C-03</td><td>All data must remain in India-region cloud infrastructure</td><td>DPDP Act data localisation; RBI guidelines</td><td>DPO + CISO</td></tr>
+        <tr><td>C-04</td><td>Guardrail thresholds are compile-time constants, not runtime config</td><td>GRD-ALTSCORE-001; tamper-resistance</td><td>Head of Risk + ML</td></tr>
+        <tr><td>C-05</td><td>Audit log records may never be updated or deleted</td><td>Legal hold; DPDP; RBI</td><td>CISO + Legal</td></tr>
+        <tr><td>C-06</td><td>Model artifacts must be SHA-256 verified before loading</td><td>ML supply-chain integrity; TM-ML-04</td><td>ML Engineering</td></tr>
+        <tr><td>C-07</td><td>Score API must not expose sequential retailer IDs (IDOR risk)</td><td>TM-API-01; privacy</td><td>Security + API Engineering</td></tr>
+        <tr><td>C-08</td><td>No service may directly query another service's database</td><td>Domain isolation; reduces blast radius</td><td>Head of Engineering</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer class="doc-footer">
+  <div><div class="ft-brand">Alt<span>Score</span></div><div style="margin-top:4px">Functional Architecture · FA-ALTSCORE-001 · v1.0 · May 2026</div></div>
+  <div style="text-align:right">INTERNAL — Engineering &amp; Product<br>AltScore Technologies Private Limited<br>8 services · 10 events · 8 constraints</div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('.section');
+  const obs = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('visible'); }), {threshold:0.07});
+  sections.forEach(s => obs.observe(s));
+  const dots = document.querySelectorAll('.nav-dot');
+  dots.forEach(d => d.addEventListener('click', () => { const t = document.getElementById(d.dataset.target); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); }));
+  const navObs = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting){ dots.forEach(d=>d.classList.remove('active')); const i=Array.from(sections).indexOf(x.target); if(i>=0&&dots[i]) dots[i].classList.add('active'); } }), {threshold:0.4});
+  sections.forEach(s => navObs.observe(s));
+</script>
+</body>
+</html>

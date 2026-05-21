@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Deployment Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#0f0e0c; --paper:#f5f0e8; --cream:#ede7d9;
+    --accent:#c94b1f; --accent2:#2b5e3f; --accent3:#1a3a5c;
+    --muted:#7a7065; --rule:#ccc4b4; --tag-bg:#e8e0cf;
+    --gold:#c4890d; --purple:#5a2d82;
+    --da:#4a1a6e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.75;}
+  .cover{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+  .cover-left{background:var(--ink);padding:80px 60px;display:flex;flex-direction:column;justify-content:space-between;position:relative;}
+  .cover-left::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px);pointer-events:none;}
+  .cover-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--da);text-transform:uppercase;}
+  .cover-title{font-family:'Syne',sans-serif;font-size:clamp(36px,5vw,68px);font-weight:800;line-height:.95;color:var(--paper);letter-spacing:-.02em;}
+  .cover-title span{color:var(--da);}
+  .cover-sub{font-family:'DM Mono',monospace;font-size:13px;color:rgba(245,240,232,.5);line-height:1.8;border-top:1px solid rgba(255,255,255,.1);padding-top:24px;}
+  .cover-right{background:var(--cream);padding:80px 60px;display:flex;flex-direction:column;justify-content:center;gap:28px;border-left:4px solid var(--da);}
+  .cover-stat{border-bottom:1px solid var(--rule);padding-bottom:22px;}
+  .cover-stat:last-child{border-bottom:none;padding-bottom:0;}
+  .stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--da);line-height:1;display:block;}
+  .stat-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-top:4px;display:block;}
+  .stat-desc{font-size:14px;color:var(--ink);margin-top:6px;font-style:italic;}
+  .doc{max-width:1100px;margin:0 auto;padding:80px 40px;}
+  .section{margin-bottom:80px;opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s;}
+  .section.visible{opacity:1;transform:none;}
+  .section-header{display:flex;align-items:baseline;gap:16px;margin-bottom:40px;border-bottom:2px solid var(--ink);padding-bottom:16px;}
+  .section-num{font-family:'DM Mono',monospace;font-size:12px;color:var(--da);letter-spacing:.1em;flex-shrink:0;}
+  h2{font-family:'Syne',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.02em;}
+  h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;margin-bottom:12px;margin-top:32px;}
+  h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:8px;}
+  p{margin-bottom:16px;color:#2a2620;}
+  .callout{background:var(--ink);color:var(--paper);padding:32px 40px;margin:32px 0;border-left:6px solid var(--da);}
+  .callout p{font-size:17px;font-style:italic;line-height:1.6;color:var(--paper);margin:0;}
+  .callout .attr{font-family:'DM Mono',monospace;font-size:11px;color:var(--da);letter-spacing:.15em;margin-top:12px;display:block;}
+  .doc-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:13px;}
+  .doc-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;text-align:left;padding:10px 14px;background:var(--ink);color:var(--paper);}
+  .doc-table td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5;}
+  .doc-table tr:nth-child(even) td{background:var(--cream);}
+
+  /* infra diagram */
+  .infra-diagram{background:var(--ink);padding:40px;margin:32px 0;overflow-x:auto;}
+  .infra-zone{border:1px solid rgba(255,255,255,.12);padding:20px;margin-bottom:16px;}
+  .infra-zone-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,240,232,.4);margin-bottom:14px;}
+  .infra-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .infra-node{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:12px 16px;font-family:'DM Mono',monospace;flex:1;min-width:130px;}
+  .infra-node.highlight{background:rgba(74,26,110,.3);border-color:var(--da);}
+  .infra-node.green{background:rgba(43,94,63,.25);border-color:#2b5e3f;}
+  .infra-node.amber{background:rgba(196,137,13,.2);border-color:#c4890d;}
+  .infra-node-name{font-size:12px;color:var(--paper);font-weight:500;display:block;}
+  .infra-node-detail{font-size:10px;color:rgba(245,240,232,.4);margin-top:3px;display:block;}
+  .infra-arrow{text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:rgba(245,240,232,.3);padding:6px 0;}
+
+  /* pipeline stages */
+  .pipeline{display:flex;gap:0;margin:32px 0;overflow-x:auto;}
+  .pipe-stage{flex:1;min-width:120px;border:1px solid var(--rule);border-right:none;}
+  .pipe-stage:last-child{border-right:1px solid var(--rule);}
+  .pipe-stage-head{padding:12px 16px;background:var(--ink);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper);text-align:center;}
+  .pipe-stage-head.purple{background:var(--da);}
+  .pipe-stage-head.green{background:var(--accent2);}
+  .pipe-stage-head.red{background:var(--accent);}
+  .pipe-stage-head.gold{background:var(--gold);}
+  .pipe-stage-body{padding:14px 16px;background:var(--cream);font-size:12px;color:#3a352d;line-height:1.5;}
+  .pipe-stage-body ul{list-style:none;padding:0;margin:0;}
+  .pipe-stage-body ul li{padding:2px 0 2px 12px;position:relative;}
+  .pipe-stage-body ul li::before{content:'·';position:absolute;left:0;color:var(--da);font-weight:bold;}
+
+  /* env table */
+  .env-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin:32px 0;}
+  .env-card{border:1px solid var(--rule);}
+  .env-head{padding:16px 20px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;border-bottom:1px solid var(--rule);}
+  .env-head.dev{background:#e8f0ff;border-top:4px solid var(--accent3);}
+  .env-head.staging{background:#fff8e0;border-top:4px solid var(--gold);}
+  .env-head.prod{background:#e8f5ee;border-top:4px solid var(--accent2);}
+  .env-body{padding:16px 20px;background:var(--cream);font-size:12px;color:#3a352d;line-height:1.6;}
+  .env-body ul{list-style:none;padding:0;}
+  .env-body ul li{padding:2px 0 2px 12px;position:relative;}
+  .env-body ul li::before{content:'→';position:absolute;left:0;color:var(--muted);font-size:10px;top:4px;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:32px 0;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin:32px 0;}
+  .card{background:var(--cream);border:1px solid var(--rule);padding:24px;}
+  .card.purple-top{border-top:4px solid var(--da);}
+  .card.green-top{border-top:4px solid var(--accent2);}
+  .card.red-top{border-top:4px solid var(--accent);}
+  .card.gold-top{border-top:4px solid var(--gold);}
+  .card.blue-top{border-top:4px solid var(--accent3);}
+  .card-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;}
+  .card h3{font-size:15px;margin-bottom:8px;margin-top:0;}
+  .card p{font-size:13px;color:#4a4540;margin:0;line-height:1.6;}
+  .card ul{list-style:none;padding:0;margin:8px 0 0 0;}
+  .card ul li{font-size:12px;padding:3px 0 3px 14px;position:relative;color:#3a352d;}
+  .card ul li::before{content:'·';position:absolute;left:0;color:var(--da);font-weight:bold;}
+
+  code{font-family:'DM Mono',monospace;font-size:12px;background:var(--tag-bg);padding:2px 6px;color:var(--da);}
+  .divider{border:none;border-top:1px solid var(--rule);margin:64px 0;}
+  .sidenav{position:fixed;left:24px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100;}
+  .nav-dot{width:8px;height:8px;background:var(--rule);cursor:pointer;transition:all .3s;position:relative;}
+  .nav-dot:hover,.nav-dot.active{background:var(--da);transform:scale(1.5);}
+  .nav-dot::after{content:attr(data-label);position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);white-space:nowrap;opacity:0;transition:opacity .2s;background:var(--paper);padding:2px 8px;border:1px solid var(--rule);}
+  .nav-dot:hover::after{opacity:1;}
+  .doc-footer{background:var(--ink);color:rgba(245,240,232,.5);padding:40px;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;}
+  .ft-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--paper);}
+  .ft-brand span{color:var(--da);}
+  @media(max-width:768px){.cover{grid-template-columns:1fr;}.doc{padding:40px 20px;}.two-col,.three-col,.env-grid{grid-template-columns:1fr;}.sidenav{display:none;}.pipeline{flex-direction:column;}.pipe-stage{border-right:1px solid var(--rule);border-bottom:none;}.pipe-stage:last-child{border-bottom:1px solid var(--rule);}}
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+<nav class="sidenav" id="sidenav">
+  <div class="nav-dot" data-label="Overview" data-target="s01"></div>
+  <div class="nav-dot" data-label="Cloud Topology" data-target="s02"></div>
+  <div class="nav-dot" data-label="Kubernetes" data-target="s03"></div>
+  <div class="nav-dot" data-label="Networking" data-target="s04"></div>
+  <div class="nav-dot" data-label="CI/CD" data-target="s05"></div>
+  <div class="nav-dot" data-label="Environments" data-target="s06"></div>
+  <div class="nav-dot" data-label="Data Storage" data-target="s07"></div>
+  <div class="nav-dot" data-label="Observability" data-target="s08"></div>
+  <div class="nav-dot" data-label="DR & Backup" data-target="s09"></div>
+  <div class="nav-dot" data-label="Capacity" data-target="s10"></div>
+</nav>
+
+<div class="cover">
+  <div class="cover-left">
+    <div>
+      <div class="cover-label">AltScore Platform · Architecture</div>
+      <div style="height:40px"></div>
+      <div class="cover-title">Deployment<br><span>Architecture</span></div>
+    </div>
+    <div class="cover-sub">
+      DOC-ID: DA-ALTSCORE-001<br>
+      Version: 1.0 · May 2026<br>
+      Classification: INTERNAL — Engineering &amp; DevOps<br>
+      Owner: Platform Engineering, AltScore Technologies
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat">
+      <span class="stat-num">India-Only</span>
+      <span class="stat-label">Data Residency</span>
+      <span class="stat-desc">AWS ap-south-1 (Mumbai) primary · Azure Central India DR · No cross-border data transfer</span>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">K8s + EKS</span>
+      <span class="stat-label">Container Orchestration</span>
+      <span class="stat-desc">Amazon EKS · 3 node groups · Auto-scaling · Namespace-per-service</span>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">3 Envs</span>
+      <span class="stat-label">Environment Strategy</span>
+      <span class="stat-desc">Development · Staging (prod-mirror) · Production · Isolated VPCs</span>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">99.9%</span>
+      <span class="stat-label">Score API SLA</span>
+      <span class="stat-desc">RTO: 4h · RPO: 1h · Multi-AZ active-active</span>
+    </div>
+  </div>
+</div>
+
+<div class="doc">
+
+  <!-- 01 -->
+  <div class="section" id="s01">
+    <div class="section-header"><span class="section-num">01 —</span><h2>Overview &amp; Cloud Strategy</h2></div>
+    <div class="callout">
+      <p>AltScore deploys on AWS ap-south-1 (Mumbai) as the primary cloud region, with Azure Central India as a disaster-recovery target. All data — in transit, at rest, and in computation — remains within India's geographic boundaries to comply with the DPDP Act 2023 data localisation requirements.</p>
+      <span class="attr">DA-ALTSCORE-001 · Deployment Charter</span>
+    </div>
+    <p>The infrastructure is entirely containerised (Docker) and orchestrated via Amazon EKS. No pet servers — every compute resource is defined in code (Terraform) and reproduced identically across environments. The deployment pipeline enforces immutable image tags, environment-specific secrets, and mandatory security scanning before any image reaches production.</p>
+    <div class="three-col">
+      <div class="card purple-top"><span class="card-tag">Primary Region</span><h3>AWS ap-south-1</h3><p>Mumbai. All production workloads. Multi-AZ active-active for API services. EKS, RDS PostgreSQL, ElastiCache Redis, S3, MSK Kafka, CloudWatch.</p></div>
+      <div class="card blue-top"><span class="card-tag">DR Region</span><h3>Azure Central India</h3><p>Pune. Passive standby for data lake and PostgreSQL (continuous replication). Activated on primary region failure. RTO 4h, RPO 1h.</p></div>
+      <div class="card green-top"><span class="card-tag">IaC</span><h3>Terraform + Helm</h3><p>All infrastructure defined as code. Terraform manages cloud resources. Helm charts manage Kubernetes workloads. No manual console changes in production.</p></div>
+    </div>
+  </div>
+
+  <!-- 02 Cloud Topology -->
+  <div class="section" id="s02">
+    <div class="section-header"><span class="section-num">02 —</span><h2>Cloud Topology</h2></div>
+    <div class="infra-diagram">
+      <!-- Internet -->
+      <div class="infra-zone" style="border-color:rgba(201,75,31,.4);">
+        <div class="infra-zone-label">Internet / External</div>
+        <div class="infra-row">
+          <div class="infra-node"><span class="infra-node-name">NBFC Lenders</span><span class="infra-node-detail">Score API consumers</span></div>
+          <div class="infra-node"><span class="infra-node-name">ERP Connector SDK</span><span class="infra-node-detail">Distributor sites</span></div>
+          <div class="infra-node"><span class="infra-node-name">WhatsApp Business API</span><span class="infra-node-detail">Meta Cloud</span></div>
+          <div class="infra-node"><span class="infra-node-name">Distributor Dashboard</span><span class="infra-node-detail">Web browser</span></div>
+        </div>
+      </div>
+      <div class="infra-arrow">↕ AWS Shield Advanced · CloudFront · WAF · TLS 1.3 termination ↕</div>
+      <!-- DMZ -->
+      <div class="infra-zone" style="border-color:rgba(196,137,13,.4);">
+        <div class="infra-zone-label">DMZ — Public Subnet (ap-south-1a/b/c)</div>
+        <div class="infra-row">
+          <div class="infra-node amber"><span class="infra-node-name">AWS ALB</span><span class="infra-node-detail">Layer 7 load balancer · TLS offload</span></div>
+          <div class="infra-node amber"><span class="infra-node-name">API Gateway (Kong)</span><span class="infra-node-detail">JWT verify · rate limit · routing</span></div>
+          <div class="infra-node amber"><span class="infra-node-name">NAT Gateway</span><span class="infra-node-detail">Outbound-only for private subnets</span></div>
+          <div class="infra-node amber"><span class="infra-node-name">VPN Gateway</span><span class="infra-node-detail">mTLS ERP connector tunnels</span></div>
+        </div>
+      </div>
+      <div class="infra-arrow">↕ Internal VPC routing — no direct internet access ↕</div>
+      <!-- App tier -->
+      <div class="infra-zone" style="border-color:rgba(74,26,110,.4);">
+        <div class="infra-zone-label">Application Zone — Private Subnet (EKS cluster)</div>
+        <div class="infra-row">
+          <div class="infra-node highlight"><span class="infra-node-name">Score API pods</span><span class="infra-node-detail">3–20 replicas · HPA</span></div>
+          <div class="infra-node highlight"><span class="infra-node-name">Consent Service pods</span><span class="infra-node-detail">3–10 replicas · HPA</span></div>
+          <div class="infra-node highlight"><span class="infra-node-name">ERP Ingestion pods</span><span class="infra-node-detail">2–8 replicas · HPA</span></div>
+          <div class="infra-node highlight"><span class="infra-node-name">Notification pods</span><span class="infra-node-detail">2–6 replicas · HPA</span></div>
+          <div class="infra-node highlight"><span class="infra-node-name">Admin Service pods</span><span class="infra-node-detail">2 replicas · fixed</span></div>
+          <div class="infra-node highlight"><span class="infra-node-name">Audit Service pods</span><span class="infra-node-detail">2–4 replicas · HPA</span></div>
+        </div>
+      </div>
+      <div class="infra-arrow">↕ VPC peering / private endpoints — no public egress ↕</div>
+      <!-- Data + ML -->
+      <div class="infra-zone" style="border-color:rgba(43,94,63,.4);">
+        <div class="infra-zone-label">Data &amp; ML Zone — Isolated Private Subnet</div>
+        <div class="infra-row">
+          <div class="infra-node green"><span class="infra-node-name">Amazon EMR / Spark</span><span class="infra-node-detail">Feature pipeline · Bronze→Gold</span></div>
+          <div class="infra-node green"><span class="infra-node-name">Apache Airflow (MWAA)</span><span class="infra-node-detail">DAG orchestration</span></div>
+          <div class="infra-node green"><span class="infra-node-name">Scoring Engine pods</span><span class="infra-node-detail">ML inference · GPU-optional</span></div>
+          <div class="infra-node green"><span class="infra-node-name">MLflow on EKS</span><span class="infra-node-detail">Model registry · artifact store</span></div>
+        </div>
+      </div>
+      <div class="infra-arrow">↕ AWS PrivateLink / VPC endpoints ↕</div>
+      <!-- Storage -->
+      <div class="infra-zone">
+        <div class="infra-zone-label">Managed Storage (AWS Managed Services)</div>
+        <div class="infra-row">
+          <div class="infra-node"><span class="infra-node-name">Amazon S3</span><span class="infra-node-detail">Data Lake · Object Lock (WORM)</span></div>
+          <div class="infra-node"><span class="infra-node-name">Amazon RDS PostgreSQL</span><span class="infra-node-detail">Multi-AZ · Encrypted · RLS</span></div>
+          <div class="infra-node"><span class="infra-node-name">Amazon ElastiCache Redis</span><span class="infra-node-detail">Cluster mode · TLS · AUTH</span></div>
+          <div class="infra-node"><span class="infra-node-name">Amazon MSK (Kafka)</span><span class="infra-node-detail">3-broker · SASL · TLS</span></div>
+          <div class="infra-node"><span class="infra-node-name">AWS KMS</span><span class="infra-node-detail">CMKs · HSM-backed · per-distributor</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 Kubernetes -->
+  <div class="section" id="s03">
+    <div class="section-header"><span class="section-num">03 —</span><h2>Kubernetes Cluster Design</h2></div>
+    <p>The production EKS cluster runs in Amazon EKS v1.29+ across three availability zones (ap-south-1a, 1b, 1c). Three node groups separate compute concerns and enable independent scaling policies.</p>
+    <table class="doc-table">
+      <thead><tr><th>Node Group</th><th>Instance Type</th><th>Min/Max Nodes</th><th>Workloads</th><th>Taints</th></tr></thead>
+      <tbody>
+        <tr><td><strong>api-nodes</strong></td><td>c6i.xlarge (4 vCPU, 8GB)</td><td>3 / 20</td><td>Score API, Consent, ERP Ingestion, Notification, Audit, Admin</td><td>workload=api:NoSchedule</td></tr>
+        <tr><td><strong>ml-nodes</strong></td><td>m6i.2xlarge (8 vCPU, 32GB)</td><td>2 / 10</td><td>Scoring Engine, MLflow, Feature Pipeline workers</td><td>workload=ml:NoSchedule</td></tr>
+        <tr><td><strong>system-nodes</strong></td><td>t3.medium (2 vCPU, 4GB)</td><td>3 / 3</td><td>Cluster DNS, metrics-server, cluster-autoscaler, cert-manager, Istio control plane</td><td>node-role=system:NoSchedule</td></tr>
+      </tbody>
+    </table>
+    <h3>Namespace Strategy</h3>
+    <table class="doc-table">
+      <thead><tr><th>Namespace</th><th>Services</th><th>Network Policy</th><th>Resource Quota</th></tr></thead>
+      <tbody>
+        <tr><td><code>altscore-api</code></td><td>Score API, Consent, ERP Ingestion, Notification, Admin</td><td>Deny all except from altscore-gateway + internal cross-namespace on port 8080</td><td>4 CPU / 8Gi RAM max</td></tr>
+        <tr><td><code>altscore-ml</code></td><td>Scoring Engine, MLflow, Guardrail Engine</td><td>Deny all external; allow only altscore-api inbound; S3/RDS via PrivateLink only</td><td>16 CPU / 64Gi RAM max</td></tr>
+        <tr><td><code>altscore-data</code></td><td>Airflow workers, dbt runner, pipeline utilities</td><td>No external inbound; EMR outbound via VPC peering; S3 via PrivateLink</td><td>8 CPU / 32Gi RAM max</td></tr>
+        <tr><td><code>altscore-gateway</code></td><td>Kong API Gateway, ingress controller</td><td>Accept inbound from ALB; egress to altscore-api only</td><td>2 CPU / 4Gi RAM max</td></tr>
+        <tr><td><code>altscore-monitoring</code></td><td>Prometheus, Grafana, AlertManager</td><td>Read-only scrape from all namespaces; no write access</td><td>2 CPU / 4Gi RAM max</td></tr>
+        <tr><td><code>istio-system</code></td><td>Istio control plane, sidecar injector</td><td>Managed by Istio; enforces mTLS between all pods</td><td>2 CPU / 4Gi RAM max</td></tr>
+      </tbody>
+    </table>
+    <h3>Pod Security &amp; mTLS</h3>
+    <p>Istio service mesh is deployed cluster-wide with <strong>STRICT mTLS mode</strong> — all pod-to-pod communication is mutually authenticated and encrypted. PodSecurityPolicy (or Pod Security Admission in newer K8s) enforces: no privilege escalation, read-only root filesystem, non-root user, no host network/PID. Secrets are injected via AWS Secrets Manager CSI driver — never as environment variables or ConfigMaps.</p>
+  </div>
+
+  <!-- 04 Networking -->
+  <div class="section" id="s04">
+    <div class="section-header"><span class="section-num">04 —</span><h2>Network Security Architecture</h2></div>
+    <div class="two-col">
+      <div>
+        <h3 style="margin-top:0">VPC Design</h3>
+        <table class="doc-table">
+          <thead><tr><th>Subnet Type</th><th>CIDR</th><th>Routing</th></tr></thead>
+          <tbody>
+            <tr><td>Public (DMZ)</td><td>10.0.0.0/24 per AZ</td><td>Internet Gateway; ALB, NAT GW only</td></tr>
+            <tr><td>Private App</td><td>10.0.10.0/23 per AZ</td><td>NAT GW for egress only; no direct inbound</td></tr>
+            <tr><td>Private Data/ML</td><td>10.0.20.0/23 per AZ</td><td>No NAT; PrivateLink only; no internet</td></tr>
+            <tr><td>DB Subnet Group</td><td>10.0.30.0/24 per AZ</td><td>No routing to internet; RDS/ElastiCache/MSK</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Security Groups</h3>
+        <table class="doc-table">
+          <thead><tr><th>Group</th><th>Inbound</th><th>Outbound</th></tr></thead>
+          <tbody>
+            <tr><td>sg-alb</td><td>443 from 0.0.0.0/0</td><td>8080 to sg-gateway</td></tr>
+            <tr><td>sg-gateway</td><td>8080 from sg-alb</td><td>8080 to sg-api-pods</td></tr>
+            <tr><td>sg-api-pods</td><td>8080 from sg-gateway</td><td>5432 to sg-rds, 6379 to sg-redis, 9092 to sg-kafka</td></tr>
+            <tr><td>sg-ml-pods</td><td>8080 from sg-api-pods only</td><td>5432 to sg-rds, S3 via endpoint</td></tr>
+            <tr><td>sg-rds</td><td>5432 from sg-api-pods, sg-ml-pods only</td><td>None</td></tr>
+            <tr><td>sg-erp-vpn</td><td>443 from distributor IP allowlist</td><td>8080 to sg-api-pods</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <h3>TLS &amp; Certificate Management</h3>
+    <p>All external TLS is terminated at the ALB with ACM-managed certificates (auto-renewed). Internal pod-to-pod TLS is managed by Istio using SPIFFE/SPIRE identities — certificates rotate every 24 hours automatically. ERP connector mTLS uses per-distributor client certificates issued by AltScore's internal CA (cert-manager on K8s), rotated every 90 days. All certificates are SHA-256/RSA-4096 or EC P-256.</p>
+  </div>
+
+  <!-- 05 CI/CD -->
+  <div class="section" id="s05">
+    <div class="section-header"><span class="section-num">05 —</span><h2>CI/CD Pipeline</h2></div>
+    <p>Every service follows an identical pipeline enforced by GitHub Actions. Merges to <code>main</code> automatically deploy to staging; promotion to production requires manual approval from two engineers. No direct production access — all changes go through the pipeline.</p>
+    <div class="pipeline">
+      <div class="pipe-stage">
+        <div class="pipe-stage-head purple">1 · Commit</div>
+        <div class="pipe-stage-body"><ul><li>PR raised; branch protection enforced</li><li>Linting (ruff, black)</li><li>Unit tests (pytest ≥80% coverage)</li><li>SAST scan (Bandit, Semgrep)</li><li>Dependency audit (pip-audit)</li></ul></div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-stage-head purple">2 · Build</div>
+        <div class="pipe-stage-body"><ul><li>Docker build (multi-stage)</li><li>Image scan: Trivy (CRITICAL/HIGH = fail)</li><li>SRI hash generated</li><li>Image tagged with git SHA (no <code>latest</code>)</li><li>Push to ECR (private, encrypted)</li></ul></div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-stage-head green">3 · Staging Deploy</div>
+        <div class="pipe-stage-body"><ul><li>Auto-deploy on merge to main</li><li>Helm upgrade with SHA-pinned image</li><li>Smoke tests run against staging</li><li>Integration tests: consent, score, ingest</li><li>Load test: 50 concurrent lenders</li></ul></div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-stage-head gold">4 · Approval Gate</div>
+        <div class="pipe-stage-body"><ul><li>Two-engineer approval required</li><li>Security sign-off for infra changes</li><li>DPO sign-off for data pipeline changes</li><li>Change record auto-created</li><li>Rollback plan documented</li></ul></div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-stage-head red">5 · Production</div>
+        <div class="pipe-stage-body"><ul><li>Helm upgrade (rolling, zero-downtime)</li><li>Readiness gates: health checks pass</li><li>Canary: 10% traffic → 100% over 15min</li><li>Auto-rollback on error rate &gt;1%</li><li>Slack + PagerDuty notify on deploy</li></ul></div>
+      </div>
+    </div>
+    <h3>ML Model Deployment</h3>
+    <p>ML model promotion follows a separate path governed by the Guardrail Committee process (GRD-ALTSCORE-001, Section 10). Model artifacts are stored in MLflow on S3 with SHA-256 hash verification. The Scoring Engine pulls the active model at startup — it never bakes model weights into a container image. Model promotion is triggered via the Admin Service (two-person sign-off), which updates a model pointer in the database; the Scoring Engine reloads the new artifact within 60 seconds without a container restart.</p>
+    <h3>GitOps Repository Structure</h3>
+    <table class="doc-table">
+      <thead><tr><th>Repository</th><th>Contents</th><th>Deployment Target</th></tr></thead>
+      <tbody>
+        <tr><td><code>altscore/platform</code></td><td>Terraform modules: VPC, EKS, RDS, ElastiCache, MSK, S3, KMS, IAM</td><td>AWS infrastructure</td></tr>
+        <tr><td><code>altscore/services</code></td><td>Service source code + Dockerfile + Helm chart per service</td><td>EKS via Helm</td></tr>
+        <tr><td><code>altscore/ml</code></td><td>Training code, feature engineering, model evaluation notebooks</td><td>MLflow registry</td></tr>
+        <tr><td><code>altscore/data-pipelines</code></td><td>Airflow DAGs, dbt models, Spark jobs, schema definitions</td><td>MWAA + EMR</td></tr>
+        <tr><td><code>altscore/k8s-config</code></td><td>Helm values per environment, NetworkPolicy, RBAC, PodSecurity manifests</td><td>EKS via ArgoCD</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 06 Environments -->
+  <div class="section" id="s06">
+    <div class="section-header"><span class="section-num">06 —</span><h2>Environment Strategy</h2></div>
+    <p>Three fully isolated environments — Development, Staging, Production — each in separate AWS accounts (AWS Organizations). No shared resources; no prod credentials accessible from dev or staging. Staging mirrors production configuration exactly (same instance types, same security policies) to prevent "works in staging" surprises.</p>
+    <div class="env-grid">
+      <div class="env-card">
+        <div class="env-head dev">Development (dev)</div>
+        <div class="env-body"><ul>
+          <li>AWS account: dedicated dev account</li>
+          <li>EKS: single-AZ, smaller instances (t3.large)</li>
+          <li>RDS: single instance, non-HA</li>
+          <li>Data: synthetic retailer data only (no real ERP)</li>
+          <li>No real NBFC partner credentials</li>
+          <li>Feature flags: all experimental features ON</li>
+          <li>Cost optimised: cluster auto-scales to zero overnight</li>
+          <li>Access: all engineers (role-based)</li>
+        </ul></div>
+      </div>
+      <div class="env-card">
+        <div class="env-head staging">Staging (staging)</div>
+        <div class="env-body"><ul>
+          <li>AWS account: dedicated staging account</li>
+          <li>EKS: multi-AZ, production-identical instance types</li>
+          <li>RDS: Multi-AZ, same config as prod</li>
+          <li>Data: anonymised production-shaped dataset</li>
+          <li>NBFC partner sandbox credentials only</li>
+          <li>Integration tests + load tests run here</li>
+          <li>Used for NBFC partner UAT</li>
+          <li>Access: engineers + DPO + NBFC sandbox users</li>
+        </ul></div>
+      </div>
+      <div class="env-card">
+        <div class="env-head prod">Production (prod)</div>
+        <div class="env-body"><ul>
+          <li>AWS account: dedicated prod account</li>
+          <li>EKS: multi-AZ, full HA, HPA enabled</li>
+          <li>RDS: Multi-AZ, automated backups, PITR</li>
+          <li>Data: real retailer data under DPDP consent</li>
+          <li>Live NBFC partner credentials</li>
+          <li>Two-engineer approval required for any change</li>
+          <li>No developer SSH/kubectl exec access by default</li>
+          <li>Access: break-glass via FIDO2 + audit trail</li>
+        </ul></div>
+      </div>
+    </div>
+    <h3>Environment Promotion Flow</h3>
+    <p>Code flows <strong>dev → staging → production</strong> only. No hot-patches to production without staging validation except for P1 incidents (break-glass procedure with post-incident review required). Environment-specific secrets are managed in AWS Secrets Manager per account; no secrets in code repositories.</p>
+  </div>
+
+  <!-- 07 Data Storage -->
+  <div class="section" id="s07">
+    <div class="section-header"><span class="section-num">07 —</span><h2>Data Storage Deployment</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>Store</th><th>Service</th><th>Config</th><th>Encryption</th><th>Backup / Retention</th></tr></thead>
+      <tbody>
+        <tr><td>PostgreSQL</td><td>Amazon RDS PostgreSQL 15</td><td>db.r6g.large, Multi-AZ, 500GB gp3</td><td>AES-256 (AWS KMS CMK)</td><td>Automated daily snapshots; 35-day PITR; 7-year audit log partition on S3</td></tr>
+        <tr><td>Redis</td><td>Amazon ElastiCache Redis 7</td><td>cache.r6g.large, cluster mode (3 shards × 2 replicas)</td><td>TLS in-transit; AES-256 at-rest</td><td>No persistent backup (cache); reconstructed from DB on failure</td></tr>
+        <tr><td>Kafka</td><td>Amazon MSK 3.5</td><td>3 broker, kafka.m5.large, 1TB per broker</td><td>TLS in-transit; EBS AES-256 at-rest</td><td>Topic-specific retention (7 days to indefinite per event catalogue)</td></tr>
+        <tr><td>Data Lake</td><td>Amazon S3 + Object Lock</td><td>Standard + Intelligent-Tiering</td><td>SSE-KMS per-distributor CMK; S3 Object Lock (WORM) for audit + Bronze</td><td>Versioning enabled; Bronze WORM 7yr; Silver 2yr+5yr archive; Gold 3yr</td></tr>
+        <tr><td>Secrets</td><td>AWS Secrets Manager + KMS</td><td>HSM-backed CMK; per-secret rotation</td><td>AES-256; HSM-backed for API signing keys</td><td>Secret versions retained 30 days post-rotation</td></tr>
+        <tr><td>Container Registry</td><td>Amazon ECR (private)</td><td>Per-service repository; image scanning on push</td><td>AES-256 at-rest</td><td>Untagged images purged after 90 days; tagged retained indefinitely</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 08 Observability -->
+  <div class="section" id="s08">
+    <div class="section-header"><span class="section-num">08 —</span><h2>Observability &amp; Monitoring</h2></div>
+    <div class="three-col">
+      <div class="card purple-top">
+        <span class="card-tag">Metrics</span>
+        <h3>Prometheus + Grafana</h3>
+        <p>Prometheus scrapes all pods via ServiceMonitor CRDs. Grafana dashboards for: Score API latency/error rate, consent check SLA, pipeline run times, guardrail trigger rates, ML drift (PSI). Alert rules for p95 &gt; thresholds and error rate spikes.</p>
+      </div>
+      <div class="card green-top">
+        <span class="card-tag">Logging</span>
+        <h3>Structured JSON → AWS CloudWatch</h3>
+        <p>All services log structured JSON (no plaintext). Fluentd DaemonSet ships logs to CloudWatch Logs. Log groups per service, per environment. 90-day hot retention; 7-year cold on S3. PII fields redacted at log emission.</p>
+      </div>
+      <div class="card gold-top">
+        <span class="card-tag">Tracing</span>
+        <h3>OpenTelemetry + AWS X-Ray</h3>
+        <p>Distributed tracing across Score API → Consent → Scoring Engine → Audit. Trace IDs propagated via W3C headers. Sampling: 1% baseline, 100% for error traces. Used for latency root-cause analysis.</p>
+      </div>
+    </div>
+    <h3>Key Alerts</h3>
+    <table class="doc-table">
+      <thead><tr><th>Alert</th><th>Condition</th><th>Severity</th><th>Response</th></tr></thead>
+      <tbody>
+        <tr><td>Score API error rate high</td><td>5xx rate &gt; 1% over 5 minutes</td><td>P1</td><td>PagerDuty; auto-rollback if post-deploy</td></tr>
+        <tr><td>Consent Service unreachable</td><td>Health check fails for &gt; 30s</td><td>P1</td><td>PagerDuty; circuit breaker activates</td></tr>
+        <tr><td>Score API latency degraded</td><td>p95 &gt; 2s for 5 minutes</td><td>P2</td><td>Slack alert; on-call investigation</td></tr>
+        <tr><td>Pipeline SLA breach</td><td>Gold layer not updated in &gt;6h</td><td>P2</td><td>Slack + PagerDuty; pipeline engineer notified</td></tr>
+        <tr><td>Guardrail triggered</td><td>Any GR-1 through GR-6 escalation</td><td>P2/P3</td><td>Risk team Slack channel; case auto-created</td></tr>
+        <tr><td>Certificate expiry</td><td>Any cert &lt; 14 days remaining</td><td>P3</td><td>Slack alert; cert-manager auto-renews</td></tr>
+        <tr><td>Kafka consumer lag</td><td>altscore.audit consumer lag &gt; 10K messages</td><td>P3</td><td>Audit Service scaling investigation</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 09 DR -->
+  <div class="section" id="s09">
+    <div class="section-header"><span class="section-num">09 —</span><h2>Disaster Recovery &amp; Backup</h2></div>
+    <div class="two-col">
+      <div class="card purple-top">
+        <span class="card-tag">RTO / RPO Targets</span>
+        <h3>Recovery Objectives</h3>
+        <ul>
+          <li>Score API RTO: 4 hours (AWS region failure)</li>
+          <li>Score API RPO: 1 hour (max data loss)</li>
+          <li>Consent Service RTO: 4 hours</li>
+          <li>Data Lake RPO: 24 hours (S3 cross-region replication)</li>
+          <li>Model rollback RTO: &lt;10 minutes (same region)</li>
+          <li>PostgreSQL PITR: any point in last 35 days</li>
+        </ul>
+      </div>
+      <div class="card green-top">
+        <span class="card-tag">DR Architecture</span>
+        <h3>Active-Passive to Azure Central India</h3>
+        <ul>
+          <li>PostgreSQL: continuous streaming replication to Azure DB for PostgreSQL</li>
+          <li>S3 Data Lake: S3 cross-region replication to Azure Blob Storage (ADLS Gen2)</li>
+          <li>Kafka: MSK topic mirroring to Azure Event Hubs</li>
+          <li>EKS workloads: Terraform templates ready; deploy-from-scratch in &lt;2h</li>
+          <li>DNS failover: Route 53 health checks → CNAME switch to Azure ALB</li>
+          <li>DR drill: quarterly test (RTO/RPO verified)</li>
+        </ul>
+      </div>
+    </div>
+    <h3>Backup Schedule</h3>
+    <table class="doc-table">
+      <thead><tr><th>Resource</th><th>Backup Frequency</th><th>Retention</th><th>Restore Tested</th></tr></thead>
+      <tbody>
+        <tr><td>RDS PostgreSQL</td><td>Continuous (PITR) + daily snapshot</td><td>35 days PITR; 7 years snapshots for audit tables</td><td>Monthly</td></tr>
+        <tr><td>S3 Bronze layer</td><td>Object Lock WORM (no backup needed)</td><td>7 years</td><td>Quarterly DR drill</td></tr>
+        <tr><td>S3 Silver/Gold layers</td><td>Versioning + cross-region replication</td><td>2yr active + 5yr archive</td><td>Quarterly DR drill</td></tr>
+        <tr><td>MLflow model artifacts</td><td>WORM on S3 + ECR tag</td><td>Indefinite (model lineage)</td><td>On every model rollback test</td></tr>
+        <tr><td>Kafka topics</td><td>MSK MirrorMaker 2 (continuous)</td><td>Per topic retention policy</td><td>Semi-annual</td></tr>
+        <tr><td>Secrets Manager</td><td>Automatic version history</td><td>30 days per version</td><td>Monthly</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 10 Capacity -->
+  <div class="section" id="s10">
+    <div class="section-header"><span class="section-num">10 —</span><h2>Capacity Planning</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>Workload</th><th>Phase 01 (Pilot)</th><th>Phase 03 (10 Districts)</th><th>Phase 05 (National)</th><th>Scaling Mechanism</th></tr></thead>
+      <tbody>
+        <tr><td>Active retailers</td><td>10,000</td><td>250,000</td><td>2,000,000</td><td>Data lake partitioning by distributor</td></tr>
+        <tr><td>NBFC lenders</td><td>3</td><td>15</td><td>50</td><td>Kong rate-limit config; RLS policy per lender</td></tr>
+        <tr><td>Score API req/day</td><td>5,000</td><td>150,000</td><td>2,000,000</td><td>HPA on Score API pods (CPU + RPS)</td></tr>
+        <tr><td>ERP batches/day</td><td>30 distributors</td><td>500 distributors</td><td>5,000 distributors</td><td>Spark cluster auto-scales (EMR managed)</td></tr>
+        <tr><td>Nightly scoring run</td><td>10K retailers / 10min</td><td>250K / 2h</td><td>2M / 6h</td><td>ML node group auto-scale; EMR spot instances</td></tr>
+        <tr><td>Kafka throughput</td><td>~100 events/s</td><td>~2,000 events/s</td><td>~20,000 events/s</td><td>MSK partition increase; consumer group scale-out</td></tr>
+        <tr><td>PostgreSQL storage</td><td>50 GB</td><td>500 GB</td><td>5 TB</td><td>RDS storage auto-scaling; table partitioning by month</td></tr>
+        <tr><td>S3 data lake</td><td>100 GB</td><td>5 TB</td><td>100 TB</td><td>S3 Intelligent-Tiering; Glacier archive for Bronze &gt;2yr</td></tr>
+      </tbody>
+    </table>
+    <p>All capacity estimates assume a 2× headroom buffer over peak measured load. The cluster autoscaler and HPA are configured to scale before hitting 70% utilization on any node group, ensuring buffer for traffic spikes without service degradation.</p>
+  </div>
+
+</div>
+
+<footer class="doc-footer">
+  <div><div class="ft-brand">Alt<span>Score</span></div><div style="margin-top:4px">Deployment Architecture · DA-ALTSCORE-001 · v1.0 · May 2026</div></div>
+  <div style="text-align:right">INTERNAL — Engineering &amp; DevOps<br>AltScore Technologies Private Limited<br>AWS ap-south-1 Primary · Azure Central India DR</div>
+</footer>
+
+<script>
+  const sections=document.querySelectorAll('.section');
+  const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible');}),{threshold:0.07});
+  sections.forEach(s=>obs.observe(s));
+  const dots=document.querySelectorAll('.nav-dot');
+  dots.forEach(d=>d.addEventListener('click',()=>{const t=document.getElementById(d.dataset.target);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}));
+  const navObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){dots.forEach(d=>d.classList.remove('active'));const i=Array.from(sections).indexOf(x.target);if(i>=0&&dots[i])dots[i].classList.add('active');}}),{threshold:0.4});
+  sections.forEach(s=>navObs.observe(s));
+</script>
+</body>
+</html>

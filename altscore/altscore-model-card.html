@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Model Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --accent: #c94b1f;
+    --accent2: #2b5e3f;
+    --accent3: #1a3a5c;
+    --muted: #7a7065;
+    --rule: #ccc4b4;
+    --tag-bg: #e8e0cf;
+    --code-bg: #1e1c18;
+    --code-text: #e8d8b0;
+    --gold: #c4890d;
+    --purple: #5a2d82;
+    --model-accent: #8b1a1a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Lora', Georgia, serif; font-size: 16px; line-height: 1.75; }
+
+  /* ── COVER ── */
+  .cover { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+  .cover-left { background: var(--ink); padding: 80px 60px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .cover-left::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px); pointer-events: none; }
+  .cover-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .2em; color: var(--model-accent); text-transform: uppercase; }
+  .cover-title { font-family: 'Syne', sans-serif; font-size: clamp(44px,6vw,76px); font-weight: 800; line-height: .95; color: var(--paper); letter-spacing: -.02em; }
+  .cover-title span { color: var(--model-accent); }
+  .cover-sub { font-family: 'DM Mono', monospace; font-size: 13px; color: rgba(245,240,232,.5); line-height: 1.8; border-top: 1px solid rgba(255,255,255,.1); padding-top: 24px; }
+  .cover-right { background: var(--cream); padding: 80px 60px; display: flex; flex-direction: column; justify-content: center; gap: 32px; border-left: 4px solid var(--model-accent); }
+  .cover-stat { border-bottom: 1px solid var(--rule); padding-bottom: 24px; }
+  .cover-stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: var(--model-accent); line-height: 1; display: block; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .15em; color: var(--muted); text-transform: uppercase; margin-top: 4px; display: block; }
+  .stat-desc { font-size: 14px; color: var(--ink); margin-top: 6px; font-style: italic; }
+
+  /* ── LAYOUT ── */
+  .doc { max-width: 1100px; margin: 0 auto; padding: 80px 40px; }
+  .section { margin-bottom: 80px; opacity: 0; transform: translateY(20px); transition: opacity .6s, transform .6s; }
+  .section.visible { opacity: 1; transform: none; }
+  .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 40px; border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+  .section-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--model-accent); letter-spacing: .1em; flex-shrink: 0; }
+  h2 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -.02em; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+  h4 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 8px; letter-spacing: .02em; }
+  p { margin-bottom: 16px; color: #2a2620; }
+
+  /* ── CALLOUT ── */
+  .callout { background: var(--ink); color: var(--paper); padding: 32px 40px; margin: 32px 0; border-left: 6px solid var(--model-accent); }
+  .callout p { font-size: 17px; font-style: italic; line-height: 1.6; color: var(--paper); margin: 0; }
+  .callout .attr { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--model-accent); letter-spacing: .15em; margin-top: 12px; display: block; }
+
+  .warning-callout { background: #fff8f0; border: 1px solid var(--gold); border-left: 6px solid var(--gold); padding: 24px 32px; margin: 24px 0; }
+  .warning-callout .warn-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; display: block; }
+  .warning-callout p { font-size: 14px; color: #3a2a00; margin: 0; }
+
+  .stop-callout { background: #fff5f5; border: 1px solid var(--model-accent); border-left: 6px solid var(--model-accent); padding: 24px 32px; margin: 24px 0; }
+  .stop-callout .stop-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--model-accent); margin-bottom: 8px; display: block; }
+  .stop-callout p { font-size: 14px; color: #3a0000; margin: 0; }
+
+  /* ── TABLES ── */
+  .doc-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+  .doc-table th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; text-align: left; padding: 10px 14px; background: var(--ink); color: var(--paper); }
+  .doc-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; }
+  .doc-table tr:nth-child(even) td { background: var(--cream); }
+  .doc-table tr:hover td { background: #e8dfc8; }
+
+  /* ── MODEL INFO BLOCK ── */
+  .model-identity { background: var(--ink); color: var(--paper); padding: 48px; margin: 40px 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; border-left: 8px solid var(--model-accent); }
+  .mi-item {}
+  .mi-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: rgba(245,240,232,.45); margin-bottom: 6px; display: block; }
+  .mi-val { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--paper); }
+  .mi-val.small { font-size: 13px; font-weight: 400; font-family: 'DM Mono', monospace; color: rgba(245,240,232,.8); }
+
+  /* ── METRIC CARDS ── */
+  .metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background-color: var(--rule); margin: 32px 0; }
+  .metric-cell { background: var(--paper); padding: 24px 20px; text-align: center; }
+  .metric-val { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--model-accent); display: block; line-height: 1; }
+  .metric-val.green { color: var(--accent2); }
+  .metric-val.blue { color: var(--accent3); }
+  .metric-name { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 8px; display: block; }
+  .metric-context { font-size: 11px; color: var(--muted); margin-top: 4px; font-style: italic; display: block; }
+
+  /* ── FEATURE FAMILY ── */
+  .feature-family { border: 1px solid var(--rule); margin-bottom: 32px; }
+  .ff-header { display: grid; grid-template-columns: 8px 1fr; }
+  .ff-accent { background: var(--model-accent); }
+  .ff-title-block { padding: 18px 24px; background: var(--cream); border-bottom: 1px solid var(--rule); }
+  .ff-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--ink); }
+  .ff-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: .08em; margin-top: 2px; }
+  .ff-body { padding: 20px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ff-feature { font-size: 13px; color: #2a2620; display: flex; align-items: baseline; gap: 10px; }
+  .ff-feature-name { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent3); flex-shrink: 0; min-width: 200px; }
+  .ff-feature-desc { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* ── CARDS ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 32px 0; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin: 32px 0; }
+  .card { background: var(--cream); border: 1px solid var(--rule); padding: 24px; }
+  .card.red-top { border-top: 4px solid var(--model-accent); }
+  .card.green-top { border-top: 4px solid var(--accent2); }
+  .card.blue-top { border-top: 4px solid var(--accent3); }
+  .card.gold-top { border-top: 4px solid var(--gold); }
+  .card.purple-top { border-top: 4px solid var(--purple); }
+  .card-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
+  .card h3 { font-size: 15px; margin-bottom: 8px; }
+  .card p { font-size: 13px; color: #4a4540; margin: 0; line-height: 1.6; }
+  .card ul { list-style: none; padding: 0; margin: 8px 0 0 0; }
+  .card ul li { font-size: 12px; padding: 3px 0 3px 16px; position: relative; color: #3a352d; line-height: 1.5; }
+  .card ul li::before { content: '→'; position: absolute; left: 0; color: var(--muted); font-size: 10px; top: 5px; }
+
+  /* ── FAIRNESS BANDS ── */
+  .fairness-bar-row { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; font-size: 13px; }
+  .fairness-bar-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink); width: 200px; flex-shrink: 0; }
+  .fairness-bar-track { flex: 1; height: 12px; background: var(--cream); border: 1px solid var(--rule); position: relative; }
+  .fairness-bar-fill { height: 100%; background: var(--accent2); }
+  .fairness-bar-fill.amber { background: var(--gold); }
+  .fairness-bar-fill.red { background: var(--model-accent); }
+  .fairness-bar-val { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); width: 60px; text-align: right; flex-shrink: 0; }
+  .fairness-threshold { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--model-accent); margin-top: 8px; }
+
+  /* ── LIMITATION BLOCKS ── */
+  .limit-block { border-left: 4px solid var(--gold); background: var(--cream); padding: 20px 24px; margin-bottom: 20px; }
+  .limit-id { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; display: block; }
+  .limit-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .limit-desc { font-size: 13px; color: #3a352d; line-height: 1.6; margin-bottom: 10px; }
+  .limit-mitigation { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent2); }
+
+  /* ── PROHIBITED USE BLOCK ── */
+  .prohibited-item { background: #fff5f5; border: 1px solid #e8c0c0; border-left: 4px solid var(--model-accent); padding: 16px 20px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
+  .prohibited-icon { font-family: 'DM Mono', monospace; font-size: 20px; color: var(--model-accent); flex-shrink: 0; line-height: 1; margin-top: 4px; }
+  .prohibited-text h4 { font-size: 13px; margin-bottom: 4px; }
+  .prohibited-text p { font-size: 12px; color: #5a1010; margin: 0; line-height: 1.5; }
+
+  .permitted-item { background: #f0fff4; border: 1px solid #b0dcc0; border-left: 4px solid var(--accent2); padding: 16px 20px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
+  .permitted-icon { font-family: 'DM Mono', monospace; font-size: 20px; color: var(--accent2); flex-shrink: 0; line-height: 1; margin-top: 4px; }
+  .permitted-text h4 { font-size: 13px; margin-bottom: 4px; }
+  .permitted-text p { font-size: 12px; color: #0a3a1a; margin: 0; line-height: 1.5; }
+
+  /* ── TIMELINE ── */
+  .timeline { position: relative; padding-left: 32px; margin: 32px 0; }
+  .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: var(--rule); }
+  .tl-item { position: relative; margin-bottom: 28px; }
+  .tl-dot { position: absolute; left: -32px; top: 6px; width: 16px; height: 16px; background: var(--model-accent); border: 2px solid var(--paper); }
+  .tl-version { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--model-accent); letter-spacing: .1em; margin-bottom: 4px; display: block; }
+  .tl-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .tl-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ── REGULATORY ── */
+  .reg-row { display: grid; grid-template-columns: 140px 1fr 120px; gap: 0; border-bottom: 1px solid var(--rule); padding: 14px 0; align-items: start; }
+  .reg-row:last-child { border-bottom: none; }
+  .reg-framework { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent3); font-weight: 500; }
+  .reg-desc { font-size: 13px; color: #2a2620; padding: 0 16px; line-height: 1.5; }
+  .reg-status { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .1em; text-align: right; }
+  .status-met { color: var(--accent2); }
+  .status-partial { color: var(--gold); }
+  .status-planned { color: var(--accent3); }
+
+  /* ── UTILITY ── */
+  .tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 3px 10px; background: var(--tag-bg); color: var(--ink); margin: 2px; }
+  .tag.red { background: #fde8e0; color: var(--model-accent); }
+  .tag.green { background: #e0f0e8; color: var(--accent2); }
+  .tag.blue { background: #e0e8f0; color: var(--accent3); }
+  .tag.gold { background: #fdf0d8; color: var(--gold); }
+
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 64px 0; }
+
+  /* ── SIDENAV ── */
+  .sidenav { position: fixed; left: 24px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+  .nav-dot { width: 8px; height: 8px; background: var(--rule); cursor: pointer; transition: all .3s; position: relative; }
+  .nav-dot:hover, .nav-dot.active { background: var(--model-accent); transform: scale(1.5); }
+  .nav-dot::after { content: attr(data-label); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); white-space: nowrap; opacity: 0; transition: opacity .2s; background: var(--paper); padding: 2px 8px; border: 1px solid var(--rule); }
+  .nav-dot:hover::after { opacity: 1; }
+
+  /* ── FOOTER ── */
+  .doc-footer { background: var(--ink); color: rgba(245,240,232,.5); padding: 40px; display: flex; justify-content: space-between; align-items: center; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .1em; }
+  .doc-footer .ft-brand { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--paper); }
+  .doc-footer .ft-brand span { color: var(--model-accent); }
+
+  @media (max-width: 768px) {
+    .cover { grid-template-columns: 1fr; }
+    .cover-right { border-left: none; border-top: 4px solid var(--model-accent); }
+    .doc { padding: 40px 20px; }
+    .two-col, .three-col, .metric-row { grid-template-columns: 1fr; }
+    .model-identity { grid-template-columns: 1fr; }
+    .sidenav { display: none; }
+    .ff-body { grid-template-columns: 1fr; }
+    .reg-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+
+<!-- SIDENAV -->
+<nav class="sidenav" id="sidenav">
+  <div class="nav-dot" data-label="Overview" data-target="s01"></div>
+  <div class="nav-dot" data-label="Model Identity" data-target="s02"></div>
+  <div class="nav-dot" data-label="Training Data" data-target="s03"></div>
+  <div class="nav-dot" data-label="Features" data-target="s04"></div>
+  <div class="nav-dot" data-label="Performance" data-target="s05"></div>
+  <div class="nav-dot" data-label="Fairness" data-target="s06"></div>
+  <div class="nav-dot" data-label="Limitations" data-target="s07"></div>
+  <div class="nav-dot" data-label="Intended Use" data-target="s08"></div>
+  <div class="nav-dot" data-label="Explainability" data-target="s09"></div>
+  <div class="nav-dot" data-label="Lifecycle" data-target="s10"></div>
+</nav>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-left">
+    <div>
+      <div class="cover-label">AltScore Platform · ML Documentation</div>
+      <div style="height: 40px;"></div>
+      <div class="cover-title">Model<br><span>Card</span></div>
+    </div>
+    <div class="cover-sub">
+      DOC-ID: MC-ALTSCORE-001<br>
+      Model: AltScore Credit Scoring Engine v1<br>
+      Version: 1.0 &nbsp;·&nbsp; May 2026<br>
+      Classification: CONFIDENTIAL — NBFC Partners &amp; Regulators<br>
+      Owner: ML Engineering &amp; Credit Risk, AltScore Technologies
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat">
+      <span class="stat-num">XGBoost</span>
+      <span class="stat-label">Primary Model Architecture</span>
+      <span class="stat-desc">Gradient-boosted tree ensemble; Croston's for sparse/seasonal retailers</span>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">300–900</span>
+      <span class="stat-label">AltScore Output Range</span>
+      <span class="stat-desc">Calibrated to CIBIL-equivalent scale; 4 risk bands A/B/C/D</span>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">40+</span>
+      <span class="stat-label">Engineered Features</span>
+      <span class="stat-desc">Across 5 families: payment, order, trajectory, seasonal, relationship</span>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">≥ 0.72</span>
+      <span class="stat-label">Minimum Acceptable AUROC</span>
+      <span class="stat-desc">KS ≥ 0.35 · PD calibration within ±2%</span>
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="doc">
+
+  <!-- SECTION 01: Overview -->
+  <div class="section" id="s01">
+    <div class="section-header">
+      <span class="section-num">01 —</span>
+      <h2>Overview &amp; Purpose</h2>
+    </div>
+
+    <div class="callout">
+      <p>The AltScore Credit Scoring Engine is a machine learning system that generates creditworthiness assessments for informal Indian retailers — small kiranas, pharmacies, and general merchants — who lack formal credit histories but have verifiable transactional relationships with FMCG distributors.</p>
+      <span class="attr">MC-ALTSCORE-001 · Model Purpose Statement</span>
+    </div>
+
+    <p>India's informal retail sector accounts for roughly ₹12 trillion in annual commerce, yet 12 million+ small retailers remain credit-invisible to traditional lenders. AltScore bridges this gap by transforming distributor ERP transaction data — invoices, payments, return rates, order cadence — into a structured creditworthiness signal that NBFC lending partners can underwrite against.</p>
+
+    <p>This Model Card documents the AltScore Credit Scoring Engine v1 in full compliance with RBI FLDG Guidelines (which mandate model transparency for co-lending arrangements), the DPDP Act 2023 (explainability obligations for automated decision-making), and emerging best practices for responsible AI in credit.</p>
+
+    <div class="three-col">
+      <div class="card green-top">
+        <span class="card-tag">Primary Audience</span>
+        <h3>NBFC Lending Partners</h3>
+        <p>Integration guide and model transparency disclosure for credit underwriting teams consuming the Score API.</p>
+      </div>
+      <div class="card blue-top">
+        <span class="card-tag">Regulatory Audience</span>
+        <h3>RBI &amp; DPDP Board</h3>
+        <p>Demonstrating compliance with FLDG reason-code requirements, fair lending obligations, and automated decision-making transparency.</p>
+      </div>
+      <div class="card red-top">
+        <span class="card-tag">Internal Audience</span>
+        <h3>ML &amp; Risk Teams</h3>
+        <p>Reference document for model monitoring, guardrail thresholds, drift detection, and champion/challenger protocol.</p>
+      </div>
+    </div>
+
+    <h3>Scope of This Card</h3>
+    <p>This card covers the primary XGBoost classifier used for retailers with ≥ 6 months of distributor transaction history. The Croston's Method sub-model (sparse/seasonal routing) and the Isolation Forest anomaly detector are described in Sections 04 and 07 respectively. Cold-start fallback scoring is covered under Limitations (Section 07).</p>
+
+  </div>
+
+  <!-- SECTION 02: Model Identity -->
+  <div class="section" id="s02">
+    <div class="section-header">
+      <span class="section-num">02 —</span>
+      <h2>Model Identity &amp; Provenance</h2>
+    </div>
+
+    <div class="model-identity">
+      <div class="mi-item">
+        <span class="mi-label">Model Name</span>
+        <div class="mi-val">AltScore Engine</div>
+      </div>
+      <div class="mi-item">
+        <span class="mi-label">Version</span>
+        <div class="mi-val">v1.0</div>
+      </div>
+      <div class="mi-item">
+        <span class="mi-label">Model ID</span>
+        <div class="mi-val small">altscore-xgb-v1-prod</div>
+      </div>
+      <div class="mi-item">
+        <span class="mi-label">Algorithm Family</span>
+        <div class="mi-val">XGBoost</div>
+      </div>
+      <div class="mi-item">
+        <span class="mi-label">Task Type</span>
+        <div class="mi-val">Binary Classification</div>
+      </div>
+      <div class="mi-item">
+        <span class="mi-label">Output</span>
+        <div class="mi-val small">Score + PD + Band + Codes</div>
+      </div>
+      <div class="mi-item">
+        <span class="mi-label">Explainability</span>
+        <div class="mi-val">SHAP TreeExplainer</div>
+      </div>
+      <div class="mi-item">
+        <span class="mi-label">Experiment Tracking</span>
+        <div class="mi-val small">MLflow (self-managed)</div>
+      </div>
+      <div class="mi-item">
+        <span class="mi-label">Model Registry Hash</span>
+        <div class="mi-val small">SHA-256 on artifact</div>
+      </div>
+    </div>
+
+    <h3>Sub-Models</h3>
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>Sub-Model</th>
+          <th>Algorithm</th>
+          <th>Trigger Condition</th>
+          <th>Output</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Primary Scorer</td>
+          <td>XGBoost v1.7</td>
+          <td>≥6 months transaction history, completeness ≥70%</td>
+          <td>PD (0–1), Score (300–900)</td>
+          <td><span class="tag green">Production</span></td>
+        </tr>
+        <tr>
+          <td>Sparse/Seasonal Router</td>
+          <td>Croston's Method</td>
+          <td>Intermittent order pattern OR high seasonal amplitude</td>
+          <td>Adjusted order frequency; routes to modified XGB feature set</td>
+          <td><span class="tag green">Production</span></td>
+        </tr>
+        <tr>
+          <td>Anomaly Detector</td>
+          <td>Isolation Forest</td>
+          <td>Every scoring request; async gaming checks</td>
+          <td>anomaly_score (0–1), flags {gaming, data_quality}</td>
+          <td><span class="tag green">Production</span></td>
+        </tr>
+        <tr>
+          <td>Explainability Layer</td>
+          <td>SHAP TreeExplainer</td>
+          <td>Every scored retailer</td>
+          <td>reason_codes[] (≥5 categorical); SHAP values per feature</td>
+          <td><span class="tag green">Production</span></td>
+        </tr>
+        <tr>
+          <td>Cold-Start Fallback</td>
+          <td>Rule-based conservative</td>
+          <td>&lt;6 months history OR completeness &lt;50%</td>
+          <td>Provisional score; ₹25K limit cap; low_confidence flag</td>
+          <td><span class="tag green">Production</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Intended Deployment Context</h3>
+    <p>The model is invoked exclusively via the Score API (<code>POST /v1/score</code>) by credentialed NBFC partners. It is not exposed to retailers directly and is never used in real-time decisioning without retailer consent being verified upstream. All scoring is performed in a managed cloud environment (AWS or Azure, India region) with no on-premises model deployment permitted.</p>
+
+  </div>
+
+  <!-- SECTION 03: Training Data -->
+  <div class="section" id="s03">
+    <div class="section-header">
+      <span class="section-num">03 —</span>
+      <h2>Training Data</h2>
+    </div>
+
+    <p>The model is trained on historical distributor-to-retailer transaction records combined with ground-truth repayment outcomes sourced from NBFC lending partners under data-sharing agreements. All training data is processed through the AltScore Data Lake Bronze → Silver pipeline before feature engineering.</p>
+
+    <div class="warning-callout">
+      <span class="warn-title">Training Data Dependency</span>
+      <p>The quality of the AltScore model is directly bounded by the quality and representativeness of distributor ERP data. Retailers with a single distributor relationship, or those whose distributor uses non-standard ERP schema, will produce less reliable scores. See Limitations (Section 07).</p>
+    </div>
+
+    <h3>Data Sources</h3>
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>Data Type</th>
+          <th>Coverage</th>
+          <th>Consent Basis</th>
+          <th>Retention in Training</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tally Prime ERP</td>
+          <td>Invoice history, payment ledger, GST filings</td>
+          <td>Primary; ~60% of distributor base</td>
+          <td>Retailer consent + distributor data partnership agreement</td>
+          <td>Up to 36 months per retailer</td>
+        </tr>
+        <tr>
+          <td>SAP Business One</td>
+          <td>Invoice history, payment terms, returns</td>
+          <td>~25% of distributor base</td>
+          <td>Retailer consent + distributor data partnership agreement</td>
+          <td>Up to 36 months per retailer</td>
+        </tr>
+        <tr>
+          <td>CSV/Manual Upload</td>
+          <td>Structured invoice exports</td>
+          <td>~15% of distributor base</td>
+          <td>Retailer consent + distributor data partnership agreement</td>
+          <td>Up to 24 months (lower freshness)</td>
+        </tr>
+        <tr>
+          <td>NBFC Repayment Outcomes</td>
+          <td>Loan disbursement + repayment status</td>
+          <td>Pilot cohort (Phase 02 shadow lending)</td>
+          <td>NBFC data sharing agreement; no retailer PII transferred</td>
+          <td>24-month performance window</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Data Preprocessing Pipeline</h3>
+    <p>Raw ERP data enters the Bronze layer as immutable append-only records protected by S3 Object Lock (WORM). The Bronze → Silver transformation applies pseudonymization (GST/phone replaced with UUIDs), outlier capping, schema normalization, and feature engineering via Apache Spark. No PII reaches the Silver layer or the model training pipeline.</p>
+
+    <div class="two-col">
+      <div class="card green-top">
+        <span class="card-tag">Included Signals</span>
+        <h3>What the Model Sees</h3>
+        <ul>
+          <li>Payment delay distributions (mean, P90, zero-delay rate)</li>
+          <li>Invoice frequency and GMV trajectory over time</li>
+          <li>Seasonal amplitude and recovery patterns</li>
+          <li>Return rate percentage and frequency</li>
+          <li>Distributor tenure and relationship breadth</li>
+          <li>Partial payment frequency and partial payment ratio</li>
+          <li>Order gap duration and regularity</li>
+          <li>Data completeness score for the retailer</li>
+        </ul>
+      </div>
+      <div class="card red-top">
+        <span class="card-tag">Excluded Signals</span>
+        <h3>What the Model Does Not See</h3>
+        <ul>
+          <li>Name, address, caste, religion, gender, age</li>
+          <li>GST number, phone number (pseudonymized)</li>
+          <li>Geographic location beyond state-level (binned)</li>
+          <li>Social media or web-derived behavioral signals</li>
+          <li>Bank account balances or external credit bureau scores</li>
+          <li>Any data collected without explicit retailer consent</li>
+          <li>Data from retailers who have revoked consent</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Training / Validation / Test Split</h3>
+    <table class="doc-table">
+      <thead>
+        <tr><th>Split</th><th>Composition</th><th>Size</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Training</td>
+          <td>Historical retailers with ≥12mo history + known outcomes</td>
+          <td>70%</td>
+          <td>Parameter fitting</td>
+        </tr>
+        <tr>
+          <td>Validation</td>
+          <td>Time-stratified holdout (most recent 6 months)</td>
+          <td>15%</td>
+          <td>Hyperparameter tuning, early stopping</td>
+        </tr>
+        <tr>
+          <td>Test (OOT)</td>
+          <td>Out-of-time: retailers onboarded after training cutoff</td>
+          <td>15%</td>
+          <td>Final unbiased performance assessment</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The out-of-time (OOT) test split is critical for credit models: using a temporal holdout prevents look-ahead bias that would inflate AUROC estimates. All reported metrics are OOT unless otherwise noted.</p>
+
+  </div>
+
+  <!-- SECTION 04: Features -->
+  <div class="section" id="s04">
+    <div class="section-header">
+      <span class="section-num">04 —</span>
+      <h2>Feature Engineering</h2>
+    </div>
+
+    <p>The model uses 40+ engineered features grouped into five families. Features are computed in the Silver layer via dbt transformations applied over Apache Spark. All features are deterministic — the same input data always produces the same features, facilitating auditability and reproducibility.</p>
+
+    <!-- Family 1 -->
+    <div class="feature-family">
+      <div class="ff-header">
+        <div class="ff-accent"></div>
+        <div class="ff-title-block">
+          <div class="ff-title">Family 1: Payment Behavior</div>
+          <div class="ff-sub">Core creditworthiness signal · ~35% model weight (SHAP aggregate)</div>
+        </div>
+      </div>
+      <div class="ff-body">
+        <div class="ff-feature"><span class="ff-feature-name">avg_payment_delay_days</span><span class="ff-feature-desc">Mean days between invoice due date and payment receipt</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">p90_payment_delay_days</span><span class="ff-feature-desc">90th percentile delay — captures tail behavior, not just average</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">zero_delay_rate</span><span class="ff-feature-desc">Fraction of invoices paid on or before due date</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">partial_payment_freq</span><span class="ff-feature-desc">Fraction of invoices that received partial (not full) payment</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">partial_payment_ratio</span><span class="ff-feature-desc">Median partial payment as % of invoice value</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">max_consecutive_delays</span><span class="ff-feature-desc">Longest streak of consecutive delayed invoices</span></div>
+      </div>
+    </div>
+
+    <!-- Family 2 -->
+    <div class="feature-family">
+      <div class="ff-header">
+        <div class="ff-accent"></div>
+        <div class="ff-title-block">
+          <div class="ff-title">Family 2: Order Consistency</div>
+          <div class="ff-sub">Operational regularity signal · ~20% model weight</div>
+        </div>
+      </div>
+      <div class="ff-body">
+        <div class="ff-feature"><span class="ff-feature-name">monthly_order_frequency</span><span class="ff-feature-desc">Average orders per month over trailing 6 months</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">order_gap_median_days</span><span class="ff-feature-desc">Median days between consecutive orders</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">order_gap_cv</span><span class="ff-feature-desc">Coefficient of variation of inter-order gaps (regularity proxy)</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">return_rate_pct</span><span class="ff-feature-desc">Percentage of invoiced items returned across all orders</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">return_freq_pct</span><span class="ff-feature-desc">Fraction of orders that had any return</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">gmv_per_order_cv</span><span class="ff-feature-desc">Volatility of basket size (consistency proxy)</span></div>
+      </div>
+    </div>
+
+    <!-- Family 3 -->
+    <div class="feature-family">
+      <div class="ff-header">
+        <div class="ff-accent"></div>
+        <div class="ff-title-block">
+          <div class="ff-title">Family 3: Business Trajectory</div>
+          <div class="ff-sub">Growth and viability signal · ~25% model weight</div>
+        </div>
+      </div>
+      <div class="ff-body">
+        <div class="ff-feature"><span class="ff-feature-name">gmv_trend_slope</span><span class="ff-feature-desc">OLS slope of monthly GMV over trailing 12 months</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">gmv_3m_vs_12m_ratio</span><span class="ff-feature-desc">Recent 3-month GMV vs. trailing 12-month average (acceleration)</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">gmv_yoy_growth</span><span class="ff-feature-desc">Year-over-year GMV growth rate</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">active_months_pct</span><span class="ff-feature-desc">% of months with at least one order (activity density)</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">invoice_count_trend</span><span class="ff-feature-desc">OLS slope of monthly invoice count</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">avg_monthly_gmv</span><span class="ff-feature-desc">Mean monthly GMV (absolute scale, log-transformed)</span></div>
+      </div>
+    </div>
+
+    <!-- Family 4 -->
+    <div class="feature-family">
+      <div class="ff-header">
+        <div class="ff-accent"></div>
+        <div class="ff-title-block">
+          <div class="ff-title">Family 4: Seasonal Pattern</div>
+          <div class="ff-sub">Temporal resilience signal · ~10% model weight</div>
+        </div>
+      </div>
+      <div class="ff-body">
+        <div class="ff-feature"><span class="ff-feature-name">seasonal_amplitude</span><span class="ff-feature-desc">Ratio of peak-season to trough-season GMV (Diwali/Eid/harvest windows)</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">seasonal_recovery_rate</span><span class="ff-feature-desc">Speed and completeness of GMV recovery after a seasonal trough</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">festival_spike_count</span><span class="ff-feature-desc">Number of distinct festival-window order spikes in training window</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">off_season_payment_delay</span><span class="ff-feature-desc">Payment delay differential in off-season vs. peak (stress signal)</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">croston_demand_rate</span><span class="ff-feature-desc">[Sparse retailers] Croston's adjusted demand rate for intermittent orderers</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">inter_demand_cv</span><span class="ff-feature-desc">[Sparse retailers] Variation in non-zero demand periods</span></div>
+      </div>
+    </div>
+
+    <!-- Family 5 -->
+    <div class="feature-family">
+      <div class="ff-header">
+        <div class="ff-accent"></div>
+        <div class="ff-title-block">
+          <div class="ff-title">Family 5: Relationship Depth</div>
+          <div class="ff-sub">Trust and context signal · ~10% model weight</div>
+        </div>
+      </div>
+      <div class="ff-body">
+        <div class="ff-feature"><span class="ff-feature-name">distributor_tenure_months</span><span class="ff-feature-desc">Months since first invoice with this distributor</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">distributor_count</span><span class="ff-feature-desc">Number of distinct distributors in retailer's transaction history</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">credit_term_utilization</span><span class="ff-feature-desc">Actual payment days vs. agreed credit terms ratio</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">dispute_rate</span><span class="ff-feature-desc">Fraction of invoices with recorded dispute/deduction</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">data_completeness_score</span><span class="ff-feature-desc">Weighted completeness of retailer's data record (0–100)</span></div>
+        <div class="ff-feature"><span class="ff-feature-name">data_freshness_days</span><span class="ff-feature-desc">Days since most recent ERP record (staleness signal)</span></div>
+      </div>
+    </div>
+
+    <div class="warning-callout">
+      <span class="warn-title">Proxy Feature Notice</span>
+      <p>All features are reviewed quarterly for potential demographic proxy correlation. Features such as <code>seasonal_amplitude</code> and <code>festival_spike_count</code> are monitored for differential impact across religious community proxies. See Fairness section (06). No features encode geographic granularity below state level.</p>
+    </div>
+
+  </div>
+
+  <!-- SECTION 05: Performance -->
+  <div class="section" id="s05">
+    <div class="section-header">
+      <span class="section-num">05 —</span>
+      <h2>Model Performance</h2>
+    </div>
+
+    <p>All performance metrics are computed on the out-of-time (OOT) test split. This is the only acceptable evaluation methodology for credit scoring models where look-ahead bias would render in-sample metrics misleading. Minimum thresholds below represent production promotion gates — a model that fails any threshold is returned to experimentation.</p>
+
+    <div class="metric-row">
+      <div class="metric-cell">
+        <span class="metric-val">≥ 0.72</span>
+        <span class="metric-name">AUROC</span>
+        <span class="metric-context">Area Under ROC — discriminatory power</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val green">≥ 0.35</span>
+        <span class="metric-name">KS Statistic</span>
+        <span class="metric-context">Kolmogorov-Smirnov separation</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val blue">± 2%</span>
+        <span class="metric-name">PD Calibration</span>
+        <span class="metric-context">Predicted vs. actual default rate delta</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val">≥ 70%</span>
+        <span class="metric-name">Lender Acceptance</span>
+        <span class="metric-context">NBFC partner adoption rate</span>
+      </div>
+    </div>
+
+    <h3>Score Band Performance Thresholds</h3>
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>Band</th>
+          <th>Score Range</th>
+          <th>Risk Label</th>
+          <th>Expected PD Range</th>
+          <th>Monotonicity Requirement</th>
+          <th>Typical Recommended Limit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>A</strong></td>
+          <td>750–900</td>
+          <td>Low Risk</td>
+          <td>&lt; 5%</td>
+          <td>PD(A) &lt; PD(B) — enforced in test suite</td>
+          <td>Up to 30% of 6-month GMV</td>
+        </tr>
+        <tr>
+          <td><strong>B</strong></td>
+          <td>600–749</td>
+          <td>Medium-Low Risk</td>
+          <td>5–12%</td>
+          <td>PD(B) &lt; PD(C) — enforced in test suite</td>
+          <td>15–25% of 6-month GMV</td>
+        </tr>
+        <tr>
+          <td><strong>C</strong></td>
+          <td>450–599</td>
+          <td>Medium-High Risk</td>
+          <td>12–25%</td>
+          <td>PD(C) &lt; PD(D) — enforced in test suite</td>
+          <td>10–15% of 6-month GMV</td>
+        </tr>
+        <tr>
+          <td><strong>D</strong></td>
+          <td>300–449</td>
+          <td>High Risk</td>
+          <td>&gt; 25%</td>
+          <td>Highest PD cohort — enforced in test suite</td>
+          <td>Decline or &lt;₹25K conservative</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Ongoing Monitoring Metrics</h3>
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Frequency</th>
+          <th>Green Threshold</th>
+          <th>Amber Threshold</th>
+          <th>Red — Action Required</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Population Stability Index (PSI)</td>
+          <td>Monthly</td>
+          <td>&lt; 0.10</td>
+          <td>0.10 – 0.20</td>
+          <td>&gt; 0.20 → Model refresh triggered</td>
+        </tr>
+        <tr>
+          <td>KS Statistic</td>
+          <td>Monthly (when outcomes available)</td>
+          <td>≥ 0.35</td>
+          <td>0.25 – 0.35</td>
+          <td>&lt; 0.25 → Champion/challenger triggered</td>
+        </tr>
+        <tr>
+          <td>PD Calibration Divergence</td>
+          <td>Quarterly</td>
+          <td>Within ±2%</td>
+          <td>±2–5%</td>
+          <td>&gt; ±5% → Model freeze, re-calibration</td>
+        </tr>
+        <tr>
+          <td>Score Distribution Shift</td>
+          <td>Monthly</td>
+          <td>P50 within ±30 pts of baseline</td>
+          <td>±30–60 pts</td>
+          <td>&gt; ±60 pts → Investigation required</td>
+        </tr>
+        <tr>
+          <td>Reason Code Coverage</td>
+          <td>Daily</td>
+          <td>100%</td>
+          <td>—</td>
+          <td>&lt; 100% → Score blocked (RBI FLDG)</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <!-- SECTION 06: Fairness -->
+  <div class="section" id="s06">
+    <div class="section-header">
+      <span class="section-num">06 —</span>
+      <h2>Fairness &amp; Bias Analysis</h2>
+    </div>
+
+    <div class="callout">
+      <p>AltScore commits to the 80% Rule (Adverse Impact Ratio ≥ 0.80) across all tested demographic and geographic cohorts. A model that fails fairness thresholds is frozen for affected cohorts until the disparity is remediated. Fairness is not optional — it is a production gate.</p>
+      <span class="attr">Guardrail GR-1 · Fairness &amp; Bias Detection</span>
+    </div>
+
+    <h3>Fairness Methodology</h3>
+    <p>Since the model does not directly observe demographic attributes (by design — see Features, Section 04), fairness analysis uses indirect proxies available in the data: geographic region (state-level), retailer category (pharmacy, kirana, general merchant), and distributor affiliation as a proxy for supply-chain community. Analyses are performed quarterly by an independent reviewer on a pseudonymized dataset.</p>
+
+    <h3>Adverse Impact Ratio (AIR) by Cohort — Target Thresholds</h3>
+    <p style="font-size:13px; color: var(--muted); margin-bottom: 20px;">AIR = Approval rate of group ÷ Approval rate of most-favored group. Minimum acceptable: 0.80 (80% Rule). Values shown are design targets; actual monitoring occurs against live scoring data.</p>
+
+    <div class="fairness-bar-row">
+      <span class="fairness-bar-label">Urban vs. Rural Retailers</span>
+      <div class="fairness-bar-track"><div class="fairness-bar-fill" style="width:88%"></div></div>
+      <span class="fairness-bar-val">Target: ≥0.80</span>
+    </div>
+    <div class="fairness-bar-row">
+      <span class="fairness-bar-label">North vs. South India</span>
+      <div class="fairness-bar-track"><div class="fairness-bar-fill" style="width:88%"></div></div>
+      <span class="fairness-bar-val">Target: ≥0.80</span>
+    </div>
+    <div class="fairness-bar-row">
+      <span class="fairness-bar-label">Small Kirana vs. Pharmacy</span>
+      <div class="fairness-bar-track"><div class="fairness-bar-fill" style="width:88%"></div></div>
+      <span class="fairness-bar-val">Target: ≥0.80</span>
+    </div>
+    <div class="fairness-bar-row">
+      <span class="fairness-bar-label">Seasonal vs. Year-Round</span>
+      <div class="fairness-bar-track"><div class="fairness-bar-fill" style="width:88%"></div></div>
+      <span class="fairness-bar-val">Target: ≥0.80</span>
+    </div>
+    <div class="fairness-bar-row">
+      <span class="fairness-bar-label">Single-Distributor Retailers</span>
+      <div class="fairness-bar-track"><div class="fairness-bar-fill amber" style="width:78%"></div></div>
+      <span class="fairness-bar-val">Watch: 0.75–0.80</span>
+    </div>
+    <div class="fairness-threshold">⚠ Single-distributor retailers are a known at-risk cohort. Conservative limit cap (50% reduction) applied when AIR approaches threshold.</div>
+
+    <h3>Score Gap Analysis</h3>
+    <p>For matched cohorts (retailers with similar GMV, tenure, and payment history), score gaps should not exceed 15 percentage points across any demographic-proxy cohort. Statistically significant disparities (p &lt; 0.05 by Mann-Whitney U) trigger immediate review.</p>
+
+    <h3>Bias Monitoring Controls</h3>
+    <table class="doc-table">
+      <thead>
+        <tr><th>Control</th><th>Implementation</th><th>Frequency</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Feature proxy audit</td>
+          <td>Correlation analysis of all features against demographic proxies</td>
+          <td>Quarterly</td>
+        </tr>
+        <tr>
+          <td>Disparate impact reporting</td>
+          <td>AIR computed for 8+ cohort groupings, reported to Guardrail Committee</td>
+          <td>Quarterly</td>
+        </tr>
+        <tr>
+          <td>SHAP-based explanation audit</td>
+          <td>Distribution of reason codes across cohorts checked for anomalous concentrations</td>
+          <td>Monthly</td>
+        </tr>
+        <tr>
+          <td>Model freeze protocol</td>
+          <td>Affected cohort frozen from scoring if AIR &lt; 0.80; DPO + Board notified if &gt;1,000 affected retailers</td>
+          <td>Triggered</td>
+        </tr>
+        <tr>
+          <td>Independent fairness reviewer</td>
+          <td>External audit of quarterly fairness report before board sign-off</td>
+          <td>Annually</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <!-- SECTION 07: Limitations -->
+  <div class="section" id="s07">
+    <div class="section-header">
+      <span class="section-num">07 —</span>
+      <h2>Known Limitations</h2>
+    </div>
+
+    <p>Honest disclosure of model limitations is required under both the DPDP Act 2023 and RBI FLDG Guidelines, and is fundamental to responsible AI deployment in credit. Each limitation below is paired with its operational mitigation.</p>
+
+    <div class="limit-block">
+      <span class="limit-id">LIM-01 · Cold Start</span>
+      <div class="limit-title">Retailers with &lt; 6 Months of Transaction History</div>
+      <p class="limit-desc">The XGBoost primary model requires a minimum 6-month transaction window to produce a reliable payment delay distribution and trend signal. Retailers below this threshold cannot be scored using the primary model. A conservative rule-based fallback provides a provisional score capped at ₹25,000 with a <code>low_confidence</code> flag.</p>
+      <div class="limit-mitigation">Mitigation: Cold-start fallback scoring + conservative limit cap + low_confidence flag in API response + lender notified via reason code DATA_INSUFFICIENT.</div>
+    </div>
+
+    <div class="limit-block">
+      <span class="limit-id">LIM-02 · Single Distributor</span>
+      <div class="limit-title">Retailers with Only One Distributor Relationship</div>
+      <p class="limit-desc">Retailers who source exclusively from one distributor are more susceptible to biased scores if that distributor has data quality issues or if the relationship is atypical. The model cannot cross-validate behavior against a second distributor signal. This cohort also shows depressed AIR (see Section 06).</p>
+      <div class="limit-mitigation">Mitigation: 50% limit cap applied automatically; single-distributor flag in API response; AIR monitoring with threshold alert at 0.77.</div>
+    </div>
+
+    <div class="limit-block">
+      <span class="limit-id">LIM-03 · Sparse / Seasonal Retailers</span>
+      <div class="limit-title">Retailers with Intermittent or Highly Seasonal Order Patterns</div>
+      <p class="limit-desc">Standard payment delay and order frequency features lose predictive power for retailers who order infrequently or only during festival seasons (e.g., Diwali-only buyers). The primary XGBoost model is replaced by the Croston's Method routing for these retailers, but this sub-model has a smaller training sample and lower confidence estimates.</p>
+      <div class="limit-mitigation">Mitigation: Automatic routing to Croston's sub-model; wider PD confidence intervals; seasonal adjustment window uses peak 6-month period rather than trailing 6 months.</div>
+    </div>
+
+    <div class="limit-block">
+      <span class="limit-id">LIM-04 · Training Data Recency</span>
+      <div class="limit-title">Model Trained Before Economic Shocks or Category Disruptions</div>
+      <p class="limit-desc">The model's repayment outcome labels are derived from historical lending under the economic conditions prevailing during training. A significant economic shock (pandemic, commodity spike, supply-chain disruption) may cause the model's PD estimates to diverge from actual default rates faster than the monthly monitoring cycle can detect.</p>
+      <div class="limit-mitigation">Mitigation: Monthly PSI monitoring with &gt;0.20 threshold triggering model refresh; quarterly PD calibration check; NBFC partners advised to apply portfolio-level stress adjustments during macro stress events.</div>
+    </div>
+
+    <div class="limit-block">
+      <span class="limit-id">LIM-05 · Gaming Vulnerability</span>
+      <div class="limit-title">Coordinated Score Manipulation by Distributor-Retailer Collusion</div>
+      <p class="limit-desc">A distributor who is aware of the model's feature logic could, in theory, systematically manipulate invoice timing or payment recording to inflate retailer scores. The Isolation Forest anomaly detector addresses isolated gaming attempts but may not detect highly sophisticated long-horizon coordination.</p>
+      <div class="limit-mitigation">Mitigation: Isolation Forest with 60-day look-back; 70:30 long/short-term payment weight (long history dominates); cross-distributor behavioral consistency checks; distributor quarantine protocol for confirmed manipulation.</div>
+    </div>
+
+    <div class="limit-block">
+      <span class="limit-id">LIM-06 · Data Freshness Dependency</span>
+      <div class="limit-title">Score Accuracy Degrades with Stale ERP Data</div>
+      <p class="limit-desc">AltScore scores reflect the retailer's behavior up to the most recent ERP sync. If ERP data is more than 14 days old, the score may not reflect recent payment behavior changes (positive or negative). This is especially relevant for retailers in financial stress who may have recently deteriorated.</p>
+      <div class="limit-mitigation">Mitigation: data_freshness_days field returned in every API response; &gt;7 days triggers warning in API response; &gt;14 days adds low_confidence flag; &gt;30 days blocks scoring entirely.</div>
+    </div>
+
+    <div class="limit-block">
+      <span class="limit-id">LIM-07 · Geographic Training Coverage</span>
+      <div class="limit-title">Underrepresentation of Certain States in Training Data</div>
+      <p class="limit-desc">Phase 01 and 02 distributor onboarding is concentrated in Maharashtra, Karnataka, Tamil Nadu, and Delhi NCR. Retailers in Northeast India, tribal regions, or states with lower formal FMCG distribution penetration may be underrepresented in training data, potentially reducing model accuracy for those cohorts.</p>
+      <div class="limit-mitigation">Mitigation: Geographic coverage tracked in quarterly fairness report; state-level AIR monitored; under-represented states flagged for additional data collection in Phase 03 expansion.</div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 08: Intended Use -->
+  <div class="section" id="s08">
+    <div class="section-header">
+      <span class="section-num">08 —</span>
+      <h2>Intended &amp; Prohibited Uses</h2>
+    </div>
+
+    <p>The AltScore Credit Scoring Engine is purpose-built for a specific, constrained use case. Deployment outside these boundaries is not authorized, and AltScore Technologies bears no liability for misuse of model outputs beyond intended scope.</p>
+
+    <h3>Permitted Uses</h3>
+
+    <div class="permitted-item">
+      <div class="permitted-icon">✓</div>
+      <div class="permitted-text">
+        <h4>Working Capital Credit Underwriting — Informal Indian Retailers</h4>
+        <p>NBFC partners using AltScore scores to make lending decisions for retailers within the agreed target segment (B2B informal retail, India, distributor-relationship verified, retailer consent obtained).</p>
+      </div>
+    </div>
+
+    <div class="permitted-item">
+      <div class="permitted-icon">✓</div>
+      <div class="permitted-text">
+        <h4>Credit Limit Sizing Guidance</h4>
+        <p>Using the <code>recommended_limit</code> field (capped at 30% of trailing 6-month GMV) as an input into lender's own credit committee decisions. Lenders may set lower limits but may not exceed the AltScore ceiling without documented override.</p>
+      </div>
+    </div>
+
+    <div class="permitted-item">
+      <div class="permitted-icon">✓</div>
+      <div class="permitted-text">
+        <h4>Grievance-Driven Score Explanation</h4>
+        <p>Providing SHAP-derived reason codes to retailers who request an explanation of their AltScore, via the WhatsApp grievance portal or distributor dashboard, in accordance with RBI FLDG Guidelines and DPDP Act rights.</p>
+      </div>
+    </div>
+
+    <div class="permitted-item">
+      <div class="permitted-icon">✓</div>
+      <div class="permitted-text">
+        <h4>Shadow Mode Pilot Evaluation</h4>
+        <p>Running AltScore in parallel with existing lender credit processes for benchmarking purposes during Phase 02 shadow mode (≥30 days required before live lending use).</p>
+      </div>
+    </div>
+
+    <hr class="divider" style="margin: 32px 0;">
+    <h3>Prohibited Uses</h3>
+
+    <div class="prohibited-item">
+      <div class="prohibited-icon">✗</div>
+      <div class="prohibited-text">
+        <h4>Consumer Credit Underwriting</h4>
+        <p>AltScore scores are derived from B2B distributor transaction behavior and are not validated for consumer (personal) credit decisions. Using these scores for personal loans, consumer durables, or mortgages is prohibited.</p>
+      </div>
+    </div>
+
+    <div class="prohibited-item">
+      <div class="prohibited-icon">✗</div>
+      <div class="prohibited-text">
+        <h4>Insurance Underwriting</h4>
+        <p>Insurance risk is a materially different actuarial problem. Using AltScore outputs as an input to insurance premium pricing or policy approval is not authorized without a new model validation exercise.</p>
+      </div>
+    </div>
+
+    <div class="prohibited-item">
+      <div class="prohibited-icon">✗</div>
+      <div class="prohibited-text">
+        <h4>Demographic or Community Profiling</h4>
+        <p>Using AltScore scores, reason codes, or underlying features to infer demographic characteristics, religious affiliation, caste, or community identity of retailers is strictly prohibited. Scores reflect only transactional behavior.</p>
+      </div>
+    </div>
+
+    <div class="prohibited-item">
+      <div class="prohibited-icon">✗</div>
+      <div class="prohibited-text">
+        <h4>Non-Consented Retailers</h4>
+        <p>Scoring any retailer who has not provided unambiguous, DPDP-compliant affirmative consent is prohibited. The system enforces this at the API level; any attempt to score a non-consented retailer returns a 403 error.</p>
+      </div>
+    </div>
+
+    <div class="prohibited-item">
+      <div class="prohibited-icon">✗</div>
+      <div class="prohibited-text">
+        <h4>Model Output Resale to Third Parties</h4>
+        <p>NBFC partners may not resell, sublicense, or otherwise transfer AltScore values or reason codes to any third party not named in the original retailer consent. Each lender is individually named in the consent scope.</p>
+      </div>
+    </div>
+
+    <div class="prohibited-item">
+      <div class="prohibited-icon">✗</div>
+      <div class="prohibited-text">
+        <h4>Fully Automated Adverse Decisions Without Human Review</h4>
+        <p>For Band D scores (High Risk) or when <code>low_confidence: true</code> is returned, a human credit officer must review the decision before loan decline is communicated to the retailer. Fully automated adverse decisions without human-in-the-loop violate DPDP Act automated decision-making provisions.</p>
+      </div>
+    </div>
+
+    <div class="stop-callout">
+      <span class="stop-title">Consent Enforcement</span>
+      <p>The AltScore API enforces all use restrictions programmatically. Attempting to score a retailer without valid consent, to access scores cross-lender, or to exceed rate limits results in 4xx error responses. Technical enforcement does not substitute for contractual compliance — NBFC partners are required to maintain their own controls under the Partner Agreement.</p>
+    </div>
+
+  </div>
+
+  <!-- SECTION 09: Explainability -->
+  <div class="section" id="s09">
+    <div class="section-header">
+      <span class="section-num">09 —</span>
+      <h2>Explainability &amp; Reason Codes</h2>
+    </div>
+
+    <p>Every AltScore response includes a mandatory set of SHAP-derived reason codes explaining the key drivers of the score. This is a hard system requirement — scores without reason codes are blocked and not returned to lenders. This design ensures compliance with RBI FLDG Guidelines and the DPDP Act's right to explanation.</p>
+
+    <div class="two-col">
+      <div class="card green-top">
+        <span class="card-tag">Positive Drivers (Score Boosters)</span>
+        <h3>What Raises the AltScore</h3>
+        <ul>
+          <li><strong>CONSISTENT_ORDER_FREQ</strong> — नियमित ऑर्डर पैटर्न</li>
+          <li><strong>LOW_PAYMENT_DELAY</strong> — समय पर भुगतान</li>
+          <li><strong>GROWING_BASKET_SIZE</strong> — बढ़ता कारोबार</li>
+          <li><strong>LOW_RETURN_RATE</strong> — कम वापसी दर</li>
+          <li><strong>LONG_DISTRIBUTOR_TENURE</strong> — लंबे समय का व्यावसायिक संबंध</li>
+          <li><strong>STRONG_GMV_TREND</strong> — मजबूत बिक्री वृद्धि</li>
+          <li><strong>ZERO_DELAY_RATE_HIGH</strong> — समय पर भुगतान का उच्च अनुपात</li>
+          <li><strong>SEASONAL_RECOVERY</strong> — त्योहार के बाद वापसी</li>
+        </ul>
+      </div>
+      <div class="card red-top">
+        <span class="card-tag">Negative Drivers (Score Reducers)</span>
+        <h3>What Lowers the AltScore</h3>
+        <ul>
+          <li><strong>PAYMENT_DELAY_HIGH</strong> — उच्च भुगतान विलंब</li>
+          <li><strong>P90_DELAY_GT_15DAYS</strong> — अधिकतम देरी 15 दिन से ज़्यादा</li>
+          <li><strong>DECLINING_GMV</strong> — घटता कारोबार</li>
+          <li><strong>HIGH_RETURN_RATE</strong> — उच्च वापसी दर</li>
+          <li><strong>ORDER_GAP_DETECTED</strong> — ऑर्डर में लंबा अंतराल</li>
+          <li><strong>PARTIAL_PAYMENT_FREQ</strong> — आंशिक भुगतान बहुत बार</li>
+          <li><strong>SEASONAL_GAP_DEEP</strong> — त्योहार के बाद कोई वापसी नहीं</li>
+          <li><strong>DATA_INSUFFICIENT</strong> — पर्याप्त डेटा नहीं</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Reason Code Generation Rules</h3>
+    <table class="doc-table">
+      <thead>
+        <tr><th>Rule</th><th>Requirement</th><th>Enforcement</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Minimum codes per response</td>
+          <td>≥ 5 reason codes (≥3 positive, ≥2 negative)</td>
+          <td>Hard block — score not returned if &lt;5 codes generated</td>
+        </tr>
+        <tr>
+          <td>SHAP coverage</td>
+          <td>100% of scored retailers must have SHAP values computed</td>
+          <td>Daily monitoring; &lt;100% triggers alert</td>
+        </tr>
+        <tr>
+          <td>Language support</td>
+          <td>All 24 codes have verified Hindi translations</td>
+          <td>Translation table versioned in code repository</td>
+        </tr>
+        <tr>
+          <td>Code taxonomy stability</td>
+          <td>Reason codes are stable across model versions</td>
+          <td>New codes require Guardrail Committee sign-off + lender notification</td>
+        </tr>
+        <tr>
+          <td>Adverse action reason codes</td>
+          <td>Band D decisions and limit reductions must surface top 3 negative codes</td>
+          <td>Enforced in API response serialization</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Retailer-Facing Explanation</h3>
+    <p>Retailers may request an explanation of their score via the WhatsApp grievance portal at any time. The explanation is rendered in plain Hindi using the reason code translations and is reviewed by a human credit officer within 24 hours of request. Retailers are not shown raw SHAP values or feature weights — only the categorical reason code descriptions.</p>
+
+    <div class="warning-callout">
+      <span class="warn-title">SHAP Opacity Notice</span>
+      <p>Actual SHAP numeric values and feature weights are not exposed to retailers, lenders, or distributors via the API. This is intentional: exposing numeric weights would enable sophisticated gaming of the model's scoring logic. Reason codes convey the directional signal without exposing the precise decision boundary.</p>
+    </div>
+
+  </div>
+
+  <!-- SECTION 10: Lifecycle -->
+  <div class="section" id="s10">
+    <div class="section-header">
+      <span class="section-num">10 —</span>
+      <h2>Model Lifecycle &amp; Regulatory Alignment</h2>
+    </div>
+
+    <h3>Model Update Cadence</h3>
+    <p>The AltScore engine follows a structured champion/challenger model lifecycle. The in-production champion model is continuously monitored via PSI, KS, and PD calibration metrics. When thresholds are breached, a challenger model is trained and validated before promotion.</p>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-version">Stage 1 — Development</span>
+        <div class="tl-title">Training &amp; Validation</div>
+        <p class="tl-desc">Challenger model trained on refreshed data. OOT test split evaluated. Fairness analysis performed. All metrics must exceed promotion gates (AUROC ≥0.72, KS ≥0.35, AIR ≥0.80).</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-version">Stage 2 — Shadow Mode</span>
+        <div class="tl-title">Minimum 30-Day Parallel Run</div>
+        <p class="tl-desc">Challenger scores computed alongside champion but not used for lending decisions. Rank-order accuracy vs. champion must reach ≥75% concordance before promotion is even considered.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-version">Stage 3 — Promotion Gate</span>
+        <div class="tl-title">Two-Person Sign-Off Required</div>
+        <p class="tl-desc">Head of Risk + CTO (or delegate) must both approve promotion. Model artifact SHA-256 hash recorded in immutable audit log. NBFC partners notified of model version change with 72-hour advance notice.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-version">Stage 4 — Production</span>
+        <div class="tl-title">Champion Scoring with Continuous Monitoring</div>
+        <p class="tl-desc">Monthly PSI and score distribution monitoring. Quarterly KS and fairness audit. Drift detection triggers return to Stage 1 or emergency rollback.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-version">Stage 5 — Rollback</span>
+        <div class="tl-title">&lt;10 Minute Rollback Capability</div>
+        <p class="tl-desc">Previous champion model version retained in WORM storage with hash verification. Rollback restores previous model artifact and all routing configuration. No re-training required for rollback.</p>
+      </div>
+    </div>
+
+    <h3>Regulatory Alignment Map</h3>
+    <div style="margin: 24px 0;">
+      <div class="reg-row">
+        <span class="reg-framework">RBI FLDG</span>
+        <span class="reg-desc">Mandatory reason codes on every score; lender-readable categorical explanation; adverse action disclosure with top-3 negative codes</span>
+        <span class="reg-status status-met">✓ MET</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-framework">DPDP Act 2023</span>
+        <span class="reg-desc">Automated decision-making transparency; right to explanation; human review for adverse decisions; consent-gated scoring; right to grievance</span>
+        <span class="reg-status status-met">✓ MET</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-framework">Fair Lending</span>
+        <span class="reg-desc">Adverse Impact Ratio ≥0.80 enforced; quarterly fairness audit; model freeze for AIR breach; no protected class proxies in features</span>
+        <span class="reg-status status-met">✓ MET</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-framework">SOC 2 Type II</span>
+        <span class="reg-desc">Model artifact integrity (SHA-256 + WORM); access controls on ML pipeline; audit trail for model promotions; availability monitoring</span>
+        <span class="reg-status status-planned">◎ Month 12</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-framework">ISO 27001</span>
+        <span class="reg-desc">Information security management for ML pipeline; key management for model artifacts; supplier risk for ML libraries</span>
+        <span class="reg-status status-planned">◎ Month 18</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-framework">RBI AA Framework</span>
+        <span class="reg-desc">Integration with Account Aggregator for bank statement enrichment; consent framework alignment with AA consent artefact standard</span>
+        <span class="reg-status status-planned">◎ v2 Roadmap</span>
+      </div>
+    </div>
+
+    <h3>Model Card Update Cadence</h3>
+    <table class="doc-table">
+      <thead>
+        <tr><th>Trigger</th><th>Required Update</th><th>Owner</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>New model version promoted to production</td>
+          <td>Full card refresh — all sections</td>
+          <td>ML Engineering + Credit Risk</td>
+        </tr>
+        <tr>
+          <td>New feature family added</td>
+          <td>Section 04 (Features) updated; fairness analysis re-run</td>
+          <td>ML Engineering</td>
+        </tr>
+        <tr>
+          <td>Fairness audit finds new at-risk cohort</td>
+          <td>Section 06 updated; limitation added to Section 07</td>
+          <td>Head of Risk + DPO</td>
+        </tr>
+        <tr>
+          <td>Regulatory change</td>
+          <td>Section 10 compliance map updated; legal review</td>
+          <td>Legal &amp; DPO</td>
+        </tr>
+        <tr>
+          <td>Annual review (minimum)</td>
+          <td>All sections reviewed; sign-off from ML Lead + Head of Risk + DPO</td>
+          <td>Cross-functional</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="two-col" style="margin-top: 40px;">
+      <div class="card blue-top">
+        <span class="card-tag">Document Sign-Off</span>
+        <h3>MC-ALTSCORE-001 v1.0</h3>
+        <ul>
+          <li>ML Engineering Lead — Model accuracy, features, lifecycle</li>
+          <li>Head of Credit Risk — Thresholds, intended use, limitations</li>
+          <li>Data Protection Officer — Fairness, DPDP compliance, privacy</li>
+          <li>Head of Product — Use case scope, prohibited uses</li>
+          <li>CISO (observer) — Security controls, model integrity</li>
+        </ul>
+      </div>
+      <div class="card gold-top">
+        <span class="card-tag">Distribution List</span>
+        <h3>Confidential Disclosure</h3>
+        <ul>
+          <li>Active NBFC lending partners (on execution of Partner Agreement)</li>
+          <li>RBI Regulatory Filings (on request)</li>
+          <li>DPDP Board (on regulatory inquiry)</li>
+          <li>Internal: ML, Risk, Legal, Product, Engineering leadership</li>
+          <li>External audit / SOC 2 auditors (redacted version)</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="doc-footer">
+  <div>
+    <div class="ft-brand">Alt<span>Score</span></div>
+    <div style="margin-top: 4px;">Model Card · MC-ALTSCORE-001 · v1.0 · May 2026</div>
+  </div>
+  <div style="text-align: right;">
+    CONFIDENTIAL — NBFC Partners &amp; Regulators<br>
+    AltScore Technologies Private Limited<br>
+    10 sections · 40+ features documented · 6 sub-models
+  </div>
+</footer>
+
+<script>
+  // Scroll animations
+  const sections = document.querySelectorAll('.section');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.07 });
+  sections.forEach(s => obs.observe(s));
+
+  // Sidenav
+  const dots = document.querySelectorAll('.nav-dot');
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = document.getElementById(dot.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  const sectionEls = Array.from(sections);
+  const navObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        dots.forEach(d => d.classList.remove('active'));
+        const idx = sectionEls.indexOf(e.target);
+        if (idx >= 0 && dots[idx]) dots[idx].classList.add('active');
+      }
+    });
+  }, { threshold: 0.4 });
+  sectionEls.forEach(s => navObs.observe(s));
+</script>
+</body>
+</html>

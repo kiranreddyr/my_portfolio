@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Threat Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --accent: #c94b1f;
+    --accent2: #2b5e3f;
+    --accent3: #1a3a5c;
+    --muted: #7a7065;
+    --rule: #ccc4b4;
+    --tag-bg: #e8e0cf;
+    --code-bg: #1e1c18;
+    --code-text: #e8d8b0;
+    --purple: #5a2d82;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Lora', Georgia, serif; font-size: 16px; line-height: 1.75; }
+
+  .cover { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+  .cover-left { background: var(--ink); padding: 80px 60px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .cover-left::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px); pointer-events: none; }
+  .cover-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: #a06cd5; text-transform: uppercase; }
+  .cover-title { font-family: 'Syne', sans-serif; font-size: clamp(48px, 6vw, 80px); font-weight: 800; line-height: 0.95; color: var(--paper); letter-spacing: -0.02em; }
+  .cover-title span { color: #a06cd5; }
+  .cover-sub { font-family: 'DM Mono', monospace; font-size: 13px; color: rgba(245,240,232,0.5); line-height: 1.8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; }
+  .cover-right { background: var(--cream); padding: 80px 60px; display: flex; flex-direction: column; justify-content: center; gap: 32px; border-left: 4px solid var(--purple); }
+  .cover-stat { border-bottom: 1px solid var(--rule); padding-bottom: 24px; }
+  .cover-stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: var(--purple); line-height: 1; display: block; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-top: 4px; display: block; }
+  .stat-desc { font-size: 14px; color: var(--ink); margin-top: 6px; font-style: italic; }
+
+  .doc { max-width: 1100px; margin: 0 auto; padding: 80px 40px; }
+  .section { margin-bottom: 80px; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .section.visible { opacity: 1; transform: translateY(0); }
+  .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 40px; border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+  .section-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--purple); letter-spacing: 0.1em; flex-shrink: 0; }
+  h2 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--ink); }
+  p { margin-bottom: 16px; color: #2a2620; }
+
+  .callout { background: var(--ink); color: var(--paper); padding: 32px 40px; margin: 32px 0; border-left: 6px solid var(--purple); }
+  .callout p { font-size: 17px; font-style: italic; line-height: 1.6; color: var(--paper); }
+  .callout .attr { font-family: 'DM Mono', monospace; font-size: 11px; color: #a06cd5; letter-spacing: 0.15em; margin-top: 12px; display: block; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 32px 0; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; margin: 32px 0; }
+
+  .doc-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+  .doc-table th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-align: left; padding: 10px 14px; background: var(--ink); color: var(--paper); }
+  .doc-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; }
+  .doc-table tr:nth-child(even) td { background: var(--cream); }
+  .doc-table tr:hover td { background: #e8dfc8; }
+
+  .risk-crit { background: #8b1a1a; color: white; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 8px; letter-spacing: 0.05em; display: inline-block; }
+  .risk-high { background: var(--accent); color: white; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 8px; letter-spacing: 0.05em; display: inline-block; }
+  .risk-med  { background: #b07a20; color: white; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 8px; letter-spacing: 0.05em; display: inline-block; }
+  .risk-low  { background: var(--accent2); color: white; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 8px; letter-spacing: 0.05em; display: inline-block; }
+
+  .stride-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; display: inline-block; }
+  .s-s { background: #1a3a5c; color: white; }
+  .s-t { background: #5a1a4a; color: white; }
+  .s-r { background: #4a3a1a; color: white; }
+  .s-i { background: #1a4a2a; color: white; }
+  .s-d { background: #4a1a1a; color: white; }
+  .s-e { background: #3a1a5a; color: white; }
+
+  .threat-card { border: 1px solid var(--rule); margin-bottom: 24px; background: var(--cream); }
+  .threat-header { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: center; padding: 16px 20px; background: var(--paper); border-bottom: 1px solid var(--rule); }
+  .threat-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .threat-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .threat-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .threat-col { padding: 16px 20px; border-right: 1px solid var(--rule); }
+  .threat-col:last-child { border-right: none; }
+  .threat-col-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
+  .threat-col p { font-size: 13px; margin: 0; color: #3a352d; line-height: 1.6; }
+  .threat-col ul { list-style: none; padding: 0; margin: 0; }
+  .threat-col ul li { font-size: 12px; padding: 2px 0 2px 14px; position: relative; color: #3a352d; }
+  .threat-col ul li::before { content: '→'; position: absolute; left: 0; color: var(--muted); font-size: 10px; top: 3px; }
+
+  .dfd-box { border: 2px solid var(--ink); padding: 12px 20px; text-align: center; background: var(--cream); }
+  .dfd-ext { border: 2px solid var(--muted); padding: 12px 20px; text-align: center; background: var(--paper); }
+  .dfd-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .dfd-arrow { text-align: center; color: var(--accent); font-size: 20px; padding: 8px 0; }
+
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 64px 0; }
+  .sidenav { position: fixed; left: 24px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+  .nav-dot { width: 8px; height: 8px; background: var(--rule); cursor: pointer; transition: all 0.3s; position: relative; }
+  .nav-dot:hover, .nav-dot.active { background: var(--purple); transform: scale(1.5); }
+  .nav-dot::after { content: attr(data-label); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); white-space: nowrap; opacity: 0; transition: opacity 0.2s; background: var(--paper); padding: 2px 8px; border: 1px solid var(--rule); }
+  .nav-dot:hover::after { opacity: 1; }
+
+  .doc-footer { background: var(--ink); color: rgba(245,240,232,0.5); padding: 40px; display: flex; justify-content: space-between; align-items: center; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .doc-footer .ft-brand { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--paper); }
+  .doc-footer .ft-brand span { color: #a06cd5; }
+
+  @media (max-width: 768px) {
+    .cover { grid-template-columns: 1fr; }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .threat-body { grid-template-columns: 1fr; }
+    .threat-col { border-right: none; border-bottom: 1px solid var(--rule); }
+    .sidenav { display: none; }
+  }
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+
+<nav class="sidenav" id="sidenav">
+  <div class="nav-dot active" data-label="Cover" onclick="scrollTo('cover')"></div>
+  <div class="nav-dot" data-label="Scope" onclick="scrollTo('scope')"></div>
+  <div class="nav-dot" data-label="Assets" onclick="scrollTo('assets')"></div>
+  <div class="nav-dot" data-label="ERP Threats" onclick="scrollTo('erp')"></div>
+  <div class="nav-dot" data-label="Ingestion" onclick="scrollTo('ingestion')"></div>
+  <div class="nav-dot" data-label="ML Threats" onclick="scrollTo('ml')"></div>
+  <div class="nav-dot" data-label="API Threats" onclick="scrollTo('api')"></div>
+  <div class="nav-dot" data-label="Insider" onclick="scrollTo('insider')"></div>
+  <div class="nav-dot" data-label="Supply Chain" onclick="scrollTo('supply')"></div>
+  <div class="nav-dot" data-label="Risk Summary" onclick="scrollTo('summary')"></div>
+  <div class="nav-dot" data-label="Residual" onclick="scrollTo('residual')"></div>
+</nav>
+
+<!-- COVER -->
+<div class="cover" id="cover">
+  <div class="cover-left">
+    <div><div class="cover-label">Threat Model — TM-ALTSCORE-001</div></div>
+    <div>
+      <div class="cover-title">Threat<br><span>Model</span></div>
+      <div style="height:24px"></div>
+      <div style="font-family:'Lora',serif; font-size:18px; color:rgba(245,240,232,0.7); font-style:italic; line-height:1.5;">
+        STRIDE-based threat analysis for the AltScore platform — covering all system components, adversarial ML, insider threats, and supply chain risks.
+      </div>
+    </div>
+    <div class="cover-sub">
+      <div>DOCUMENT / TM-ALTSCORE-001</div>
+      <div>STATUS / DRAFT FOR REVIEW</div>
+      <div>VERSION / 1.0 — MAY 2026</div>
+      <div style="margin-top:12px; color:rgba(245,240,232,0.3);">Companion to PRD-ALTSCORE-001 · Confidential · Restricted to Security Team + Leadership</div>
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat">
+      <span class="stat-num">STRIDE</span>
+      <span class="stat-label">Threat methodology</span>
+      <div class="stat-desc">Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">7</span>
+      <span class="stat-label">Attack surfaces analyzed</span>
+      <div class="stat-desc">ERP connector, ingestion pipeline, feature pipeline, ML model, score API, lender dashboard, consent system</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">Quarterly</span>
+      <span class="stat-label">Review cadence</span>
+      <div class="stat-desc">Threat model reviewed and updated quarterly — or immediately on significant architecture change</div>
+    </div>
+  </div>
+</div>
+
+<main class="doc">
+
+  <!-- 01 SCOPE -->
+  <div class="section" id="scope">
+    <div class="section-header">
+      <span class="section-num">01 —</span>
+      <h2>Scope &amp; Threat Modeling Approach</h2>
+    </div>
+
+    <p>This threat model analyzes the AltScore platform using the STRIDE framework — a structured method for enumerating threats by category. Each identified threat is assessed for likelihood and impact, and paired with mitigations. The goal is a live, actionable document — not a compliance artifact.</p>
+
+    <div class="callout">
+      <p>A threat model is only useful if it is honest about what is scary. This document does not soften threats or over-claim mitigations. Where a genuine residual risk exists that we have not fully mitigated, it is declared — so it can be monitored and prioritized.</p>
+      <span class="attr">THREAT MODELING PRINCIPLE — ALTSCORE</span>
+    </div>
+
+    <h3>STRIDE Category Key</h3>
+    <div style="display:flex; flex-wrap:wrap; gap:12px; margin:24px 0;">
+      <div><span class="stride-label s-s">S — Spoofing</span> <span style="font-size:13px; margin-left:8px;">Impersonating a legitimate identity</span></div>
+      <div><span class="stride-label s-t">T — Tampering</span> <span style="font-size:13px; margin-left:8px;">Modifying data without authorization</span></div>
+      <div><span class="stride-label s-r">R — Repudiation</span> <span style="font-size:13px; margin-left:8px;">Denying an action was taken</span></div>
+      <div><span class="stride-label s-i">I — Information Disclosure</span> <span style="font-size:13px; margin-left:8px;">Exposing data to unauthorized parties</span></div>
+      <div><span class="stride-label s-d">D — Denial of Service</span> <span style="font-size:13px; margin-left:8px;">Making the system unavailable</span></div>
+      <div><span class="stride-label s-e">E — Elevation of Privilege</span> <span style="font-size:13px; margin-left:8px;">Gaining unauthorized capabilities</span></div>
+    </div>
+
+    <h3>System Boundary &amp; Trust Zones</h3>
+    <table class="doc-table">
+      <thead><tr><th>Zone</th><th>Components</th><th>Trust Level</th><th>Attack Surface</th></tr></thead>
+      <tbody>
+        <tr><td><strong>External (Untrusted)</strong></td><td>Internet, lender systems, distributor on-premise networks, WhatsApp</td><td>Zero trust — all traffic verified</td><td>API gateway, ERP connector ingestion endpoint, WhatsApp consent webhook</td></tr>
+        <tr><td><strong>DMZ</strong></td><td>API gateway, WAF, load balancer, CDN, consent webhook receiver</td><td>Low trust — input validation enforced</td><td>All internet-facing endpoints; highest exposure</td></tr>
+        <tr><td><strong>Application Zone</strong></td><td>Score API service, consent service, feature pipeline coordinator, dashboard backend</td><td>Medium trust — authenticated service-to-service calls</td><td>Internal API calls; service compromise would need to pivot here</td></tr>
+        <tr><td><strong>Data Zone</strong></td><td>Bronze data lake, Silver feature store, Gold score store, identity resolution store, consent DB</td><td>High trust — access requires elevated privileges + audit</td><td>Most valuable target — direct access most impactful</td></tr>
+        <tr><td><strong>ML Zone</strong></td><td>Training cluster, model registry, MLflow, Isolation Forest service</td><td>High trust — isolated from application zone</td><td>Model poisoning, artifact tampering</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 02 ASSETS -->
+  <div class="section" id="assets">
+    <div class="section-header">
+      <span class="section-num">02 —</span>
+      <h2>Assets at Risk</h2>
+    </div>
+    <p>Before enumerating threats, we identify what an attacker would want. This drives prioritization — threats targeting Crown Jewel assets receive the most mitigation investment.</p>
+
+    <table class="doc-table">
+      <thead><tr><th>Asset</th><th>Classification</th><th>Value to Attacker</th><th>Business Impact if Compromised</th><th>Crown Jewel</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Retailer PII (GST, phone, address)</strong></td><td>Class 1 — Highly Sensitive</td><td>Identity theft; regulatory extortion; sold on dark web</td><td>DPDP breach; regulatory fine up to ₹250Cr; retailer trust destruction; product shutdown risk</td><td>✦ Yes</td></tr>
+        <tr><td><strong>AltScore model weights + feature logic</strong></td><td>Trade Secret</td><td>Competitive reverse engineering; gaming the model systematically; disclosure to competitor</td><td>Score gaming at scale destroys model validity; competitive moat lost; lender trust collapse</td><td>✦ Yes</td></tr>
+        <tr><td><strong>AltScore values + PD estimates per retailer</strong></td><td>Class 2 — Sensitive Business</td><td>Credit market manipulation; blackmail of retailers; competitive intelligence for lenders</td><td>DPDP breach; lender trust breach; retailer harm (if scores disclosed improperly)</td><td>✦ Yes</td></tr>
+        <tr><td><strong>Distributor ERP transaction data</strong></td><td>Class 2 — Sensitive Business</td><td>Commercial intelligence on distributor's retailer network; competitor analysis; extortion</td><td>Distributor trust destruction; DPA breach; product shutdown; legal liability</td><td>✦ Yes</td></tr>
+        <tr><td><strong>Consent records</strong></td><td>Class 4 — Audit</td><td>Proof destruction; regulatory cover-up; enable unauthorized processing claims</td><td>Regulatory exposure; inability to prove compliance; DPDP enforcement</td><td>Partial</td></tr>
+        <tr><td><strong>NBFC lender portfolio data</strong></td><td>Class 2 — Sensitive Business</td><td>Financial intelligence; portfolio strategy leakage; cross-lender exposure</td><td>Lender trust breach; commercial damage; potential NBFC regulatory consequences</td><td>Partial</td></tr>
+        <tr><td><strong>Score API availability</strong></td><td>Operational</td><td>Ransom; competitive disruption</td><td>Lender unable to underwrite; SLA breach; revenue loss; lender churn</td><td>No — recoverable</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 03 ERP THREATS -->
+  <div class="section" id="erp">
+    <div class="section-header">
+      <span class="section-num">03 —</span>
+      <h2>ERP Connector Threats</h2>
+    </div>
+    <p>The ERP Connector SDK is deployed inside distributor environments — a context outside AltScore's direct control. This creates a unique threat surface: the connector could be compromised by a threat actor with access to the distributor's systems, or the connector itself could be weaponized against AltScore's ingestion infrastructure.</p>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ERP-01</div><div class="threat-name">Spoofed ERP Connector — Malicious Data Injection</div></div>
+        <span class="stride-label s-s">S — Spoofing</span>
+        <span class="risk-crit">CRITICAL</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>An attacker creates a fake ERP connector that generates synthetic or manipulated transaction data. If accepted, fabricated retailer payment histories flow into the Bronze layer and corrupt AltScore credit profiles. At scale, this could be used to inflate scores for retail borrowers controlled by the attacker, enabling fraudulent loan approvals.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>mTLS client certificates required on all connector connections; certificates are distributor-specific and issued by AltScore CA</li>
+            <li>Payload HMAC-SHA256 signature verified at ingestion endpoint; unsigned payloads rejected</li>
+            <li>Isolation Forest anomaly detection flags statistically improbable synthetic payment patterns</li>
+            <li>Per-distributor data hashing and chain-of-custody: each batch references prior batch hash</li>
+            <li>Manual audit of any distributor with sudden dramatic score distribution shift across their retailer network</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ERP-02</div><div class="threat-name">ERP Data Tampering in Transit</div></div>
+        <span class="stride-label s-t">T — Tampering</span>
+        <span class="risk-high">HIGH</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>A man-in-the-middle attacker intercepts the connector's outbound data upload and modifies invoice amounts, payment dates, or return rates before they reach AltScore's ingestion endpoint. Modified data flows into scoring pipeline, generating incorrect credit profiles.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>TLS 1.3 with certificate pinning prevents MITM interception</li>
+            <li>HMAC signature covers entire payload; any byte modification invalidates signature</li>
+            <li>Static IP allowlisting reduces MITM opportunity surface</li>
+            <li>Ingestion endpoint validates signature before writing any data to Bronze</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ERP-03</div><div class="threat-name">Distributor Insider — Deliberate Data Manipulation</div></div>
+        <span class="stride-label s-t">T — Tampering</span>
+        <span class="risk-high">HIGH</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>A distributor employee (or the distributor themselves) deliberately modifies ERP records before the connector sync — altering a retailer's payment history to inflate their score (in exchange for a bribe from the retailer) or to damage a competitor retailer's creditworthiness. Unlike a technical exploit, this threat originates from a trusted data source.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>Multi-distributor cross-validation: if a retailer has data from 2+ distributors, both must agree on payment behavior</li>
+            <li>Isolation Forest detects anomalous patterns in payment recording that differ from the distributor's broader network behavior</li>
+            <li>Statistical consistency checks: a distributor where 80% of retailers suddenly improve payment behavior triggers a review</li>
+            <li>Contractual deterrent: data partnership agreement includes a fraud and manipulation clause with financial penalties and termination rights</li>
+            <li>ERP audit log comparison: connector reads directly from ERP; ERP's own audit log should reflect the changes — if connector data doesn't match ERP audit trail, alert raised</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ERP-04</div><div class="threat-name">ERP Connector SDK Compromise — Supply Chain Attack</div></div>
+        <span class="stride-label s-e">E — Elevation of Privilege</span>
+        <span class="risk-high">HIGH</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>An attacker compromises the AltScore SDK distribution pipeline and ships a malicious SDK version to distributors. The malicious SDK extracts broader data from the ERP than the declared scope (e.g., bank account numbers, personal guarantor data), exfiltrates it, or plants a backdoor that allows the attacker to inject data into future sync batches.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>SDK binary is code-signed; distributors must verify signature before installation</li>
+            <li>SDK updates delivered only via signed, integrity-verified package</li>
+            <li>SDK distribution pipeline is separate from the main application deployment pipeline (blast radius containment)</li>
+            <li>SDK open-source core components with pinned, audited dependency versions</li>
+            <li>Outbound data from SDK is schema-validated against published extraction spec before transmission; fields outside spec are stripped (defense in depth even if SDK is compromised)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 04 INGESTION / DATA LAKE -->
+  <div class="section" id="ingestion">
+    <div class="section-header">
+      <span class="section-num">04 —</span>
+      <h2>Ingestion &amp; Data Lake Threats</h2>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-DL-01</div><div class="threat-name">Unauthorized Data Lake Access — Cross-Distributor Data Leakage</div></div>
+        <span class="stride-label s-i">I — Information Disclosure</span>
+        <span class="risk-crit">CRITICAL</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>A compromised service account or misconfigured IAM policy allows a data pipeline job for Distributor A to read Bronze-layer data belonging to Distributor B. This is the highest-impact information disclosure scenario — a distributor's competitor could access their full retailer transaction history.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>Per-distributor S3 prefix with separate CMK — key boundary is a hard technical barrier</li>
+            <li>IAM policies scoped to specific prefixes; no wildcard S3 ARNs in any policy</li>
+            <li>Spark jobs run with distributor-scoped IAM roles; cross-prefix reads are denied at the IAM level</li>
+            <li>Quarterly IAM policy review; alerts on any cross-prefix access attempt</li>
+            <li>Data lake access logging enabled; all GetObject calls logged with caller identity</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-DL-02</div><div class="threat-name">Bronze Layer Tampering — Audit Trail Destruction</div></div>
+        <span class="stride-label s-t">T — Tampering</span>
+        <span class="risk-high">HIGH</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>An attacker with write access to the Bronze layer modifies or deletes raw ERP records after ingestion. This breaks the audit lineage — it becomes impossible to trace a score back to its source data. Could be used to cover up previous data manipulation or to impede regulatory investigation.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>S3 Object Lock (WORM mode) on Bronze layer — objects cannot be modified or deleted for the retention period</li>
+            <li>Batch hash chain: each batch records a hash of all prior batches; any modification breaks the chain (detectable)</li>
+            <li>Separate backup to a second region with independent access credentials</li>
+            <li>Data ops service accounts have PutObject only; no DeleteObject or overwrite capability</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-DL-03</div><div class="threat-name">PII Re-identification from Pseudonymized Features</div></div>
+        <span class="stride-label s-i">I — Information Disclosure</span>
+        <span class="risk-med">MEDIUM</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>An attacker with access to the Silver (pseudonymized) feature store attempts to re-identify a retailer by combining feature values (e.g., unique combination of GMV range + district + SKU category) with external knowledge about specific retailers in a geography. If successful, PII protections in the Silver layer are undermined.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>k-anonymity analysis run at feature computation time — any feature combination unique to fewer than k=5 retailers is generalized (binned or suppressed)</li>
+            <li>Geographic features binned at district level, not shop-location level</li>
+            <li>Silver layer access restricted to ML Engineers + automated pipelines; no analyst direct access</li>
+            <li>Identity resolution store (UUID → GST/phone mapping) physically separated; ML pipeline has no access</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 05 ML THREATS -->
+  <div class="section" id="ml">
+    <div class="section-header">
+      <span class="section-num">05 —</span>
+      <h2>ML Model &amp; Adversarial Threats</h2>
+    </div>
+    <p>The AltScore ML system introduces threat categories that traditional software threat models do not cover — model poisoning, score gaming, model inversion, and algorithmic bias amplification.</p>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ML-01</div><div class="threat-name">Training Data Poisoning — Score Manipulation at Scale</div></div>
+        <span class="stride-label s-t">T — Tampering</span>
+        <span class="risk-crit">CRITICAL</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>An attacker who has compromised a distributor's ERP injects systematically manipulated training data into the NBFC partner repayment dataset — e.g., marking bad borrowers as repaid, or reporting good borrowers as defaulted. Over multiple training cycles, the model learns incorrect associations and begins systematically mis-scoring retailers in the attacker's favor. This is a slow, high-impact attack that may not be detected until default rates spike significantly above predictions.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>NBFC partner repayment data ingested via a separate, dedicated secure channel — not the same pipeline as ERP data</li>
+            <li>Cryptographic hash of every training dataset snapshot; hashes stored immutably in WORM storage</li>
+            <li>Champion/challenger model evaluation: new model version must outperform champion on a holdout — manipulated training data would create a weaker model, not a stronger one (in most cases)</li>
+            <li>Continuous monitoring of predicted PD vs. actual default rate per distributor cohort — systematic manipulation by one distributor creates a detectable deviation in that cohort</li>
+            <li>Annual adversarial data injection test (red team) to validate detection capability</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ML-02</div><div class="threat-name">Model Inversion — Reconstructing Retailer Profiles from API Responses</div></div>
+        <span class="stride-label s-i">I — Information Disclosure</span>
+        <span class="risk-med">MEDIUM</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>An attacker with API access systematically queries the Score API with modified inputs for the same retailer (or similar synthetic retailers), studying how the score changes in response to feature variations. Over many queries, the attacker reconstructs the model's decision boundary — effectively reverse-engineering the scoring logic to either game it or sell the knowledge to competitors.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>API does not accept arbitrary feature inputs — only retailer_id; features are computed internally and not exposed</li>
+            <li>Rate limiting: max 3 score queries per retailer per 24h per lender — limits systematic probing</li>
+            <li>Reason codes are categorical labels, not numeric feature values; labels reveal direction, not magnitude</li>
+            <li>Model score output includes controlled noise for borderline cases (score ±5 for P(Default) within 1% of band boundary)</li>
+            <li>Anomaly detection on lender query patterns — systematic probing of many retailers with minor variations triggers review</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ML-03</div><div class="threat-name">Score Gaming — Retailer Behavioral Manipulation</div></div>
+        <span class="stride-label s-t">T — Tampering</span>
+        <span class="risk-high">HIGH</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>A retailer who learns (through their distributor or a leaked reason code pattern) which behaviors improve their score deliberately inflates orders before a scoring event, makes unusually punctual payments for a short period, or avoids returns — without a genuine underlying business improvement. If successful, they receive a higher credit limit than their actual risk profile warrants, leading to over-lending and eventual default.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>Isolation Forest detects order velocity spikes &gt;3σ from 12-month baseline</li>
+            <li>60-day look-back window — manipulation must be sustained for 2 months, which requires actual behavior change</li>
+            <li>Long-term payment history (3+ years) dominates the payment signal; 2-month improvement minimally affects band</li>
+            <li>Return rate counter-signal: inflated orders are often returned; high returns penalize even if orders are high</li>
+            <li>Reason code opacity: retailers see categories ("consistent_order_frequency"), not the specific numerical thresholds</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ML-04</div><div class="threat-name">Model Artifact Tampering — Silent Score Manipulation</div></div>
+        <span class="stride-label s-t">T — Tampering</span>
+        <span class="risk-crit">CRITICAL</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>An attacker with access to the model registry modifies the serialized XGBoost model artifact or the feature scaler objects — introducing a backdoor that causes specific retailer profiles (identifiable by the attacker) to receive artificially high scores. Because the model binary is serialized, the change may not be detectable through output monitoring until default rates spike.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>SHA-256 hash of all model artifacts logged at training time; hash verified at every model load</li>
+            <li>Hash mismatch = model load failure + immediate alert to ML Ops + Security</li>
+            <li>Model registry access restricted to ML Ops role; no developer direct write access</li>
+            <li>Promotion of any model version requires: hash verification + performance validation on holdout + human sign-off from two ML team members</li>
+            <li>Artifact store on S3 WORM — model artifacts are immutable after training</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-ML-05</div><div class="threat-name">Bias Amplification — Unfair Score Systematically Targeting a Cohort</div></div>
+        <span class="stride-label s-i">I — Information Disclosure</span>
+        <span class="risk-high">HIGH</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>The model, through correlations in training data, systematically under-scores retailers in a specific geography, industry, or demographic group — not due to malicious tampering, but due to spurious correlations in historical data (e.g., a region where the NBFC partner historically denied credit, creating a self-fulfilling training signal). This is not a traditional security threat, but the harm to affected retailers is real and the regulatory exposure under DPDP Act is significant.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>Quarterly fairness audits: score distribution compared across state, district tier, trade category, and gender proxy cohorts</li>
+            <li>Disparate impact testing — score gap &gt;15% for matched behavioral cohorts triggers model review</li>
+            <li>Geography excluded as a direct feature; only behavioral signals permitted</li>
+            <li>Training data de-biasing: NBFC partner data reweighted to correct for historical denial bias if detected</li>
+            <li>Model freeze protocol: if bias detected, model frozen and retraining initiated before next production scoring cycle</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 06 API THREATS -->
+  <div class="section" id="api">
+    <div class="section-header">
+      <span class="section-num">06 —</span>
+      <h2>Score API &amp; Lender Interface Threats</h2>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-API-01</div><div class="threat-name">Cross-Lender Data Leakage via API</div></div>
+        <span class="stride-label s-i">I — Information Disclosure</span>
+        <span class="risk-crit">CRITICAL</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>A vulnerability in the API authorization layer (e.g., an IDOR — Insecure Direct Object Reference) allows a lender to query the score of a retailer that belongs to a different lender's portfolio — one where the retailer has not consented to that lender. At scale, a single lender could enumerate the entire retail credit portfolio of a competitor NBFC.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>Row-level security (RLS) in PostgreSQL Score Store — every query automatically scoped to requesting lender_id; bypass requires DB-level privilege not available to application</li>
+            <li>Consent scope check: API verifies retailer has consented to requesting lender before DB query is issued</li>
+            <li>No sequential retailer IDs; UUIDs used throughout — enumeration attacks yield no useful identifiers</li>
+            <li>Penetration testing includes IDOR testing on every release; dedicated OWASP API Top 10 test suite</li>
+            <li>Anomaly detection: lender querying many retailers they don't have a prior relationship with → alert</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-API-02</div><div class="threat-name">API Denial of Service — Lender Underwriting Disruption</div></div>
+        <span class="stride-label s-d">D — Denial of Service</span>
+        <span class="risk-high">HIGH</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>A volumetric DDoS attack against the Score API makes it unavailable to lenders during a peak underwriting period (e.g., before a major festival credit surge). Lenders cannot underwrite retailers; loan disbursements are delayed; AltScore breaches SLAs with NBFC partners. Could be financially motivated (extortion) or competitive sabotage.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>Cloud-native DDoS protection (AWS Shield Advanced / Azure DDoS Standard) upstream of application</li>
+            <li>WAF rate limiting at network layer before application-layer rate limiting</li>
+            <li>API responses cached in Redis (TTL: 12 hours per retailer) — cached scores served even if scoring pipeline is under load</li>
+            <li>Multi-region API deployment for failover; automated DNS failover on health check failure</li>
+            <li>Lender SLA includes 99.5% uptime; incident comms playbook for DDoS events pre-drafted</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-API-03</div><div class="threat-name">Compromised Lender API Key — Unauthorized Score Queries</div></div>
+        <span class="stride-label s-s">S — Spoofing</span>
+        <span class="risk-high">HIGH</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>A lender's API key is leaked (e.g., committed to a public GitHub repository, phished from an NBFC developer, or stolen in a lender-side breach). An attacker uses the stolen key to query scores within the lender's authorized retailer scope, accessing sensitive credit intelligence they are not entitled to receive.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>Compromised key revocation: lender can revoke via API or support request; revocation effective within 60 seconds</li>
+            <li>Anomaly detection on API key usage: queries from new IP geographies, unusual hours, or sudden volume spikes trigger alert to both AltScore security and NBFC CISO</li>
+            <li>API keys are short-lived access tokens (1h TTL) with rotating refresh tokens — a leaked key expires quickly</li>
+            <li>Lenders advised to use IP allowlisting for their API keys; AltScore enforces this for enterprise NBFC integrations</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="threat-card">
+      <div class="threat-header">
+        <div><div class="threat-id">TM-API-04</div><div class="threat-name">Score Repudiation — Lender Disputes Score at Default Time</div></div>
+        <span class="stride-label s-r">R — Repudiation</span>
+        <span class="risk-med">MEDIUM</span>
+      </div>
+      <div class="threat-body">
+        <div class="threat-col">
+          <span class="threat-col-label">Threat Description</span>
+          <p>After a loan defaults, an NBFC lender claims the score they received was different from what AltScore served, or that AltScore provided a score with stale data without adequate disclosure — in order to shift liability for the bad loan to AltScore. Without an immutable record of the exact score served, AltScore has no defense.</p>
+        </div>
+        <div class="threat-col">
+          <span class="threat-col-label">Mitigations</span>
+          <ul>
+            <li>Every score API response logged immutably: lender_id, retailer_id (UUID), score, PD, risk_band, model_version, data_freshness_days, generated_at, request_ip — all fields</li>
+            <li>Score record stored in Score Store with the same values; lender API response reconstructable from stored record</li>
+            <li>data_freshness_days prominently included in every response; lender acceptance of stale data is a documented API interaction</li>
+            <li>Lender API agreement includes: "AltScore's audit log constitutes the authoritative record of scores served"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 07 INSIDER -->
+  <div class="section" id="insider">
+    <div class="section-header">
+      <span class="section-num">07 —</span>
+      <h2>Insider Threats</h2>
+    </div>
+    <p>Insider threats are among the most difficult to detect and mitigate. AltScore's design assumes that any employee could be a threat actor — through malice, coercion, or negligence — and implements controls accordingly.</p>
+
+    <table class="doc-table">
+      <thead><tr><th>Threat ID</th><th>Insider Threat Scenario</th><th>Category</th><th>Severity</th><th>Key Mitigations</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);">TM-IN-01</span></td>
+          <td><strong>Data Exfiltration — Employee sells retailer PII</strong><br><span style="font-size:12px; color:var(--muted);">Employee with data access exports retailer GST + phone numbers and sells to a competitor or phishing operation</span></td>
+          <td><span class="stride-label s-i">I — Disclosure</span></td>
+          <td><span class="risk-crit">CRITICAL</span></td>
+          <td>No direct PII access for most roles; DLP alerts on bulk data export; four-eyes approval for admin access; all data access logged and reviewed; background checks at hiring; anomalous query volume alerts</td>
+        </tr>
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);">TM-IN-02</span></td>
+          <td><strong>Score Manipulation — Employee adjusts score for a retailer</strong><br><span style="font-size:12px; color:var(--muted);">Data engineer or ML engineer directly modifies a score in the Score Store DB (e.g., bribed by a lender or retailer)</span></td>
+          <td><span class="stride-label s-t">T — Tampering</span></td>
+          <td><span class="risk-crit">CRITICAL</span></td>
+          <td>Score Store only writeable by automated pipeline service account; no human write access to production Score Store; manual overrides only via lender dashboard with mandatory audit trail; all DB changes logged and reviewed weekly</td>
+        </tr>
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);">TM-IN-03</span></td>
+          <td><strong>Model Backdoor — ML engineer embeds model manipulation</strong><br><span style="font-size:12px; color:var(--muted);">Rogue ML engineer embeds a trigger in the model that causes high scores for specific retailer identity patterns controlled by an external party</span></td>
+          <td><span class="stride-label s-t">T — Tampering</span></td>
+          <td><span class="risk-high">HIGH</span></td>
+          <td>Mandatory peer code review for all model training code changes; two-person sign-off for model promotion; model artifact hash verification; champion/challenger evaluation catches performance deviations introduced by backdoors</td>
+        </tr>
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);">TM-IN-04</span></td>
+          <td><strong>Credential Sharing — Employee shares admin access</strong><br><span style="font-size:12px; color:var(--muted);">Employee shares their admin credentials with an unauthorized party (contractor, former colleague, or external attacker who has socially engineered them)</span></td>
+          <td><span class="stride-label s-s">S — Spoofing</span></td>
+          <td><span class="risk-high">HIGH</span></td>
+          <td>Hardware security key (FIDO2) for admin access — credentials are phishing-resistant and non-shareable; session anomaly detection (geographic, device, time-of-day); immediate credential revocation on off-boarding</td>
+        </tr>
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);">TM-IN-05</span></td>
+          <td><strong>Negligent Data Handling — Employee exposes data via unsecured channel</strong><br><span style="font-size:12px; color:var(--muted);">Employee exports a report containing retailer data and emails it unencrypted, posts it in a public Slack channel, or leaves a laptop with unencrypted data unattended</span></td>
+          <td><span class="stride-label s-i">I — Disclosure</span></td>
+          <td><span class="risk-med">MEDIUM</span></td>
+          <td>DLP policy on email and Slack (auto-detect PII patterns, block unencrypted export); endpoint encryption (FileVault / BitLocker) mandatory; security awareness training quarterly; no PII in analytics reports (aggregated only)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 08 SUPPLY CHAIN -->
+  <div class="section" id="supply">
+    <div class="section-header">
+      <span class="section-num">08 —</span>
+      <h2>Supply Chain Threats</h2>
+    </div>
+
+    <p>AltScore's technology stack depends on open-source libraries, cloud provider services, and third-party APIs. Each dependency is a potential attack vector if compromised upstream.</p>
+
+    <table class="doc-table">
+      <thead><tr><th>Component</th><th>Threat</th><th>Severity</th><th>Mitigations</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Python ML libraries (XGBoost, SHAP, scikit-learn)</strong></td>
+          <td>Malicious package version published to PyPI mimicking a dependency; dependency confusion attack; typosquatting</td>
+          <td><span class="risk-high">HIGH</span></td>
+          <td>Pinned dependency versions in requirements.txt; private PyPI mirror for production dependencies; automated dependency vulnerability scanning (Dependabot / Snyk) in CI/CD; no internet access from ML training cluster (packages from internal mirror only)</td>
+        </tr>
+        <tr>
+          <td><strong>Cloud Provider (AWS/Azure)</strong></td>
+          <td>Cloud provider infrastructure breach; availability event; regional outage; insider at cloud provider accessing customer data</td>
+          <td><span class="risk-med">MEDIUM</span></td>
+          <td>Customer-managed encryption keys (CMK) — cloud provider cannot decrypt data without AltScore's key; multi-region deployment for availability; cloud provider SLA and DPA reviewed; no unencrypted PII in any cloud service</td>
+        </tr>
+        <tr>
+          <td><strong>WhatsApp Business API (Meta)</strong></td>
+          <td>Meta-side breach exposes consent message content; API outage disrupts consent flow; Meta changes API terms restricting use case</td>
+          <td><span class="risk-med">MEDIUM</span></td>
+          <td>AltScore stores only consent_decision + timestamp (not message content); SMS fallback consent channel for WhatsApp outages; alternative consent channel (web portal) available; Meta API terms reviewed annually; consent channel is contractually abstracted — can swap provider</td>
+        </tr>
+        <tr>
+          <td><strong>Tally / SAP B1 ERP software</strong></td>
+          <td>Vulnerability in ERP software exploited to provide false data to the connector; ERP vendor breach exposes distributor data</td>
+          <td><span class="risk-med">MEDIUM</span></td>
+          <td>Connector reads ERP via read-only DB connection; ERP vulnerabilities don't directly affect AltScore systems; distributor is responsible for ERP security; AltScore connector does not expose new attack surface to the ERP</td>
+        </tr>
+        <tr>
+          <td><strong>npm / node dependencies (dashboard frontend)</strong></td>
+          <td>Malicious npm package in dashboard build; XSS via compromised CDN-loaded script</td>
+          <td><span class="risk-med">MEDIUM</span></td>
+          <td>Subresource Integrity (SRI) hashes on all CDN-loaded scripts; npm audit in CI/CD; no CDN scripts loaded by default without SRI; Content Security Policy (CSP) headers strict on dashboard</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 09 RISK SUMMARY -->
+  <div class="section" id="summary">
+    <div class="section-header">
+      <span class="section-num">09 —</span>
+      <h2>Risk Heat Map Summary</h2>
+    </div>
+    <p>All identified threats consolidated and ranked by residual risk (after mitigations applied). This summary drives prioritization of security investment and quarterly review focus.</p>
+
+    <table class="doc-table">
+      <thead><tr><th>Threat ID</th><th>Threat Summary</th><th>STRIDE</th><th>Inherent Risk</th><th>Residual Risk</th><th>Review Cadence</th></tr></thead>
+      <tbody>
+        <tr><td class="tc-id">TM-ERP-01</td><td>Spoofed ERP connector — malicious data injection</td><td><span class="stride-label s-s">S</span></td><td><span class="risk-crit">CRITICAL</span></td><td><span class="risk-med">MEDIUM</span></td><td>Quarterly</td></tr>
+        <tr><td class="tc-id">TM-ML-01</td><td>Training data poisoning — systematic score manipulation</td><td><span class="stride-label s-t">T</span></td><td><span class="risk-crit">CRITICAL</span></td><td><span class="risk-med">MEDIUM</span></td><td>Quarterly</td></tr>
+        <tr><td class="tc-id">TM-ML-04</td><td>Model artifact tampering — silent score manipulation</td><td><span class="stride-label s-t">T</span></td><td><span class="risk-crit">CRITICAL</span></td><td><span class="risk-low">LOW</span></td><td>Monthly</td></tr>
+        <tr><td class="tc-id">TM-DL-01</td><td>Cross-distributor data lake access — PII leakage</td><td><span class="stride-label s-i">I</span></td><td><span class="risk-crit">CRITICAL</span></td><td><span class="risk-low">LOW</span></td><td>Quarterly</td></tr>
+        <tr><td class="tc-id">TM-API-01</td><td>Cross-lender data leakage via API (IDOR)</td><td><span class="stride-label s-i">I</span></td><td><span class="risk-crit">CRITICAL</span></td><td><span class="risk-low">LOW</span></td><td>Every release</td></tr>
+        <tr><td class="tc-id">TM-IN-01</td><td>Employee exfiltrates retailer PII</td><td><span class="stride-label s-i">I</span></td><td><span class="risk-crit">CRITICAL</span></td><td><span class="risk-med">MEDIUM</span></td><td>Continuous monitoring</td></tr>
+        <tr><td class="tc-id">TM-IN-02</td><td>Employee directly manipulates score store</td><td><span class="stride-label s-t">T</span></td><td><span class="risk-crit">CRITICAL</span></td><td><span class="risk-low">LOW</span></td><td>Monthly audit</td></tr>
+        <tr><td class="tc-id">TM-ERP-03</td><td>Distributor deliberate data manipulation</td><td><span class="stride-label s-t">T</span></td><td><span class="risk-high">HIGH</span></td><td><span class="risk-med">MEDIUM</span></td><td>Quarterly</td></tr>
+        <tr><td class="tc-id">TM-ERP-04</td><td>ERP connector SDK supply chain attack</td><td><span class="stride-label s-e">E</span></td><td><span class="risk-high">HIGH</span></td><td><span class="risk-med">MEDIUM</span></td><td>Per SDK release</td></tr>
+        <tr><td class="tc-id">TM-ML-03</td><td>Score gaming — retailer behavioral manipulation</td><td><span class="stride-label s-t">T</span></td><td><span class="risk-high">HIGH</span></td><td><span class="risk-low">LOW</span></td><td>Quarterly</td></tr>
+        <tr><td class="tc-id">TM-ML-05</td><td>Bias amplification — systematic cohort under-scoring</td><td><span class="stride-label s-i">I</span></td><td><span class="risk-high">HIGH</span></td><td><span class="risk-low">LOW</span></td><td>Quarterly fairness audit</td></tr>
+        <tr><td class="tc-id">TM-API-02</td><td>DDoS against Score API</td><td><span class="stride-label s-d">D</span></td><td><span class="risk-high">HIGH</span></td><td><span class="risk-low">LOW</span></td><td>Continuous monitoring</td></tr>
+        <tr><td class="tc-id">TM-API-03</td><td>Compromised lender API key</td><td><span class="stride-label s-s">S</span></td><td><span class="risk-high">HIGH</span></td><td><span class="risk-low">LOW</span></td><td>Continuous monitoring</td></tr>
+        <tr><td class="tc-id">TM-DL-03</td><td>PII re-identification from pseudonymized features</td><td><span class="stride-label s-i">I</span></td><td><span class="risk-med">MEDIUM</span></td><td><span class="risk-low">LOW</span></td><td>Annually</td></tr>
+        <tr><td class="tc-id">TM-ML-02</td><td>Model inversion — reconstructing scoring logic</td><td><span class="stride-label s-i">I</span></td><td><span class="risk-med">MEDIUM</span></td><td><span class="risk-low">LOW</span></td><td>Quarterly</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 10 RESIDUAL -->
+  <div class="section" id="residual">
+    <div class="section-header">
+      <span class="section-num">10 —</span>
+      <h2>Residual Risks &amp; Accepted Risks</h2>
+    </div>
+    <p>Not all risks can be fully mitigated. The following residual risks are explicitly acknowledged by the Security team and CISO — accepted because the cost of full mitigation exceeds the risk, or because the mitigations available are structurally limited.</p>
+
+    <div class="callout">
+      <p>An accepted risk is not an ignored risk. Every accepted risk has a named owner, a monitoring mechanism, and a re-evaluation date. If the threat landscape changes — a new attack vector is discovered, a mitigation fails, or the residual impact estimate turns out to be wrong — the risk is escalated back to active mitigation.</p>
+      <span class="attr">RESIDUAL RISK MANAGEMENT PRINCIPLE</span>
+    </div>
+
+    <table class="doc-table">
+      <thead><tr><th>Risk ID</th><th>Residual Risk Description</th><th>Why Accepted</th><th>Monitoring</th><th>Owner</th><th>Review Date</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="tc-id">RR-01</td>
+          <td><strong>Distributor data manipulation (TM-ERP-03)</strong> — a determined, sophisticated distributor could manipulate ERP data in ways that pass all current anomaly detection</td>
+          <td>Full prevention requires physical access to distributor ERP, which is structurally impossible. Current mitigations make manipulation detectable at scale but not for a single carefully crafted event.</td>
+          <td>Multi-distributor cross-validation; PSI monitoring; manual audit of outlier distributor cohorts quarterly</td>
+          <td>Head of Risk &amp; Data Quality</td>
+          <td>Q3 2026</td>
+        </tr>
+        <tr>
+          <td class="tc-id">RR-02</td>
+          <td><strong>Training data poisoning (TM-ML-01)</strong> — slow, coordinated poisoning over multiple training cycles that stays below anomaly detection thresholds is not fully preventable</td>
+          <td>Perfect training data integrity requires verified repayment outcomes, which depend on NBFC partner systems outside AltScore's control. The mitigation (batch hashing, champion/challenger) reduces but does not eliminate the risk.</td>
+          <td>Monthly PD calibration check (predicted vs. actual per distributor cohort); annual adversarial data injection test</td>
+          <td>Head of ML + CISO</td>
+          <td>Q3 2026</td>
+        </tr>
+        <tr>
+          <td class="tc-id">RR-03</td>
+          <td><strong>Social engineering of employees</strong> — a sophisticated attacker could social-engineer a key employee into taking an action that bypasses technical controls (e.g., approving a fraudulent four-eyes access request)</td>
+          <td>Social engineering of motivated humans cannot be fully mitigated through technical controls alone. Awareness training reduces but does not eliminate the risk.</td>
+          <td>Quarterly security awareness training; phishing simulation exercises; anomalous access pattern alerts</td>
+          <td>CISO</td>
+          <td>Annual</td>
+        </tr>
+        <tr>
+          <td class="tc-id">RR-04</td>
+          <td><strong>Zero-day vulnerability in cloud infrastructure</strong> — an unpatched vulnerability in AWS/Azure infrastructure or managed services could expose data before a patch is available</td>
+          <td>Zero-days in cloud providers cannot be pre-mitigated. CMK encryption provides defense in depth (cloud provider cannot decrypt data), but a zero-day in the IAM or key management layer could potentially bypass this.</td>
+          <td>AWS/Azure security bulletins monitored daily; incident response plan covers cloud provider zero-day scenario; multi-cloud architecture considered for Phase 3</td>
+          <td>Head of Engineering + CISO</td>
+          <td>Annual</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer class="doc-footer">
+  <div>
+    <div class="ft-brand">Alt<span>Score</span> · Threat Model</div>
+    <div style="margin-top:6px;">TM-ALTSCORE-001 · v1.0 · May 2026</div>
+  </div>
+  <div style="text-align:right;">
+    <div>HIGHLY CONFIDENTIAL — SECURITY TEAM + LEADERSHIP ONLY</div>
+    <div style="margin-top:4px;">Companion to PRD-ALTSCORE-001</div>
+  </div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('.section');
+  const dots = document.querySelectorAll('.nav-dot');
+  const sectionIds = ['scope','assets','erp','ingestion','ml','api','insider','supply','summary','residual'];
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = sectionIds.indexOf(entry.target.id);
+        if (idx >= 0) { dots.forEach(d => d.classList.remove('active')); dots[idx + 1]?.classList.add('active'); }
+      }
+    });
+  }, { threshold: 0.1 });
+  sections.forEach(s => observer.observe(s));
+  const coverObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) { dots.forEach(d => d.classList.remove('active')); dots[0].classList.add('active'); }
+  }, { threshold: 0.3 });
+  coverObserver.observe(document.getElementById('cover'));
+  window.scrollTo = function(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+</script>
+</body>
+</html>

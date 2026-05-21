@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — API Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0f0e0c;--paper:#f5f0e8;--cream:#ede7d9;--accent:#c94b1f;--accent2:#2b5e3f;--accent3:#1a3a5c;--muted:#7a7065;--rule:#ccc4b4;--tag-bg:#e8e0cf;--gold:#c4890d;--purple:#5a2d82;--api:#0d4a3a;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.75;}
+  .cover{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+  .cover-left{background:var(--ink);padding:80px 60px;display:flex;flex-direction:column;justify-content:space-between;position:relative;}
+  .cover-left::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.04) 39px,rgba(255,255,255,.04) 40px);pointer-events:none;}
+  .cover-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--api);text-transform:uppercase;}
+  .cover-title{font-family:'Syne',sans-serif;font-size:clamp(40px,5.5vw,72px);font-weight:800;line-height:.95;color:var(--paper);letter-spacing:-.02em;}
+  .cover-title span{color:var(--api);}
+  .cover-sub{font-family:'DM Mono',monospace;font-size:13px;color:rgba(245,240,232,.5);line-height:1.8;border-top:1px solid rgba(255,255,255,.1);padding-top:24px;}
+  .cover-right{background:var(--cream);padding:80px 60px;display:flex;flex-direction:column;justify-content:center;gap:28px;border-left:4px solid var(--api);}
+  .cover-stat{border-bottom:1px solid var(--rule);padding-bottom:22px;}
+  .cover-stat:last-child{border-bottom:none;padding-bottom:0;}
+  .stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--api);line-height:1;display:block;}
+  .stat-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-top:4px;display:block;}
+  .stat-desc{font-size:14px;color:var(--ink);margin-top:6px;font-style:italic;}
+  .doc{max-width:1100px;margin:0 auto;padding:80px 40px;}
+  .section{margin-bottom:80px;opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s;}
+  .section.visible{opacity:1;transform:none;}
+  .section-header{display:flex;align-items:baseline;gap:16px;margin-bottom:40px;border-bottom:2px solid var(--ink);padding-bottom:16px;}
+  .section-num{font-family:'DM Mono',monospace;font-size:12px;color:var(--api);letter-spacing:.1em;flex-shrink:0;}
+  h2{font-family:'Syne',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.02em;}
+  h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;margin-bottom:12px;margin-top:32px;}
+  h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:8px;}
+  p{margin-bottom:16px;color:#2a2620;}
+  .callout{background:var(--ink);color:var(--paper);padding:32px 40px;margin:32px 0;border-left:6px solid var(--api);}
+  .callout p{font-size:17px;font-style:italic;line-height:1.6;color:var(--paper);margin:0;}
+  .callout .attr{font-family:'DM Mono',monospace;font-size:11px;color:var(--api);letter-spacing:.15em;margin-top:12px;display:block;}
+  .doc-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:13px;}
+  .doc-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;text-align:left;padding:10px 14px;background:var(--ink);color:var(--paper);}
+  .doc-table td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5;}
+  .doc-table tr:nth-child(even) td{background:var(--cream);}
+
+  /* endpoint block */
+  .endpoint{border:1px solid var(--rule);margin-bottom:40px;}
+  .ep-header{display:flex;align-items:stretch;gap:0;}
+  .ep-method{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;padding:14px 20px;display:flex;align-items:center;min-width:80px;justify-content:center;letter-spacing:.05em;}
+  .ep-method.get{background:#e0f0e8;color:var(--accent2);}
+  .ep-method.post{background:#e0e8f0;color:var(--accent3);}
+  .ep-method.put{background:#fdf0d8;color:var(--gold);}
+  .ep-method.delete{background:#fde8e0;color:var(--accent);}
+  .ep-path{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;padding:14px 20px;flex:1;display:flex;align-items:center;background:var(--cream);border-left:1px solid var(--rule);}
+  .ep-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:14px 16px;display:flex;align-items:center;background:var(--cream);border-left:1px solid var(--rule);color:var(--muted);}
+  .ep-body{padding:24px;background:var(--paper);}
+  .ep-desc{font-size:14px;color:#2a2620;margin-bottom:20px;line-height:1.6;}
+  .ep-section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--api);margin-bottom:8px;margin-top:20px;display:block;}
+  .ep-section-label:first-child{margin-top:0;}
+
+  /* code blocks */
+  .code-block{background:#1e1c18;color:#e8d8b0;padding:20px 24px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;overflow-x:auto;margin:12px 0;}
+  .code-block .k{color:#7ec8e3;}
+  .code-block .s{color:#98c379;}
+  .code-block .n{color:#e8d8b0;}
+  .code-block .c{color:#5c6370;font-style:italic;}
+  .code-block .num{color:#d19a66;}
+
+  /* badge */
+  .badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:0;}
+  .badge.required{background:#fde8e0;color:var(--accent);}
+  .badge.optional{background:var(--tag-bg);color:var(--muted);}
+  .badge.deprecated{background:#f0f0f0;color:#aaa;text-decoration:line-through;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:32px 0;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin:32px 0;}
+  .card{background:var(--cream);border:1px solid var(--rule);padding:24px;}
+  .card.api-top{border-top:4px solid var(--api);}
+  .card.green-top{border-top:4px solid var(--accent2);}
+  .card.red-top{border-top:4px solid var(--accent);}
+  .card.gold-top{border-top:4px solid var(--gold);}
+  .card-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;}
+  .card h3{font-size:15px;margin-bottom:8px;margin-top:0;}
+  .card p{font-size:13px;color:#4a4540;margin:0;line-height:1.6;}
+  .card ul{list-style:none;padding:0;margin:8px 0 0 0;}
+  .card ul li{font-size:12px;padding:3px 0 3px 14px;position:relative;color:#3a352d;}
+  .card ul li::before{content:'·';position:absolute;left:0;color:var(--api);font-weight:bold;}
+
+  code{font-family:'DM Mono',monospace;font-size:12px;background:var(--tag-bg);padding:2px 6px;color:var(--api);}
+  .divider{border:none;border-top:1px solid var(--rule);margin:64px 0;}
+  .sidenav{position:fixed;left:24px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100;}
+  .nav-dot{width:8px;height:8px;background:var(--rule);cursor:pointer;transition:all .3s;position:relative;}
+  .nav-dot:hover,.nav-dot.active{background:var(--api);transform:scale(1.5);}
+  .nav-dot::after{content:attr(data-label);position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);white-space:nowrap;opacity:0;transition:opacity .2s;background:var(--paper);padding:2px 8px;border:1px solid var(--rule);}
+  .nav-dot:hover::after{opacity:1;}
+  .doc-footer{background:var(--ink);color:rgba(245,240,232,.5);padding:40px;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;}
+  .ft-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--paper);}
+  .ft-brand span{color:var(--api);}
+  @media(max-width:768px){.cover{grid-template-columns:1fr;}.doc{padding:40px 20px;}.two-col,.three-col{grid-template-columns:1fr;}.sidenav{display:none;}.ep-header{flex-wrap:wrap;}}
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+<nav class="sidenav">
+  <div class="nav-dot" data-label="Overview" data-target="s01"></div>
+  <div class="nav-dot" data-label="Auth" data-target="s02"></div>
+  <div class="nav-dot" data-label="Score API" data-target="s03"></div>
+  <div class="nav-dot" data-label="Consent API" data-target="s04"></div>
+  <div class="nav-dot" data-label="Ingestion API" data-target="s05"></div>
+  <div class="nav-dot" data-label="Grievance API" data-target="s06"></div>
+  <div class="nav-dot" data-label="Admin API" data-target="s07"></div>
+  <div class="nav-dot" data-label="Error Codes" data-target="s08"></div>
+  <div class="nav-dot" data-label="Rate Limits" data-target="s09"></div>
+  <div class="nav-dot" data-label="Versioning" data-target="s10"></div>
+</nav>
+
+<div class="cover">
+  <div class="cover-left">
+    <div>
+      <div class="cover-label">AltScore Platform · API Reference</div>
+      <div style="height:40px"></div>
+      <div class="cover-title">API<br><span>Specification</span></div>
+    </div>
+    <div class="cover-sub">DOC-ID: API-ALTSCORE-001<br>Version: v1 · May 2026<br>Base URL: https://api.altscore.in/v1<br>Classification: CONFIDENTIAL — NBFC Partners &amp; Engineering</div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat"><span class="stat-num">5</span><span class="stat-label">API Groups</span><span class="stat-desc">Score · Consent · Ingestion · Grievance · Admin</span></div>
+    <div class="cover-stat"><span class="stat-num">18</span><span class="stat-label">Endpoints</span><span class="stat-desc">REST, JSON, OpenAPI 3.1 schema, HTTPS only</span></div>
+    <div class="cover-stat"><span class="stat-num">JWT RS256</span><span class="stat-label">External Auth</span><span class="stat-desc">1h TTL · per-lender client secret · 100 req/min rate limit</span></div>
+    <div class="cover-stat"><span class="stat-num">TLS 1.3</span><span class="stat-label">Transport Security</span><span class="stat-desc">All endpoints HTTPS only · HSTS enforced · no HTTP fallback</span></div>
+  </div>
+</div>
+
+<div class="doc">
+
+  <!-- 01 Overview -->
+  <div class="section" id="s01">
+    <div class="section-header"><span class="section-num">01 —</span><h2>API Overview</h2></div>
+    <div class="callout"><p>The AltScore API is a REST API served over HTTPS/TLS 1.3. All request and response bodies are JSON. All endpoints require authentication. No endpoint is publicly accessible without a valid credential.</p><span class="attr">API-ALTSCORE-001 · Base URL: https://api.altscore.in/v1</span></div>
+    <div class="three-col">
+      <div class="card api-top"><span class="card-tag">Score API</span><h3>NBFC Partners</h3><p>Retrieve AltScore credit scores, risk bands, PD estimates, and SHAP reason codes for individual retailers.</p></div>
+      <div class="card green-top"><span class="card-tag">Consent API</span><h3>Internal + WhatsApp</h3><p>Manage retailer consent lifecycle. Grant, revoke, check, and export consent records. Called internally by all services.</p></div>
+      <div class="card gold-top"><span class="card-tag">Ingestion API</span><h3>Distributor Connectors</h3><p>ERP connector SDK posts invoice and payment batches. Authenticated via mTLS + API key. HMAC-signed payloads.</p></div>
+    </div>
+    <div class="two-col">
+      <div class="card red-top"><span class="card-tag">Grievance API</span><h3>Retailers + Lenders</h3><p>File score grievances, check status, request explanation. Human review within 24h acknowledgement SLA.</p></div>
+      <div class="card api-top"><span class="card-tag">Admin API</span><h3>Internal Only</h3><p>Distributor onboarding, model promotion, compliance reports, RBAC management. FIDO2 authenticated.</p></div>
+    </div>
+    <h3>Common Headers</h3>
+    <table class="doc-table">
+      <thead><tr><th>Header</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>Authorization</code></td><td><span class="badge required">required</span></td><td><code>Bearer &lt;jwt_token&gt;</code> for external APIs. See Section 02.</td></tr>
+        <tr><td><code>X-Client-ID</code></td><td><span class="badge required">required</span></td><td>Lender or distributor identifier. Must match JWT subject claim.</td></tr>
+        <tr><td><code>X-Request-ID</code></td><td><span class="badge optional">optional</span></td><td>Client-supplied idempotency key (UUID). Returned in response for tracing.</td></tr>
+        <tr><td><code>Content-Type</code></td><td><span class="badge required">required</span> (POST/PUT)</td><td>Must be <code>application/json</code>.</td></tr>
+        <tr><td><code>Accept-Language</code></td><td><span class="badge optional">optional</span></td><td><code>en</code> or <code>hi</code>. Reason codes returned in specified language. Default: <code>en</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 02 Auth -->
+  <div class="section" id="s02">
+    <div class="section-header"><span class="section-num">02 —</span><h2>Authentication &amp; Authorization</h2></div>
+    <h3>NBFC Partner Authentication (Score API)</h3>
+    <table class="doc-table">
+      <thead><tr><th>Property</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Token type</td><td>JWT (JSON Web Token)</td></tr>
+        <tr><td>Signing algorithm</td><td>RS256 (RSA 2048-bit + SHA-256)</td></tr>
+        <tr><td>Token TTL</td><td>1 hour. Refresh before expiry.</td></tr>
+        <tr><td>Required claims</td><td><code>sub</code> (lender_id), <code>iss</code> (altscore.in), <code>exp</code>, <code>iat</code>, <code>jti</code> (unique per token)</td></tr>
+        <tr><td>Additional header</td><td><code>X-Client-ID: &lt;lender_id&gt;</code> must match <code>sub</code> claim</td></tr>
+        <tr><td>Token endpoint</td><td><code>POST /v1/auth/token</code> — body: <code>{"client_id":"…","client_secret":"…"}</code></td></tr>
+        <tr><td>Key rotation</td><td>Signing keys rotated every 6 months. 2-week overlap period. JWKS endpoint: <code>GET /.well-known/jwks.json</code></td></tr>
+      </tbody>
+    </table>
+    <h3>ERP Connector Authentication (Ingestion API)</h3>
+    <p>ERP connectors use <strong>mTLS + API key</strong>. The client certificate (per distributor, 90-day rotation) handles transport-level identity. The <code>X-API-Key</code> header provides application-level identity. Payload HMAC-SHA256 signature must be included in <code>X-Payload-Signature</code> header.</p>
+    <h3>Admin API Authentication</h3>
+    <p>Admin API requires FIDO2/WebAuthn hardware key + SAML 2.0 SSO token. No username/password authentication. Session tokens are short-lived (15 minutes) and non-renewable; re-authentication required per session.</p>
+    <h3>Authorization Model</h3>
+    <p>All APIs enforce consent-scoped authorization on top of authentication. An authenticated NBFC partner may only retrieve scores for retailers who have explicitly named that lender in their active consent record. The <code>403 Forbidden</code> response does not distinguish between "retailer not found" and "retailer exists but consent not granted" — both return 403 to prevent information leakage.</p>
+  </div>
+
+  <!-- 03 Score API -->
+  <div class="section" id="s03">
+    <div class="section-header"><span class="section-num">03 —</span><h2>Score API</h2></div>
+    <p>The Score API is the primary interface for NBFC lending partners. All endpoints require JWT RS256 authentication. Rate limit: <strong>100 requests/minute per lender</strong>.</p>
+
+    <!-- POST /score -->
+    <div class="endpoint">
+      <div class="ep-header">
+        <div class="ep-method post">POST</div>
+        <div class="ep-path">/v1/score</div>
+        <div class="ep-tag">Score API · NBFC Auth</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-desc">Retrieve the AltScore credit assessment for a single retailer. Returns score, risk band, probability of default, recommended credit limit, SHAP-derived reason codes, and data freshness. Consent is verified on every call.</div>
+        <span class="ep-section-label">Request Body</span>
+        <div class="code-block"><span class="k">{</span><br>
+&nbsp;&nbsp;<span class="s">"retailer_id"</span><span class="n">: </span><span class="s">"ret_7f3a92c1d4e8b051"</span><span class="n">,</span>  <span class="c">// required — AltScore UUID (not GST)</span><br>
+&nbsp;&nbsp;<span class="s">"purpose"</span><span class="n">: </span><span class="s">"working_capital_loan"</span><span class="n">,</span>  <span class="c">// required — must match consent purpose</span><br>
+&nbsp;&nbsp;<span class="s">"requested_limit_inr"</span><span class="n">: </span><span class="num">150000</span>  <span class="c">// optional — lender's proposed limit for override check</span><br>
+<span class="k">}</span></div>
+        <span class="ep-section-label">Response 200 — Score Available</span>
+        <div class="code-block"><span class="k">{</span><br>
+&nbsp;&nbsp;<span class="s">"retailer_id"</span><span class="n">: </span><span class="s">"ret_7f3a92c1d4e8b051"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"altscore"</span><span class="n">: </span><span class="num">724</span><span class="n">,</span>  <span class="c">// 300–900</span><br>
+&nbsp;&nbsp;<span class="s">"risk_band"</span><span class="n">: </span><span class="s">"B"</span><span class="n">,</span>  <span class="c">// "A" | "B" | "C" | "D"</span><br>
+&nbsp;&nbsp;<span class="s">"probability_of_default"</span><span class="n">: </span><span class="num">0.082</span><span class="n">,</span>  <span class="c">// 0.0–1.0</span><br>
+&nbsp;&nbsp;<span class="s">"recommended_limit_inr"</span><span class="n">: </span><span class="num">175000</span><span class="n">,</span>  <span class="c">// hard-capped at 30% of 6-month GMV</span><br>
+&nbsp;&nbsp;<span class="s">"reason_codes"</span><span class="n">: [</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span><span class="s">"code"</span><span class="n">:</span><span class="s">"LOW_PAYMENT_DELAY"</span><span class="n">,</span><span class="s">"direction"</span><span class="n">:</span><span class="s">"positive"</span><span class="n">,</span><span class="s">"rank"</span><span class="n">:</span><span class="num">1</span><span class="n">,</span><span class="s">"label_en"</span><span class="n">:</span><span class="s">"Timely payments"</span><span class="n">,</span><span class="s">"label_hi"</span><span class="n">:</span><span class="s">"समय पर भुगतान"</span><span class="k">}</span><span class="n">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span><span class="s">"code"</span><span class="n">:</span><span class="s">"CONSISTENT_ORDER_FREQ"</span><span class="n">,</span><span class="s">"direction"</span><span class="n">:</span><span class="s">"positive"</span><span class="n">,</span><span class="s">"rank"</span><span class="n">:</span><span class="num">2</span><span class="n">, </span><span class="s">"label_en"</span><span class="n">:</span><span class="s">"Regular order pattern"</span><span class="n">,</span><span class="s">"label_hi"</span><span class="n">:</span><span class="s">"नियमित ऑर्डर"</span><span class="k">}</span><span class="n">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span><span class="s">"code"</span><span class="n">:</span><span class="s">"GROWING_BASKET_SIZE"</span><span class="n">,</span><span class="s">"direction"</span><span class="n">:</span><span class="s">"positive"</span><span class="n">,</span><span class="s">"rank"</span><span class="n">:</span><span class="num">3</span><span class="n">,</span><span class="s">"label_en"</span><span class="n">:</span><span class="s">"Growing business"</span><span class="n">,</span><span class="s">"label_hi"</span><span class="n">:</span><span class="s">"बढ़ता कारोबार"</span><span class="k">}</span><span class="n">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span><span class="s">"code"</span><span class="n">:</span><span class="s">"HIGH_RETURN_RATE"</span><span class="n">,</span><span class="s">"direction"</span><span class="n">:</span><span class="s">"negative"</span><span class="n">,</span><span class="s">"rank"</span><span class="n">:</span><span class="num">4</span><span class="n">,</span><span class="s">"label_en"</span><span class="n">:</span><span class="s">"High return rate"</span><span class="n">,</span><span class="s">"label_hi"</span><span class="n">:</span><span class="s">"उच्च वापसी दर"</span><span class="k">}</span><span class="n">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span><span class="s">"code"</span><span class="n">:</span><span class="s">"ORDER_GAP_DETECTED"</span><span class="n">,</span><span class="s">"direction"</span><span class="n">:</span><span class="s">"negative"</span><span class="n">,</span><span class="s">"rank"</span><span class="n">:</span><span class="num">5</span><span class="n">,</span><span class="s">"label_en"</span><span class="n">:</span><span class="s">"Order gap detected"</span><span class="n">,</span><span class="s">"label_hi"</span><span class="n">:</span><span class="s">"ऑर्डर में अंतराल"</span><span class="k">}</span><br>
+&nbsp;&nbsp;<span class="n">],</span>  <span class="c">// always ≥5 codes (≥3 positive, ≥2 negative)</span><br>
+&nbsp;&nbsp;<span class="s">"data_freshness_days"</span><span class="n">: </span><span class="num">3</span><span class="n">,</span>  <span class="c">// days since last ERP sync</span><br>
+&nbsp;&nbsp;<span class="s">"low_confidence"</span><span class="n">: </span><span class="k">false</span><span class="n">,</span>  <span class="c">// true if completeness 50–69% or freshness >14 days</span><br>
+&nbsp;&nbsp;<span class="s">"score_version"</span><span class="n">: </span><span class="s">"altscore-xgb-v1-prod"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"scored_at"</span><span class="n">: </span><span class="s">"2026-05-19T22:14:07Z"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"request_id"</span><span class="n">: </span><span class="s">"req_a3f8c2d1"</span>  <span class="c">// echoes X-Request-ID</span><br>
+<span class="k">}</span></div>
+        <span class="ep-section-label">Error Responses</span>
+        <table class="doc-table" style="margin-top:8px">
+          <thead><tr><th>Status</th><th>Error Code</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>400</td><td><code>INVALID_REQUEST</code></td><td>Missing or invalid retailer_id / purpose field</td></tr>
+            <tr><td>401</td><td><code>TOKEN_EXPIRED</code> / <code>TOKEN_INVALID</code></td><td>JWT expired or signature invalid</td></tr>
+            <tr><td>403</td><td><code>CONSENT_NOT_GRANTED</code></td><td>Retailer has not consented to this lender (or retailer not found — intentionally ambiguous)</td></tr>
+            <tr><td>404</td><td><code>RETAILER_NOT_SCORED</code></td><td>Retailer exists and consented but no score computed yet (e.g., data too fresh)</td></tr>
+            <tr><td>422</td><td><code>DATA_INSUFFICIENT</code></td><td>Completeness &lt;50% — scoring blocked</td></tr>
+            <tr><td>429</td><td><code>RATE_LIMIT_EXCEEDED</code></td><td>100 req/min exceeded. Headers: <code>Retry-After</code>, <code>X-RateLimit-Reset</code></td></tr>
+            <tr><td>503</td><td><code>SERVICE_UNAVAILABLE</code></td><td>Consent Service unreachable (fail-safe block)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GET /score/:id/history -->
+    <div class="endpoint">
+      <div class="ep-header">
+        <div class="ep-method get">GET</div>
+        <div class="ep-path">/v1/score/{retailer_id}/history</div>
+        <div class="ep-tag">Score API · NBFC Auth</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-desc">Retrieve the last 12 AltScore values for a retailer (monthly snapshots). Useful for trend analysis. Subject to same consent check as <code>POST /v1/score</code>.</div>
+        <span class="ep-section-label">Query Parameters</span>
+        <table class="doc-table" style="margin-top:8px"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>months</code></td><td>integer</td><td>6</td><td>Number of monthly snapshots to return (max 12)</td></tr>
+          </tbody>
+        </table>
+        <span class="ep-section-label">Response 200</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"retailer_id"</span><span class="n">:</span><span class="s">"ret_7f3a92c1d4e8b051"</span><span class="n">,</span><span class="s">"history"</span><span class="n">:[</span><br>
+&nbsp;&nbsp;<span class="k">{</span><span class="s">"month"</span><span class="n">:</span><span class="s">"2026-05"</span><span class="n">,</span><span class="s">"altscore"</span><span class="n">:</span><span class="num">724</span><span class="n">,</span><span class="s">"risk_band"</span><span class="n">:</span><span class="s">"B"</span><span class="n">,</span><span class="s">"score_version"</span><span class="n">:</span><span class="s">"altscore-xgb-v1-prod"</span><span class="k">}</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="k">{</span><span class="s">"month"</span><span class="n">:</span><span class="s">"2026-04"</span><span class="n">,</span><span class="s">"altscore"</span><span class="n">:</span><span class="num">708</span><span class="n">,</span><span class="s">"risk_band"</span><span class="n">:</span><span class="s">"B"</span><span class="n">,</span><span class="s">"score_version"</span><span class="n">:</span><span class="s">"altscore-xgb-v1-prod"</span><span class="k">}</span><br>
+<span class="n">]}</span></div>
+      </div>
+    </div>
+
+    <!-- GET /retailers/lookup -->
+    <div class="endpoint">
+      <div class="ep-header">
+        <div class="ep-method get">GET</div>
+        <div class="ep-path">/v1/retailers/lookup</div>
+        <div class="ep-tag">Score API · NBFC Auth</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-desc">Resolve a retailer's AltScore UUID from their GST number (if consented to this lender). Returns the opaque <code>retailer_id</code> required for <code>POST /v1/score</code>. GST is not stored post-lookup — only the UUID is returned.</div>
+        <span class="ep-section-label">Query Parameters</span>
+        <table class="doc-table" style="margin-top:8px"><thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>gst</code></td><td><span class="badge required">required</span></td><td>15-character GSTIN of the retailer</td></tr>
+          </tbody>
+        </table>
+        <span class="ep-section-label">Response 200</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"retailer_id"</span><span class="n">:</span><span class="s">"ret_7f3a92c1d4e8b051"</span><span class="n">,</span><span class="s">"consent_active"</span><span class="n">:</span><span class="k">true</span><span class="k">}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 Consent API -->
+  <div class="section" id="s04">
+    <div class="section-header"><span class="section-num">04 —</span><h2>Consent API</h2></div>
+    <p>Internal-use API for consent lifecycle management. Called by other services (Scoring Engine, Score API) and by the WhatsApp Webhook Handler. NBFC partners do not call this API directly.</p>
+
+    <div class="endpoint">
+      <div class="ep-header"><div class="ep-method post">POST</div><div class="ep-path">/v1/consent/grant</div><div class="ep-tag">Consent · Webhook Handler Auth</div></div>
+      <div class="ep-body">
+        <div class="ep-desc">Record an affirmative consent grant from a retailer. Creates a cryptographically signed (ECDSA P-256) consent record. Emits <code>consent.granted</code> Kafka event.</div>
+        <span class="ep-section-label">Request Body</span>
+        <div class="code-block"><span class="k">{</span><br>
+&nbsp;&nbsp;<span class="s">"retailer_phone_hash"</span><span class="n">:</span><span class="s">"sha256_of_phone"</span><span class="n">,</span>  <span class="c">// hashed phone — never raw</span><br>
+&nbsp;&nbsp;<span class="s">"distributor_id"</span><span class="n">:</span><span class="s">"dist_c4f9"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"lender_scope"</span><span class="n">:[</span><span class="s">"lender_shriram"</span><span class="n">,</span><span class="s">"lender_ugro"</span><span class="n">],</span>  <span class="c">// specific NBFCs named</span><br>
+&nbsp;&nbsp;<span class="s">"purpose"</span><span class="n">:</span><span class="s">"working_capital_loan"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"consent_channel"</span><span class="n">:</span><span class="s">"whatsapp"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"wa_message_id"</span><span class="n">:</span><span class="s">"wamid.xxx"</span>  <span class="c">// WhatsApp message ID for audit</span><br>
+<span class="k">}</span></div>
+        <span class="ep-section-label">Response 201</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"consent_id"</span><span class="n">:</span><span class="s">"cns_8a2f"</span><span class="n">,</span><span class="s">"retailer_id"</span><span class="n">:</span><span class="s">"ret_7f3a"</span><span class="n">,</span><span class="s">"signed_at"</span><span class="n">:</span><span class="s">"2026-05-20T08:00:00Z"</span><span class="n">,</span><span class="s">"signature"</span><span class="n">:</span><span class="s">"ECDSA_P256_hex"</span><span class="k">}</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header"><div class="ep-method post">POST</div><div class="ep-path">/v1/consent/revoke</div><div class="ep-tag">Consent · Retailer or Admin Auth</div></div>
+      <div class="ep-body">
+        <div class="ep-desc">Revoke a retailer's consent. Processing halt within 1 hour. Emits <code>consent.revoked</code> event which stops scoring and invalidates Score API cache. Consent record is NOT deleted (7-year audit retention).</div>
+        <span class="ep-section-label">Request Body</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"consent_id"</span><span class="n">:</span><span class="s">"cns_8a2f"</span><span class="n">,</span><span class="s">"reason"</span><span class="n">:</span><span class="s">"retailer_request"</span><span class="n">,</span><span class="s">"wa_message_id"</span><span class="n">:</span><span class="s">"wamid.yyy"</span><span class="k">}</span></div>
+        <span class="ep-section-label">Response 200</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"consent_id"</span><span class="n">:</span><span class="s">"cns_8a2f"</span><span class="n">,</span><span class="s">"status"</span><span class="n">:</span><span class="s">"revoked"</span><span class="n">,</span><span class="s">"processing_halt_by"</span><span class="n">:</span><span class="s">"2026-05-20T09:00:00Z"</span><span class="k">}</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header"><div class="ep-method get">GET</div><div class="ep-path">/v1/consent/check</div><div class="ep-tag">Consent · Internal Service Auth</div></div>
+      <div class="ep-body">
+        <div class="ep-desc">Check whether a specific retailer has active consent for a specific lender. Used by Score API Service on every request. Returns boolean only — no PII exposed.</div>
+        <span class="ep-section-label">Query Parameters</span>
+        <table class="doc-table" style="margin-top:8px"><thead><tr><th>Parameter</th><th>Required</th></tr></thead>
+          <tbody>
+            <tr><td><code>retailer_id</code></td><td><span class="badge required">required</span></td></tr>
+            <tr><td><code>lender_id</code></td><td><span class="badge required">required</span></td></tr>
+          </tbody>
+        </table>
+        <span class="ep-section-label">Response 200</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"consented"</span><span class="n">:</span><span class="k">true</span><span class="n">,</span><span class="s">"consent_id"</span><span class="n">:</span><span class="s">"cns_8a2f"</span><span class="n">,</span><span class="s">"expires_at"</span><span class="n">:</span><span class="s">"2027-05-20T00:00:00Z"</span><span class="k">}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 Ingestion API -->
+  <div class="section" id="s05">
+    <div class="section-header"><span class="section-num">05 —</span><h2>ERP Ingestion API</h2></div>
+    <p>Used exclusively by the ERP Connector SDK deployed at distributor sites. Requires mTLS client certificate + API key + HMAC payload signature. Rate limit: 10 batches/hour per distributor.</p>
+
+    <div class="endpoint">
+      <div class="ep-header"><div class="ep-method post">POST</div><div class="ep-path">/v1/ingest/batch</div><div class="ep-tag">Ingestion · mTLS + API Key</div></div>
+      <div class="ep-body">
+        <div class="ep-desc">Submit a batch of ERP invoice and payment records. Records are validated, deduplicated, and written to Bronze layer. Malformed records are quarantined but do not fail the entire batch.</div>
+        <span class="ep-section-label">Request Headers (additional)</span>
+        <table class="doc-table" style="margin-top:8px"><thead><tr><th>Header</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>X-API-Key</code></td><td>Distributor API key (32-byte hex, rotated annually)</td></tr>
+            <tr><td><code>X-Payload-Signature</code></td><td>HMAC-SHA256 of request body using distributor's signing secret</td></tr>
+            <tr><td><code>X-ERP-Type</code></td><td><code>tally_prime</code> | <code>sap_b1</code> | <code>csv</code></td></tr>
+            <tr><td><code>X-Batch-ID</code></td><td>Client-generated UUID for idempotency (same batch_id = no-op if already processed)</td></tr>
+          </tbody>
+        </table>
+        <span class="ep-section-label">Request Body (abbreviated)</span>
+        <div class="code-block"><span class="k">{</span><br>
+&nbsp;&nbsp;<span class="s">"distributor_id"</span><span class="n">:</span><span class="s">"dist_c4f9"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"sync_from"</span><span class="n">:</span><span class="s">"2026-05-01T00:00:00Z"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"sync_to"</span><span class="n">:</span><span class="s">"2026-05-19T23:59:59Z"</span><span class="n">,</span><br>
+&nbsp;&nbsp;<span class="s">"invoices"</span><span class="n">: [</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span><span class="s">"invoice_id"</span><span class="n">:</span><span class="s">"INV-2026-001"</span><span class="n">,</span><span class="s">"retailer_gst"</span><span class="n">:</span><span class="s">"29AABCT..."</span><span class="n">,</span><span class="s">"invoice_date"</span><span class="n">:</span><span class="s">"2026-05-03"</span><span class="n">,</span><span class="s">"amount_inr"</span><span class="n">:</span><span class="num">42000</span><span class="n">,</span><span class="s">"due_date"</span><span class="n">:</span><span class="s">"2026-05-17"</span><span class="k">}</span><br>
+&nbsp;&nbsp;<span class="n">],</span><br>
+&nbsp;&nbsp;<span class="s">"payments"</span><span class="n">: [</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span><span class="s">"payment_id"</span><span class="n">:</span><span class="s">"PAY-2026-001"</span><span class="n">,</span><span class="s">"invoice_id"</span><span class="n">:</span><span class="s">"INV-2026-001"</span><span class="n">,</span><span class="s">"paid_date"</span><span class="n">:</span><span class="s">"2026-05-15"</span><span class="n">,</span><span class="s">"amount_paid_inr"</span><span class="n">:</span><span class="num">42000</span><span class="k">}</span><br>
+&nbsp;&nbsp;<span class="n">]</span><br>
+<span class="k">}</span></div>
+        <span class="ep-section-label">Response 202 — Accepted</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"batch_id"</span><span class="n">:</span><span class="s">"bat_3c9a"</span><span class="n">,</span><span class="s">"accepted"</span><span class="n">:</span><span class="num">247</span><span class="n">,</span><span class="s">"quarantined"</span><span class="n">:</span><span class="num">3</span><span class="n">,</span><span class="s">"status"</span><span class="n">:</span><span class="s">"processing"</span><span class="k">}</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header"><div class="ep-method get">GET</div><div class="ep-path">/v1/ingest/batch/{batch_id}/status</div><div class="ep-tag">Ingestion · mTLS + API Key</div></div>
+      <div class="ep-body">
+        <div class="ep-desc">Poll the processing status of a submitted batch. Returns per-record status including quarantined record reasons for Ops review.</div>
+        <span class="ep-section-label">Response 200</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"batch_id"</span><span class="n">:</span><span class="s">"bat_3c9a"</span><span class="n">,</span><span class="s">"status"</span><span class="n">:</span><span class="s">"complete"</span><span class="n">,</span><span class="s">"written_to_bronze"</span><span class="n">:</span><span class="num">247</span><span class="n">,</span><span class="s">"quarantined"</span><span class="n">:</span><span class="num">3</span><span class="n">,</span><span class="s">"completeness_score"</span><span class="n">:</span><span class="num">84.2</span><span class="n">,</span><span class="s">"pipeline_triggered"</span><span class="n">:</span><span class="k">true</span><span class="k">}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 Grievance API -->
+  <div class="section" id="s06">
+    <div class="section-header"><span class="section-num">06 —</span><h2>Grievance API</h2></div>
+
+    <div class="endpoint">
+      <div class="ep-header"><div class="ep-method post">POST</div><div class="ep-path">/v1/grievances</div><div class="ep-tag">Grievance · NBFC or Retailer Auth</div></div>
+      <div class="ep-body">
+        <div class="ep-desc">File a grievance against a score. Triggers 24h acknowledgement SLA and 7-day resolution SLA. Emits <code>grievance.filed</code> event.</div>
+        <span class="ep-section-label">Request Body</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"retailer_id"</span><span class="n">:</span><span class="s">"ret_7f3a"</span><span class="n">,</span><span class="s">"score_id"</span><span class="n">:</span><span class="s">"scr_9b2c"</span><span class="n">,</span><span class="s">"grievance_type"</span><span class="n">:</span><span class="s">"incorrect_score"</span><span class="n">,</span><span class="s">"description"</span><span class="n">:</span><span class="s">"Payment records missing for March"</span><span class="n">,</span><span class="s">"contact_phone_hash"</span><span class="n">:</span><span class="s">"sha256_hash"</span><span class="k">}</span></div>
+        <span class="ep-section-label">Response 201</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"grievance_id"</span><span class="n">:</span><span class="s">"grv_5d1e"</span><span class="n">,</span><span class="s">"status"</span><span class="n">:</span><span class="s">"open"</span><span class="n">,</span><span class="s">"ack_by"</span><span class="n">:</span><span class="s">"2026-05-21T08:00:00Z"</span><span class="n">,</span><span class="s">"resolution_sla"</span><span class="n">:</span><span class="s">"2026-05-27T08:00:00Z"</span><span class="k">}</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header"><div class="ep-method get">GET</div><div class="ep-path">/v1/grievances/{grievance_id}</div><div class="ep-tag">Grievance · Auth</div></div>
+      <div class="ep-body">
+        <div class="ep-desc">Check the status of a grievance. Returns current status, resolution notes (if resolved), and SLA clock.</div>
+        <span class="ep-section-label">Response 200</span>
+        <div class="code-block"><span class="k">{</span><span class="s">"grievance_id"</span><span class="n">:</span><span class="s">"grv_5d1e"</span><span class="n">,</span><span class="s">"status"</span><span class="n">:</span><span class="s">"resolved"</span><span class="n">,</span><span class="s">"resolution"</span><span class="n">:</span><span class="s">"Score updated after data correction"</span><span class="n">,</span><span class="s">"resolved_at"</span><span class="n">:</span><span class="s">"2026-05-24T14:00:00Z"</span><span class="k">}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07 Admin API -->
+  <div class="section" id="s07">
+    <div class="section-header"><span class="section-num">07 —</span><h2>Admin API (Internal)</h2></div>
+    <p>Internal-only. Requires FIDO2 hardware key + SSO. All operations are audit-logged. Not accessible from outside the VPN.</p>
+    <table class="doc-table">
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span style="color:var(--accent3);font-family:'DM Mono',monospace;font-size:12px">POST</span></td><td><code>/v1/admin/distributors</code></td><td>Onboard a new distributor; issues mTLS cert + API key</td></tr>
+        <tr><td><span style="color:var(--accent3);font-family:'DM Mono',monospace;font-size:12px">POST</span></td><td><code>/v1/admin/distributors/{id}/rotate-key</code></td><td>Rotate a distributor's API key and mTLS cert</td></tr>
+        <tr><td><span style="color:var(--accent3);font-family:'DM Mono',monospace;font-size:12px">POST</span></td><td><code>/v1/admin/models/promote</code></td><td>Promote a challenger model to champion (two-person sign-off enforced)</td></tr>
+        <tr><td><span style="color:var(--accent3);font-family:'DM Mono',monospace;font-size:12px">POST</span></td><td><code>/v1/admin/models/rollback</code></td><td>Rollback to previous champion model (&lt;10 min)</td></tr>
+        <tr><td><span style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:12px">GET</span></td><td><code>/v1/admin/grievances</code></td><td>List open grievances with SLA status</td></tr>
+        <tr><td><span style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:12px">GET</span></td><td><code>/v1/admin/compliance/report</code></td><td>Generate DPDP/RBI compliance report for specified date range</td></tr>
+        <tr><td><span style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:12px">GET</span></td><td><code>/v1/admin/audit/events</code></td><td>Query audit log (DPO/Legal access; read-only)</td></tr>
+        <tr><td><span style="color:var(--gold);font-family:'DM Mono',monospace;font-size:12px">PUT</span></td><td><code>/v1/admin/retailers/{id}/erasure</code></td><td>Process Right-to-Erasure request (30-day SLA timer started)</td></tr>
+        <tr><td><span style="color:var(--gold);font-family:'DM Mono',monospace;font-size:12px">GET</span></td><td><code>/v1/admin/retailers/{id}/export</code></td><td>Data portability export for retailer (15-day SLA, JSON)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 08 Error Codes -->
+  <div class="section" id="s08">
+    <div class="section-header"><span class="section-num">08 —</span><h2>Error Code Reference</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>HTTP Status</th><th>Error Code</th><th>Description</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>400</td><td><code>INVALID_REQUEST</code></td><td>Malformed JSON or missing required field</td><td>Fix request body per schema</td></tr>
+        <tr><td>400</td><td><code>INVALID_RETAILER_ID</code></td><td>retailer_id format invalid (must be ret_ prefix + 16 hex chars)</td><td>Use /v1/retailers/lookup first</td></tr>
+        <tr><td>401</td><td><code>TOKEN_EXPIRED</code></td><td>JWT exp claim in the past</td><td>Refresh token via POST /v1/auth/token</td></tr>
+        <tr><td>401</td><td><code>TOKEN_INVALID</code></td><td>JWT signature verification failed</td><td>Re-authenticate; check signing key rotation</td></tr>
+        <tr><td>401</td><td><code>TOKEN_MISSING</code></td><td>Authorization header absent</td><td>Add Bearer token header</td></tr>
+        <tr><td>403</td><td><code>CONSENT_NOT_GRANTED</code></td><td>Retailer not consented to this lender or retailer unknown</td><td>Initiate consent flow via distributor dashboard</td></tr>
+        <tr><td>403</td><td><code>SCOPE_MISMATCH</code></td><td>Requested purpose not in consent scope</td><td>Verify purpose matches consent record</td></tr>
+        <tr><td>404</td><td><code>RETAILER_NOT_SCORED</code></td><td>No score available yet (consented but data too new)</td><td>Retry after next pipeline run (up to 24h)</td></tr>
+        <tr><td>409</td><td><code>BATCH_ALREADY_PROCESSED</code></td><td>X-Batch-ID already received and processed</td><td>Idempotent — original result stands</td></tr>
+        <tr><td>422</td><td><code>DATA_INSUFFICIENT</code></td><td>Completeness &lt;50% — scoring blocked</td><td>Distributor must supply more ERP data</td></tr>
+        <tr><td>429</td><td><code>RATE_LIMIT_EXCEEDED</code></td><td>100 req/min exceeded</td><td>Back off per Retry-After header</td></tr>
+        <tr><td>500</td><td><code>INTERNAL_ERROR</code></td><td>Unexpected server error</td><td>Retry with exponential backoff; contact support if persists</td></tr>
+        <tr><td>503</td><td><code>SERVICE_UNAVAILABLE</code></td><td>Consent Service or Scoring Engine temporarily unavailable</td><td>Retry after 30s; fail-safe block active</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 09 Rate Limits -->
+  <div class="section" id="s09">
+    <div class="section-header"><span class="section-num">09 —</span><h2>Rate Limits &amp; Quotas</h2></div>
+    <table class="doc-table">
+      <thead><tr><th>API Group</th><th>Limit</th><th>Window</th><th>Scope</th><th>Response on Breach</th></tr></thead>
+      <tbody>
+        <tr><td>Score API</td><td>100 requests</td><td>1 minute</td><td>Per lender (JWT sub)</td><td>429 + <code>Retry-After</code> + <code>X-RateLimit-Reset</code></td></tr>
+        <tr><td>Score API</td><td>5,000 requests</td><td>24 hours</td><td>Per lender</td><td>429 with daily quota context</td></tr>
+        <tr><td>Ingestion API</td><td>10 batches</td><td>1 hour</td><td>Per distributor</td><td>429</td></tr>
+        <tr><td>Ingestion API</td><td>1,000 records/batch</td><td>Per request</td><td>Per batch payload</td><td>400 BATCH_TOO_LARGE</td></tr>
+        <tr><td>Grievance API</td><td>5 filings</td><td>24 hours</td><td>Per retailer</td><td>429</td></tr>
+        <tr><td>Auth token endpoint</td><td>10 requests</td><td>1 minute</td><td>Per client_id</td><td>429 (brute-force protection)</td></tr>
+      </tbody>
+    </table>
+    <h3>Rate Limit Response Headers</h3>
+    <div class="code-block"><span class="c"># Returned on every Score API response</span><br>
+<span class="k">X-RateLimit-Limit:</span><span class="n"> 100</span><br>
+<span class="k">X-RateLimit-Remaining:</span><span class="n"> 87</span><br>
+<span class="k">X-RateLimit-Reset:</span><span class="n"> 1716220800</span>  <span class="c"># Unix timestamp when window resets</span><br>
+<span class="k">Retry-After:</span><span class="n"> 23</span>  <span class="c"># Seconds — only present on 429 response</span></div>
+  </div>
+
+  <!-- 10 Versioning -->
+  <div class="section" id="s10">
+    <div class="section-header"><span class="section-num">10 —</span><h2>API Versioning &amp; Lifecycle</h2></div>
+    <p>APIs are versioned by URL path prefix (<code>/v1/</code>). A new major version is only created when a breaking change is unavoidable. Minor and patch changes are non-breaking and applied in-place.</p>
+    <div class="two-col">
+      <div class="card api-top">
+        <span class="card-tag">Breaking Change Policy</span>
+        <h3>Requires New Major Version</h3>
+        <ul>
+          <li>Removing a field from response schema</li>
+          <li>Changing a field type (e.g., int → string)</li>
+          <li>Changing HTTP method for an endpoint</li>
+          <li>Removing an endpoint</li>
+          <li>Changing authentication mechanism</li>
+          <li>Reducing rate limits below published minimums</li>
+        </ul>
+      </div>
+      <div class="card green-top">
+        <span class="card-tag">Non-Breaking Changes</span>
+        <h3>Applied In-Place (v1)</h3>
+        <ul>
+          <li>Adding new optional response fields</li>
+          <li>Adding new optional request parameters</li>
+          <li>Adding new endpoints</li>
+          <li>Adding new error codes</li>
+          <li>Adding new reason codes to the taxonomy</li>
+          <li>Performance improvements, latency reductions</li>
+        </ul>
+      </div>
+    </div>
+    <h3>Version Lifecycle</h3>
+    <table class="doc-table">
+      <thead><tr><th>Version</th><th>Status</th><th>Support Until</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>v1</td><td><span style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:11px;font-weight:700">CURRENT</span></td><td>Minimum 24 months from GA</td><td>This document</td></tr>
+        <tr><td>v2</td><td><span style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px">PLANNED</span></td><td>TBD</td><td>RBI Account Aggregator integration; breaking changes TBD</td></tr>
+      </tbody>
+    </table>
+    <p>NBFC partners receive <strong>90 days advance notice</strong> before any breaking change deployment, via email + dashboard notification. Version sunset is announced at least <strong>6 months</strong> before the old version is decommissioned.</p>
+  </div>
+
+</div>
+
+<footer class="doc-footer">
+  <div><div class="ft-brand">Alt<span>Score</span></div><div style="margin-top:4px">API Specification · API-ALTSCORE-001 · v1 · May 2026</div></div>
+  <div style="text-align:right">CONFIDENTIAL — NBFC Partners &amp; Engineering<br>Base URL: https://api.altscore.in/v1<br>18 endpoints · 5 API groups</div>
+</footer>
+
+<script>
+  const sections=document.querySelectorAll('.section');
+  const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible');}),{threshold:0.07});
+  sections.forEach(s=>obs.observe(s));
+  const dots=document.querySelectorAll('.nav-dot');
+  dots.forEach(d=>d.addEventListener('click',()=>{const t=document.getElementById(d.dataset.target);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}));
+  const navObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){dots.forEach(d=>d.classList.remove('active'));const i=Array.from(sections).indexOf(x.target);if(i>=0&&dots[i])dots[i].classList.add('active');}}),{threshold:0.4});
+  sections.forEach(s=>navObs.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltScore — Security Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --accent: #c94b1f;
+    --accent2: #2b5e3f;
+    --accent3: #1a3a5c;
+    --muted: #7a7065;
+    --rule: #ccc4b4;
+    --tag-bg: #e8e0cf;
+    --highlight: #f2c94c;
+    --code-bg: #1e1c18;
+    --code-text: #e8d8b0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Lora', Georgia, serif; font-size: 16px; line-height: 1.75; }
+
+  .cover { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; position: relative; overflow: hidden; }
+  .cover-left { background: var(--ink); padding: 80px 60px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .cover-left::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px); pointer-events: none; }
+  .cover-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--accent3); text-transform: uppercase; }
+  .cover-title { font-family: 'Syne', sans-serif; font-size: clamp(48px, 6vw, 80px); font-weight: 800; line-height: 0.95; color: var(--paper); letter-spacing: -0.02em; }
+  .cover-title span { color: var(--accent3); }
+  .cover-sub { font-family: 'DM Mono', monospace; font-size: 13px; color: rgba(245,240,232,0.5); line-height: 1.8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; }
+  .cover-right { background: var(--cream); padding: 80px 60px; display: flex; flex-direction: column; justify-content: center; gap: 32px; border-left: 4px solid var(--accent3); }
+  .cover-stat { border-bottom: 1px solid var(--rule); padding-bottom: 24px; }
+  .cover-stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 40px; font-weight: 800; color: var(--accent3); line-height: 1; display: block; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-top: 4px; display: block; }
+  .stat-desc { font-size: 14px; color: var(--ink); margin-top: 6px; font-style: italic; }
+
+  .doc { max-width: 1100px; margin: 0 auto; padding: 80px 40px; }
+  .section { margin-bottom: 80px; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .section.visible { opacity: 1; transform: translateY(0); }
+  .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 40px; border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+  .section-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent3); letter-spacing: 0.1em; flex-shrink: 0; }
+  h2 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--ink); }
+  p { margin-bottom: 16px; color: #2a2620; }
+
+  .callout { background: var(--ink); color: var(--paper); padding: 32px 40px; margin: 32px 0; position: relative; border-left: 6px solid var(--accent3); }
+  .callout p { font-size: 18px; font-style: italic; line-height: 1.6; color: var(--paper); }
+  .callout .attr { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent3); letter-spacing: 0.15em; margin-top: 12px; display: block; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 32px 0; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; margin: 32px 0; }
+
+  .card { background: var(--cream); border: 1px solid var(--rule); padding: 28px; position: relative; }
+  .card.accent-top { border-top: 4px solid var(--accent); }
+  .card.accent-green { border-top: 4px solid var(--accent2); }
+  .card.accent-blue { border-top: 4px solid var(--accent3); }
+  .card-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
+  .card h3 { font-size: 16px; margin-bottom: 8px; }
+  .card p { font-size: 14px; line-height: 1.6; color: #4a4540; margin: 0; }
+
+  .doc-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+  .doc-table th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-align: left; padding: 12px 16px; background: var(--ink); color: var(--paper); }
+  .doc-table td { padding: 12px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; }
+  .doc-table tr:nth-child(even) td { background: var(--cream); }
+  .doc-table tr:hover td { background: #e8dfc8; }
+
+  .risk-high { color: var(--accent); font-weight: 600; }
+  .risk-med  { color: #b07a20; font-weight: 600; }
+  .risk-low  { color: var(--accent2); font-weight: 600; }
+
+  .code-block { background: var(--code-bg); color: var(--code-text); padding: 24px 28px; font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.7; margin: 24px 0; border-left: 4px solid var(--accent3); overflow-x: auto; }
+  .code-block .comment { color: #6a9a6a; }
+  .code-block .key { color: #f2c94c; }
+  .code-block .val { color: #e07b54; }
+  .code-block .str { color: #a8d4a8; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .tag { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; padding: 4px 12px; background: var(--tag-bg); border: 1px solid var(--rule); color: var(--ink); }
+  .tag.blue { background: var(--accent3); color: white; border-color: var(--accent3); }
+  .tag.green { background: var(--accent2); color: white; border-color: var(--accent2); }
+  .tag.red { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .sec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 32px 0; }
+  .sec-card { border: 1px solid var(--rule); padding: 24px; background: var(--cream); border-left: 4px solid var(--accent3); }
+  .sec-card.green { border-left-color: var(--accent2); }
+  .sec-card.red { border-left-color: var(--accent); }
+  .sec-card.gold { border-left-color: #c4890d; }
+  .sec-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .sec-card ul { list-style: none; padding: 0; margin: 0; }
+  .sec-card ul li { font-size: 13px; padding: 3px 0 3px 16px; position: relative; color: #3a352d; line-height: 1.5; }
+  .sec-card ul li::before { content: '→'; position: absolute; left: 0; color: var(--muted); font-size: 11px; top: 5px; }
+
+  .layer-stack { margin: 32px 0; }
+  .layer { display: grid; grid-template-columns: 160px 1fr; gap: 0; border: 1px solid var(--rule); margin-bottom: -1px; }
+  .layer-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 20px; background: var(--ink); color: var(--paper); display: flex; align-items: center; }
+  .layer-label.l1 { background: #1a3a5c; }
+  .layer-label.l2 { background: #2b5e3f; }
+  .layer-label.l3 { background: #7a4a1a; }
+  .layer-label.l4 { background: #5a1a2a; }
+  .layer-content { padding: 16px 20px; background: var(--cream); font-size: 13px; color: #2a2620; }
+
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 64px 0; }
+  .sidenav { position: fixed; left: 24px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+  .nav-dot { width: 8px; height: 8px; background: var(--rule); cursor: pointer; transition: all 0.3s; position: relative; }
+  .nav-dot:hover, .nav-dot.active { background: var(--accent3); transform: scale(1.5); }
+  .nav-dot::after { content: attr(data-label); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); white-space: nowrap; opacity: 0; transition: opacity 0.2s; background: var(--paper); padding: 2px 8px; border: 1px solid var(--rule); }
+  .nav-dot:hover::after { opacity: 1; }
+
+  .doc-footer { background: var(--ink); color: rgba(245,240,232,0.5); padding: 40px; display: flex; justify-content: space-between; align-items: center; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .doc-footer .ft-brand { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--paper); }
+  .doc-footer .ft-brand span { color: var(--accent3); }
+
+  @media (max-width: 768px) {
+    .cover { grid-template-columns: 1fr; }
+    .two-col, .three-col, .sec-grid { grid-template-columns: 1fr; }
+    .sidenav { display: none; }
+    .layer { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body><a href="altscore-hub.html" id="back-to-hub" style="position:fixed;bottom:32px;left:32px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;background:#0f0f0f;color:#fafaf7;text-decoration:none;padding:10px 18px;border-radius:2px;border:1px solid rgba(255,255,255,0.12);opacity:0;transition:opacity 0.4s,background 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#b5450b'" onmouseleave="this.style.background='#0f0f0f'">← Hub</a><script>window.addEventListener('scroll',function(){var b=document.getElementById('back-to-hub');if(b){b.style.opacity=window.scrollY>120?'1':'0';}});</script>
+
+<nav class="sidenav" id="sidenav">
+  <div class="nav-dot active" data-label="Cover" onclick="scrollTo('cover')"></div>
+  <div class="nav-dot" data-label="Principles" onclick="scrollTo('principles')"></div>
+  <div class="nav-dot" data-label="Auth" onclick="scrollTo('auth')"></div>
+  <div class="nav-dot" data-label="Encryption" onclick="scrollTo('encryption')"></div>
+  <div class="nav-dot" data-label="Network" onclick="scrollTo('network')"></div>
+  <div class="nav-dot" data-label="Data Access" onclick="scrollTo('access')"></div>
+  <div class="nav-dot" data-label="ERP" onclick="scrollTo('erp')"></div>
+  <div class="nav-dot" data-label="ML Security" onclick="scrollTo('ml')"></div>
+  <div class="nav-dot" data-label="Audit" onclick="scrollTo('audit')"></div>
+  <div class="nav-dot" data-label="Compliance" onclick="scrollTo('compliance')"></div>
+  <div class="nav-dot" data-label="Incident" onclick="scrollTo('incident')"></div>
+</nav>
+
+<!-- COVER -->
+<div class="cover" id="cover">
+  <div class="cover-left">
+    <div><div class="cover-label">Security Architecture — SAR-ALTSCORE-001</div></div>
+    <div>
+      <div class="cover-title">Security<br><span>Architecture</span></div>
+      <div style="height:24px"></div>
+      <div style="font-family:'Lora',serif; font-size:18px; color:rgba(245,240,232,0.7); font-style:italic; line-height:1.5;">
+        Security constraints, controls, and design principles for the AltScore alternative credit intelligence platform.
+      </div>
+    </div>
+    <div class="cover-sub">
+      <div>DOCUMENT / SAR-ALTSCORE-001</div>
+      <div>STATUS / DRAFT FOR REVIEW</div>
+      <div>VERSION / 1.0 — MAY 2026</div>
+      <div style="margin-top:12px; color:rgba(245,240,232,0.3);">Companion to PRD-ALTSCORE-001 · Confidential</div>
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-stat">
+      <span class="stat-num">TLS 1.3</span>
+      <span class="stat-label">Minimum transport encryption</span>
+      <div class="stat-desc">All API and ERP connector traffic encrypted in transit</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">AES-256</span>
+      <span class="stat-label">Data-at-rest encryption standard</span>
+      <div class="stat-desc">Applied to all data lake tiers: Bronze, Silver, Gold</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">Zero PII</span>
+      <span class="stat-label">In the ML scoring pipeline</span>
+      <div class="stat-desc">Retailer identifiers pseudonymized before feature computation</div>
+    </div>
+    <div class="cover-stat">
+      <span class="stat-num">SOC 2</span>
+      <span class="stat-label">Type II target — Month 12</span>
+      <div class="stat-desc">Trust Services Criteria: Security, Availability, Confidentiality</div>
+    </div>
+  </div>
+</div>
+
+<main class="doc">
+
+  <!-- 01 PRINCIPLES -->
+  <div class="section" id="principles">
+    <div class="section-header">
+      <span class="section-num">01 —</span>
+      <h2>Security Design Principles</h2>
+    </div>
+    <p>AltScore processes sensitive commercial transaction data belonging to distributors and retailers. A breach or misuse does not just harm a company — it erodes the trust of the very small businesses the platform exists to serve. Security is therefore a first-class product constraint, not an afterthought.</p>
+
+    <div class="callout">
+      <p>The security model is built around one foundational assumption: every component can be compromised. Defense is layered so that the compromise of any single layer does not result in a material breach. No single key, credential, or service is a single point of failure.</p>
+      <span class="attr">SECURITY DESIGN PRINCIPLE — ALTSCORE</span>
+    </div>
+
+    <div class="three-col">
+      <div class="card accent-blue">
+        <span class="card-tag">Principle 01</span>
+        <h3>Least Privilege</h3>
+        <p>Every service, user, and API consumer receives the minimum access required for their function. No shared admin credentials. Role boundaries enforced at infrastructure level, not application level.</p>
+      </div>
+      <div class="card accent-green">
+        <span class="card-tag">Principle 02</span>
+        <h3>Defense in Depth</h3>
+        <p>Security controls applied at every layer — network, application, data, and identity. Compromise of one layer does not cascade. Layers include: network perimeter, WAF, application auth, field-level encryption, audit logging.</p>
+      </div>
+      <div class="card accent-top">
+        <span class="card-tag">Principle 03</span>
+        <h3>Data Minimization</h3>
+        <p>Only the data necessary to compute credit features is ingested. PII is pseudonymized before entering the feature pipeline. Raw ERP data never enters the ML scoring layer.</p>
+      </div>
+      <div class="card accent-blue">
+        <span class="card-tag">Principle 04</span>
+        <h3>Immutability of Raw Data</h3>
+        <p>Bronze-layer raw data is append-only and immutable. Audit lineage requires the ability to reconstruct any score from source. No destructive writes permitted in the raw storage tier.</p>
+      </div>
+      <div class="card accent-green">
+        <span class="card-tag">Principle 05</span>
+        <h3>Explicit Consent as a Security Control</h3>
+        <p>Consent records are cryptographically signed and stored immutably. Processing any retailer's data without a valid consent record is a system-level block, not a policy aspiration.</p>
+      </div>
+      <div class="card accent-top">
+        <span class="card-tag">Principle 06</span>
+        <h3>Assume Breach</h3>
+        <p>Detection and containment capabilities are designed for the scenario where an attacker has already gained some foothold. Segment everything. Alert on lateral movement. Mean Time to Detect (MTTD) is a primary operational metric.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 02 AUTH -->
+  <div class="section" id="auth">
+    <div class="section-header">
+      <span class="section-num">02 —</span>
+      <h2>Authentication &amp; Authorization</h2>
+    </div>
+
+    <h3>Identity Tiers</h3>
+    <table class="doc-table">
+      <thead>
+        <tr><th>Actor</th><th>Auth Mechanism</th><th>MFA Required</th><th>Session / Token TTL</th><th>Access Scope</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>NBFC Lender (API)</strong></td>
+          <td>Signed JWT bearer token (RS256) + client secret</td>
+          <td>N/A (machine-to-machine)</td>
+          <td>Access token: 1 hour; refresh: 24 hours</td>
+          <td>Score API read; own portfolio data only</td>
+        </tr>
+        <tr>
+          <td><strong>NBFC Credit Officer (Dashboard)</strong></td>
+          <td>SSO via SAML 2.0 / OIDC (lender's IdP)</td>
+          <td>Yes — enforced by lender IdP</td>
+          <td>Session: 8 hours; idle timeout: 30 min</td>
+          <td>Own lender portfolio; no cross-lender data</td>
+        </tr>
+        <tr>
+          <td><strong>Distributor (Portal)</strong></td>
+          <td>Email OTP + phone OTP (two-factor)</td>
+          <td>Yes — OTP is MFA</td>
+          <td>Session: 4 hours; idle timeout: 20 min</td>
+          <td>Own retailer network data only</td>
+        </tr>
+        <tr>
+          <td><strong>AltScore Internal (Admin)</strong></td>
+          <td>Hardware security key (FIDO2/WebAuthn) + SSO</td>
+          <td>Yes — phishing-resistant hardware key mandatory</td>
+          <td>Session: 4 hours; re-auth for sensitive actions</td>
+          <td>Role-gated (see RBAC below)</td>
+        </tr>
+        <tr>
+          <td><strong>ERP Connector (Service Account)</strong></td>
+          <td>Mutual TLS (mTLS) client certificate + API key</td>
+          <td>N/A (service account)</td>
+          <td>Certificate rotation: 90 days; key rotation: 30 days</td>
+          <td>Data ingestion only; write to Bronze lake; no read of other distributors</td>
+        </tr>
+        <tr>
+          <td><strong>ML Pipeline (Service Account)</strong></td>
+          <td>IAM role-based (AWS/Azure managed identity)</td>
+          <td>N/A (platform-managed)</td>
+          <td>Short-lived credentials: 1 hour TTL</td>
+          <td>Read Silver; write Gold; no raw Bronze PII access</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:32px;">RBAC Matrix — Internal Roles</h3>
+    <table class="doc-table">
+      <thead>
+        <tr><th>Internal Role</th><th>Raw ERP Data</th><th>Feature Layer</th><th>Score Store</th><th>Model Artifacts</th><th>Consent Records</th><th>Audit Logs</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Data Engineer</strong></td><td><span class="risk-high">Read (own dist. only)</span></td><td>Read/Write</td><td>No</td><td>No</td><td>No</td><td>Read</td></tr>
+        <tr><td><strong>ML Engineer</strong></td><td>No</td><td>Read</td><td>Read</td><td>Read/Write</td><td>No</td><td>Read</td></tr>
+        <tr><td><strong>Credit Risk Analyst</strong></td><td>No</td><td>Read (aggregated)</td><td>Read</td><td>Read</td><td>No</td><td>Read</td></tr>
+        <tr><td><strong>Legal / Compliance</strong></td><td>No</td><td>No</td><td>No</td><td>No</td><td>Read</td><td>Read</td></tr>
+        <tr><td><strong>Security / Audit</strong></td><td>No</td><td>No</td><td>No</td><td>No</td><td>Read</td><td>Read/Write</td></tr>
+        <tr><td><strong>Engineering Ops</strong></td><td>No</td><td>No</td><td>No</td><td>No</td><td>No</td><td>Read</td></tr>
+        <tr><td><strong>Super Admin</strong></td><td>Restricted + audit</td><td>Restricted + audit</td><td>Restricted + audit</td><td>Restricted + audit</td><td>Restricted + audit</td><td>Read/Write</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <p>Super Admin access to raw data always requires a four-eyes approval (a second admin must approve the access request) and generates an immutable audit entry. There is no unilateral admin access to raw retailer or distributor data.</p>
+      <span class="attr">ACCESS CONTROL REQUIREMENT</span>
+    </div>
+
+    <h3>API Authorization Constraints</h3>
+    <div class="sec-grid">
+      <div class="sec-card">
+        <div class="sec-title">Lender API Scoping</div>
+        <ul>
+          <li>Each lender API key is bound to a specific lender_id at issuance</li>
+          <li>Score queries return only retailers that lender has been granted access to via consent</li>
+          <li>Cross-lender data leakage is prevented at the DB query layer (row-level security), not just application logic</li>
+          <li>API keys are non-transferable and cannot be delegated</li>
+        </ul>
+      </div>
+      <div class="sec-card green">
+        <div class="sec-title">Token Validation Rules</div>
+        <ul>
+          <li>All JWTs validated for: signature (RS256), expiry (exp), issuer (iss), audience (aud)</li>
+          <li>Revocation list checked on every request — no grace period after revocation</li>
+          <li>Token claims are immutable — no server-side claim augmentation after issuance</li>
+          <li>Refresh tokens are one-time use; rotating refresh token scheme</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 03 ENCRYPTION -->
+  <div class="section" id="encryption">
+    <div class="section-header">
+      <span class="section-num">03 —</span>
+      <h2>Encryption &amp; Key Management</h2>
+    </div>
+
+    <h3>Encryption Standards by Layer</h3>
+    <div class="layer-stack">
+      <div class="layer">
+        <div class="layer-label l1">In Transit</div>
+        <div class="layer-content"><strong>TLS 1.3 minimum</strong> for all external API calls, ERP connector traffic, and dashboard access. TLS 1.2 permitted only for legacy ERP integrations with documented exception and 6-month migration plan. Certificate pinning on the ERP Connector SDK. HSTS enforced on all web properties with 1-year max-age.</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label l2">At Rest — Bronze</div>
+        <div class="layer-content"><strong>AES-256-GCM</strong> server-side encryption for all Bronze-layer objects in S3/ADLS. Customer-managed encryption keys (CMK) stored in AWS KMS / Azure Key Vault. Separate CMK per distributor — compromise of one distributor's key does not expose others. Key rotation: annually or on suspicion of compromise.</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label l2">At Rest — Silver/Gold</div>
+        <div class="layer-content"><strong>AES-256</strong> at the storage layer. Feature tables pseudonymized — retailer_id replaced with an opaque UUID mapped in a separate, restricted identity resolution store. Score Store encrypted column-by-column for fields: retailer_id, lender_id, score, PD estimate. Backups encrypted with separate backup CMK.</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label l3">Field-Level PII</div>
+        <div class="layer-content"><strong>Application-level envelope encryption</strong> for high-sensitivity fields: retailer phone number, GST number, shop address. Envelope key stored separately from data key. Fields encrypted before writing to any store — neither database admins nor cloud provider can read in plaintext without the application key.</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label l4">Consent Records</div>
+        <div class="layer-content"><strong>Cryptographic signature (ECDSA P-256)</strong> on every consent grant and revocation. Consent records stored immutably — no UPDATE or DELETE permitted; all changes are new signed records. Signature verification is part of the consent check on every data processing event.</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Key Management Requirements</h3>
+    <table class="doc-table">
+      <thead>
+        <tr><th>Key Type</th><th>Storage</th><th>Rotation Period</th><th>Access</th><th>Backup</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>API Signing Key (RS256 private)</td><td>HSM-backed KMS</td><td>6 months</td><td>Auth service only; no human access</td><td>Geo-replicated KMS</td></tr>
+        <tr><td>Distributor CMK (data lake)</td><td>AWS KMS / Azure Key Vault</td><td>Annual</td><td>Automated only; no console access</td><td>Cross-region replication</td></tr>
+        <tr><td>ERP Connector Client Cert</td><td>Per-connector secure keystore</td><td>90 days</td><td>Connector service only</td><td>Revocable via CRL</td></tr>
+        <tr><td>Field-Encryption DEK</td><td>Envelope-encrypted with KEK in KMS</td><td>Monthly re-wrapping</td><td>Application service account only</td><td>KEK backup in secondary region</td></tr>
+        <tr><td>Consent Signing Key (ECDSA)</td><td>HSM</td><td>Annual</td><td>Consent service only</td><td>Cold backup — not network-accessible</td></tr>
+        <tr><td>Dashboard TLS Certificate</td><td>Certificate Manager (auto-renew)</td><td>90 days (auto)</td><td>Load balancer / CDN</td><td>Auto-renewed before expiry</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 04 NETWORK -->
+  <div class="section" id="network">
+    <div class="section-header">
+      <span class="section-num">04 —</span>
+      <h2>Network Security</h2>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3>Network Segmentation</h3>
+        <p>The AltScore infrastructure is segmented into four isolated network zones. No direct connectivity between zones — all cross-zone traffic routes through an explicit gateway or service mesh with mutual authentication.</p>
+        <table class="doc-table" style="margin-top:16px;">
+          <thead><tr><th>Zone</th><th>Contents</th><th>Internet-Accessible</th></tr></thead>
+          <tbody>
+            <tr><td><strong>DMZ</strong></td><td>API Gateway, WAF, Load Balancer, CDN</td><td><span class="risk-high">Yes (controlled)</span></td></tr>
+            <tr><td><strong>Application</strong></td><td>Score API, Consent Service, Dashboard Backend</td><td><span class="risk-low">No</span></td></tr>
+            <tr><td><strong>Data</strong></td><td>Data Lake, Feature Store, Score DB, Redis Cache</td><td><span class="risk-low">No</span></td></tr>
+            <tr><td><strong>ML Compute</strong></td><td>Training cluster, MLflow, Model registry</td><td><span class="risk-low">No — egress via proxy only</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Perimeter Controls</h3>
+        <div class="sec-card" style="margin:0 0 16px 0;">
+          <div class="sec-title">WAF Rules</div>
+          <ul>
+            <li>OWASP Top 10 rule set enforced at WAF</li>
+            <li>Rate limiting: 100 req/min per lender API key; 1000 req/min per IP at WAF</li>
+            <li>Geo-blocking configurable at WAF — default: India only for production</li>
+            <li>SQL injection, XSS, and path traversal patterns blocked at ingress</li>
+            <li>Bot detection: minimum CAPTCHA score threshold for dashboard login</li>
+          </ul>
+        </div>
+        <div class="sec-card green" style="margin:0;">
+          <div class="sec-title">DDoS Protection</div>
+          <ul>
+            <li>Cloud-native DDoS shield (AWS Shield Advanced / Azure DDoS Standard)</li>
+            <li>Volumetric attack mitigation at network layer — upstream from application</li>
+            <li>API-layer throttling independent of network-layer protection</li>
+            <li>Automatic traffic scrubbing for sustained attack patterns</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">ERP Connector Network Requirements</h3>
+    <p>The ERP Connector SDK operates inside distributor on-premise or cloud environments. Network security must be enforced for both the outbound connection from the distributor and the inbound data ingestion endpoint at AltScore.</p>
+    <table class="doc-table">
+      <thead><tr><th>Requirement</th><th>Specification</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td>Outbound-only connection</td><td>Connector initiates HTTPS; AltScore never initiates inbound connection to distributor network</td><td>No VPN or firewall hole required in distributor environment</td></tr>
+        <tr><td>IP allowlisting</td><td>AltScore publishes a static IP range for ingestion endpoints; distributors can allowlist</td><td>Reduces phishing/man-in-the-middle risk</td></tr>
+        <tr><td>mTLS on ingestion endpoint</td><td>Client certificate required; self-signed certs not accepted</td><td>Prevents unauthenticated data injection</td></tr>
+        <tr><td>Payload size limit</td><td>Max 50MB per batch; connector enforces chunking above this threshold</td><td>Prevents resource exhaustion on ingestion endpoint</td></tr>
+        <tr><td>Retry with backoff</td><td>Exponential backoff; max 5 retries; failure logged and alerted</td><td>Prevents thundering-herd on transient network failures</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 05 DATA ACCESS -->
+  <div class="section" id="access">
+    <div class="section-header">
+      <span class="section-num">05 —</span>
+      <h2>Data Access Controls</h2>
+    </div>
+
+    <p>AltScore holds sensitive commercial data from multiple distributors and retailers. Strict logical isolation between data owners is a non-negotiable requirement — not just a policy, but an engineering constraint enforced at the database level.</p>
+
+    <h3>Data Isolation Architecture</h3>
+    <div class="sec-grid">
+      <div class="sec-card">
+        <div class="sec-title">Distributor Isolation</div>
+        <ul>
+          <li>Each distributor's raw data partitioned in a separate S3 prefix / ADLS container with its own CMK</li>
+          <li>Service accounts for each distributor's connector have write access only to their own partition</li>
+          <li>Bronze-layer queries require explicit distributor_id scope — no wildcard reads</li>
+          <li>Cross-distributor data joins only permitted in the pseudonymized Silver layer, after identity resolution</li>
+        </ul>
+      </div>
+      <div class="sec-card green">
+        <div class="sec-title">Lender Isolation</div>
+        <ul>
+          <li>Row-level security (RLS) enforced in Score Store PostgreSQL — every query is automatically scoped to the requesting lender_id</li>
+          <li>Lender A cannot enumerate, infer, or access retailer scores belonging to Lender B</li>
+          <li>API responses never include competitor lender identifiers or exposure amounts</li>
+          <li>Lender dashboard data is server-side rendered with lender scope — no client-side filtering</li>
+        </ul>
+      </div>
+      <div class="sec-card gold">
+        <div class="sec-title">Retailer PII Pseudonymization</div>
+        <ul>
+          <li>GST number and phone pseudonymized to UUID before entering Silver/Gold layers</li>
+          <li>Identity resolution store (UUID ↔ GST/phone) is physically separate, access-restricted</li>
+          <li>ML pipeline never accesses the identity resolution store — operates entirely on UUIDs</li>
+          <li>Score API re-maps UUID → retailer identity only at response time, via a separate lookup service</li>
+        </ul>
+      </div>
+      <div class="sec-card red">
+        <div class="sec-title">No Cross-Contamination Rules</div>
+        <ul>
+          <li>Feature computation jobs run in isolated compute environments per distributor batch</li>
+          <li>Shared infrastructure (Spark, Airflow) uses resource tagging to prevent job-level data mixing</li>
+          <li>Score Store views enforce RLS; direct table access requires separate privileged role with audit</li>
+          <li>Redis cache keys namespaced by lender_id; no shared cache keys across lenders</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Sensitive Data Handling Rules</h3>
+    <table class="doc-table">
+      <thead><tr><th>Data Type</th><th>Classification</th><th>Masking in Logs</th><th>Masking in Dashboard UI</th><th>Permitted Export</th></tr></thead>
+      <tbody>
+        <tr><td>Retailer GST Number</td><td><span class="risk-high">Highly Sensitive</span></td><td>Last 4 chars only</td><td>Partial (XXXX...R1ZX)</td><td>No — API response only</td></tr>
+        <tr><td>Retailer Phone</td><td><span class="risk-high">Highly Sensitive</span></td><td>Fully masked</td><td>Last 4 digits only</td><td>No</td></tr>
+        <tr><td>Invoice Values</td><td><span class="risk-med">Sensitive</span></td><td>Aggregated only</td><td>Range bands, not exact</td><td>Aggregated reports only</td></tr>
+        <tr><td>AltScore Value</td><td><span class="risk-med">Sensitive</span></td><td>Logged (score only)</td><td>Shown in full to authorized lender</td><td>Lender's own portfolio — yes</td></tr>
+        <tr><td>Probability of Default</td><td><span class="risk-med">Sensitive</span></td><td>Logged (value only)</td><td>Shown to authorized lender</td><td>Lender's own portfolio — yes</td></tr>
+        <tr><td>Reason Codes</td><td>Internal</td><td>Logged</td><td>Shown to lender + retailer (translated)</td><td>Yes — per consent scope</td></tr>
+        <tr><td>Model Weights/Features</td><td><span class="risk-high">Trade Secret</span></td><td>Never logged</td><td>Never shown</td><td>No</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 06 ERP SECURITY -->
+  <div class="section" id="erp">
+    <div class="section-header">
+      <span class="section-num">06 —</span>
+      <h2>ERP Connector Security</h2>
+    </div>
+
+    <p>The ERP Connector SDK is deployed inside distributor environments — a context AltScore does not control. The connector is the highest-risk ingestion surface and must be designed to be secure even when the host environment is compromised.</p>
+
+    <div class="two-col">
+      <div>
+        <h3>Connector Design Constraints</h3>
+        <div class="sec-card" style="margin:0;">
+          <div class="sec-title">Read-Only Access to ERP</div>
+          <ul>
+            <li>SDK requests only SELECT permissions to relevant ERP tables — never INSERT, UPDATE, DELETE</li>
+            <li>ERP database credentials stored in the SDK's encrypted local keystore, not in plaintext config files</li>
+            <li>Schema is documented and reviewed; any deviation from expected schema triggers a quarantine and alert</li>
+            <li>SQL queries are parameterized — no dynamic query construction from ERP data fields</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h3>Tamper-Resistance</h3>
+        <div class="sec-card green" style="margin:0;">
+          <div class="sec-title">Signed Payload Chain of Custody</div>
+          <ul>
+            <li>Every data batch signed by connector before transmission (HMAC-SHA256 using per-connector key)</li>
+            <li>Signature verified at ingestion endpoint before data is written to Bronze layer</li>
+            <li>Unsigned or invalid-signature batches are rejected and the distributor is notified</li>
+            <li>Connector binary is code-signed; SDK updates delivered via signed package only</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Data Extraction Scope Limits</h3>
+    <table class="doc-table">
+      <thead><tr><th>ERP Table / Module</th><th>Fields Extracted</th><th>Fields Excluded (Always)</th></tr></thead>
+      <tbody>
+        <tr><td>Sales Ledger</td><td>Invoice date, invoice amount, retailer ID, payment date, payment amount</td><td>Bank account numbers, internal distributor margin, credit notes to third parties</td></tr>
+        <tr><td>Item / SKU Master</td><td>SKU category code, order quantity, unit price band</td><td>Distributor cost price, supplier contracts, internal SKU profitability</td></tr>
+        <tr><td>Retailer Master</td><td>Retailer GST, shop name, locality, district, active status</td><td>Personal data beyond business identity, owner's personal income/assets</td></tr>
+        <tr><td>Payment Terms</td><td>Credit days agreed, overdue flag, payment method type (UPI/cash/cheque)</td><td>Cheque numbers, bank account details, personal guarantor data</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <p>The data extraction scope is contractually fixed in the distributor data partnership agreement. Any modification to the schema extraction list requires a new agreement version and explicit distributor consent. The SDK enforces scope technically — schema drift triggers a halt-and-alert, not a silent expansion of data collection.</p>
+      <span class="attr">ERP CONNECTOR SECURITY CONSTRAINT</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 07 ML SECURITY -->
+  <div class="section" id="ml">
+    <div class="section-header">
+      <span class="section-num">07 —</span>
+      <h2>ML Pipeline Security</h2>
+    </div>
+
+    <p>The ML scoring pipeline introduces attack surfaces that are distinct from traditional software — adversarial inputs, model poisoning, training data leakage, and score inversion attacks. Each is addressed as a security constraint, not just a model quality concern.</p>
+
+    <div class="three-col">
+      <div class="card accent-blue">
+        <span class="card-tag">Threat: Training Data Poisoning</span>
+        <h3>Data Provenance Enforcement</h3>
+        <p>Every training data batch carries a cryptographic hash. The training pipeline validates hashes before use. Any batch with a modified hash is rejected and an alert is raised. NBFC partner data is ingested via a separate authenticated channel and stored in an isolated training store.</p>
+      </div>
+      <div class="card accent-green">
+        <span class="card-tag">Threat: Model Inversion / Leakage</span>
+        <h3>Output Minimization</h3>
+        <p>API response exposes score, risk band, credit limit, and reason codes — not raw feature values. Reason codes are categorical (e.g., "payment_delay_p90_gt_15days") — not the exact numeric value that would allow reconstructing the feature. Model weights are never exposed via any interface.</p>
+      </div>
+      <div class="card accent-top">
+        <span class="card-tag">Threat: Adversarial Score Manipulation</span>
+        <h3>Input Validation &amp; Anomaly Detection</h3>
+        <p>Score requests validated for: valid retailer_id format, authorized lender scope, and request rate per retailer (max 3 score queries per retailer per 24h per lender). Isolation Forest anomaly signal is computed before scoring — flagged retailers receive a "review" disposition, not a raw score.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px;">Model Artifact Security</h3>
+    <table class="doc-table">
+      <thead><tr><th>Artifact</th><th>Storage</th><th>Access Control</th><th>Integrity Check</th></tr></thead>
+      <tbody>
+        <tr><td>Trained model binary (XGBoost)</td><td>MLflow artifact store (encrypted S3)</td><td>ML Ops role only; no developer direct access</td><td>SHA-256 hash logged at training; verified at load time</td></tr>
+        <tr><td>SHAP explainer object</td><td>Same as model binary, versioned together</td><td>Same as model binary</td><td>Hash validated before serving</td></tr>
+        <tr><td>Feature mean/std scalers</td><td>Versioned alongside model in MLflow</td><td>Same as model binary</td><td>Hash validated; scaler version must match model version</td></tr>
+        <tr><td>Training dataset snapshot</td><td>Encrypted S3, isolated training partition</td><td>ML Engineer + Security Audit only</td><td>Immutable — S3 Object Lock (WORM)</td></tr>
+        <tr><td>Model performance logs</td><td>CloudWatch / Azure Monitor</td><td>Read: ML Ops, Security; Write: pipeline only</td><td>Append-only log group; no log deletion permitted</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 08 AUDIT -->
+  <div class="section" id="audit">
+    <div class="section-header">
+      <span class="section-num">08 —</span>
+      <h2>Audit Logging &amp; Monitoring</h2>
+    </div>
+
+    <p>Every access to sensitive data, every score issued, and every consent event must be traceable to an identity and a timestamp. Audit logs are the forensic backbone of the platform and must be tamper-resistant.</p>
+
+    <h3>Mandatory Audit Events</h3>
+    <table class="doc-table">
+      <thead><tr><th>Event</th><th>Fields Logged</th><th>Retention</th><th>Alert Trigger</th></tr></thead>
+      <tbody>
+        <tr><td>Score API call</td><td>lender_id, retailer_id (UUID), timestamp, score_version, response_band, latency_ms, request_ip</td><td>7 years</td><td>Rate > 100 req/min per lender</td></tr>
+        <tr><td>Consent grant</td><td>retailer_id, distributor_id, timestamp, consent_scope, signature, channel (WhatsApp/web)</td><td>7 years</td><td>None (normal event)</td></tr>
+        <tr><td>Consent revocation</td><td>retailer_id, revocation_timestamp, requested_by, reason_code</td><td>7 years</td><td>Alert to data ops team within 1 hour</td></tr>
+        <tr><td>ERP data batch ingested</td><td>distributor_id, batch_id, record_count, data_hash, ingestion_timestamp, schema_version</td><td>7 years</td><td>Schema mismatch, hash failure</td></tr>
+        <tr><td>Admin data access</td><td>admin_user_id, resource_accessed, justification_ticket, approver_id, timestamp</td><td>7 years</td><td>All admin accesses alert to CISO</td></tr>
+        <tr><td>Failed authentication</td><td>user/lender_id, IP, timestamp, failure_reason</td><td>2 years</td><td>5 failures in 10 min → account lock + alert</td></tr>
+        <tr><td>Model version promotion</td><td>model_version, promoted_by, champion_challenger_metrics, timestamp</td><td>7 years</td><td>All promotions alert to Risk team</td></tr>
+        <tr><td>Grievance filed</td><td>retailer_id, lender_id, score queried, grievance_type, timestamp, resolution_status</td><td>7 years</td><td>SLA breach (7 days) → escalation alert</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:32px;">Log Integrity &amp; SIEM</h3>
+    <div class="sec-grid">
+      <div class="sec-card">
+        <div class="sec-title">Log Tamper-Resistance</div>
+        <ul>
+          <li>Audit logs written to append-only log groups (CloudWatch Logs with no-delete policy / Azure Immutable Blob Storage)</li>
+          <li>Log events hashed and chained — each log record includes hash of previous record (blockchain-style integrity)</li>
+          <li>Log export to cold storage (S3 Glacier / Azure Archive) after 90 days; deletion requires dual-admin approval</li>
+          <li>Log integrity verified weekly via automated hash chain check</li>
+        </ul>
+      </div>
+      <div class="sec-card green">
+        <div class="sec-title">SIEM &amp; Alerting</div>
+        <ul>
+          <li>All audit logs fed to SIEM (e.g., Splunk / AWS Security Hub / Microsoft Sentinel)</li>
+          <li>Correlation rules: unusual access hours, geographic anomalies, sudden score volume spikes</li>
+          <li>P1 alerts: paged to on-call security engineer within 5 minutes</li>
+          <li>Weekly automated threat report generated from SIEM for CISO review</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 09 COMPLIANCE -->
+  <div class="section" id="compliance">
+    <div class="section-header">
+      <span class="section-num">09 —</span>
+      <h2>Regulatory Compliance Requirements</h2>
+    </div>
+
+    <table class="doc-table">
+      <thead><tr><th>Standard / Regulation</th><th>Applicable Requirement</th><th>Security Control</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>DPDP Act 2023</strong></td>
+          <td>Consent, data minimization, purpose limitation, right to erasure, breach notification (72 hours)</td>
+          <td>Consent service with cryptographic records; pseudonymization pipeline; deletion workflow; breach runbook</td>
+          <td><span class="risk-med">Design complete — implementation in progress</span></td>
+        </tr>
+        <tr>
+          <td><strong>RBI FLDG Guidelines</strong></td>
+          <td>Explainability of credit decisions; audit trail for automated decisions</td>
+          <td>SHAP reason codes on every score; immutable audit log of all score decisions</td>
+          <td><span class="risk-low">Implemented in model design</span></td>
+        </tr>
+        <tr>
+          <td><strong>PCI-DSS</strong></td>
+          <td>No storage, processing, or transmission of payment card data</td>
+          <td>ERP extraction scope explicitly excludes card data; enforced at SDK level</td>
+          <td><span class="risk-low">By design — no card data in scope</span></td>
+        </tr>
+        <tr>
+          <td><strong>SOC 2 Type II</strong></td>
+          <td>Security, Availability, Confidentiality trust service criteria</td>
+          <td>12-month audit program; continuous monitoring; vendor assessment program</td>
+          <td><span class="risk-high">Target: Month 12 — audit readiness program begins Month 1</span></td>
+        </tr>
+        <tr>
+          <td><strong>ISO 27001</strong></td>
+          <td>Information security management system (ISMS)</td>
+          <td>ISMS policy suite; risk register; vendor management; business continuity plan</td>
+          <td><span class="risk-high">Target: Month 18 — gap assessment Month 3</span></td>
+        </tr>
+        <tr>
+          <td><strong>RBI Account Aggregator Framework</strong></td>
+          <td>Consent-based financial data sharing; AA licensing</td>
+          <td>AA integration for supplementary bureau data in v2; legal review of AA licensing requirements</td>
+          <td><span class="risk-med">v2 roadmap — legal review Month 4</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:32px;">Penetration Testing Schedule</h3>
+    <table class="doc-table">
+      <thead><tr><th>Test Type</th><th>Scope</th><th>Frequency</th><th>Performed By</th></tr></thead>
+      <tbody>
+        <tr><td>External Network Pen Test</td><td>All internet-facing endpoints (API, dashboard, connector ingestion)</td><td>Annual + before each major release</td><td>Accredited third-party firm</td></tr>
+        <tr><td>Web Application Pen Test</td><td>Dashboard, consent portal, API endpoints</td><td>Annual + after major feature changes</td><td>Accredited third-party firm</td></tr>
+        <tr><td>ERP Connector Security Review</td><td>SDK binary, client certificate handling, data extraction scope</td><td>Before each SDK major version release</td><td>Internal security + third-party code review</td></tr>
+        <tr><td>ML Adversarial Testing</td><td>Score API input fuzzing; model inversion attempts; gaming simulation</td><td>Quarterly</td><td>Internal ML security team</td></tr>
+        <tr><td>Internal Red Team</td><td>Full-scope including insider threat simulation, social engineering</td><td>Annual</td><td>External red team firm</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 10 INCIDENT -->
+  <div class="section" id="incident">
+    <div class="section-header">
+      <span class="section-num">10 —</span>
+      <h2>Incident Response Plan</h2>
+    </div>
+
+    <p>A documented, practiced incident response plan is a SOC 2 requirement and a DPDP Act obligation. The plan is reviewed and rehearsed quarterly via tabletop exercises.</p>
+
+    <h3>Severity Classification</h3>
+    <table class="doc-table">
+      <thead><tr><th>Severity</th><th>Definition</th><th>Response Time</th><th>Notification</th></tr></thead>
+      <tbody>
+        <tr><td><strong><span class="risk-high">P1 — Critical</span></strong></td><td>Confirmed data breach; unauthorized access to PII or score data; ransomware; full platform outage</td><td>15 min to acknowledge; 1 hour to contain</td><td>CISO immediately; legal within 1 hour; regulators within 72 hours (DPDP); affected data owners notified</td></tr>
+        <tr><td><strong><span class="risk-med">P2 — High</span></strong></td><td>Suspected breach (under investigation); auth system down; model serving down; consent system down</td><td>30 min to acknowledge; 4 hours to resolve or escalate</td><td>CISO + Engineering Lead; affected lenders if score API down &gt;30 min</td></tr>
+        <tr><td><strong><span class="risk-low">P3 — Medium</span></strong></td><td>Anomalous access pattern detected (no confirmed breach); single component degraded; failed pen test finding</td><td>2 hours to acknowledge; 24 hours to remediate</td><td>Security team; Engineering lead</td></tr>
+        <tr><td>P4 — Low</td><td>Policy violation; non-critical vulnerability; audit finding</td><td>Next business day</td><td>Security team internal</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:32px;">Breach Response Workflow</h3>
+    <div class="two-col">
+      <div class="sec-card">
+        <div class="sec-title">Contain (0–1 hour)</div>
+        <ul>
+          <li>Isolate affected systems — network segment block at firewall</li>
+          <li>Revoke all active API tokens and sessions immediately</li>
+          <li>Preserve forensic state — snapshot affected instances before remediation</li>
+          <li>Activate war room — CISO, Engineering Lead, Legal on bridge</li>
+          <li>Disable data ingestion and score serving if breach scope unclear</li>
+        </ul>
+      </div>
+      <div class="sec-card red">
+        <div class="sec-title">Notify (1–72 hours)</div>
+        <ul>
+          <li>Legal counsel determines regulatory notification scope</li>
+          <li>DPDP Act: notify Data Protection Board within 72 hours of confirmed breach</li>
+          <li>Notify affected distributors and retailers per breach notification template (pre-approved by legal)</li>
+          <li>Notify affected NBFC lenders if their data is in scope</li>
+          <li>Publish incident status page update every 2 hours during active incident</li>
+        </ul>
+      </div>
+      <div class="sec-card green">
+        <div class="sec-title">Recover (72 hours – 7 days)</div>
+        <ul>
+          <li>Deploy patched or clean-state infrastructure from IaC (no manual config)</li>
+          <li>Re-issue all affected credentials — API keys, certificates, session tokens</li>
+          <li>Verify data integrity via hash chain audit before resuming operations</li>
+          <li>Staged traffic restoration with enhanced monitoring</li>
+        </ul>
+      </div>
+      <div class="sec-card gold">
+        <div class="sec-title">Learn (7–30 days)</div>
+        <ul>
+          <li>Post-incident review — root cause, detection gap, response time analysis</li>
+          <li>Action items with owners and deadlines tracked in security risk register</li>
+          <li>Update threat model and relevant security controls</li>
+          <li>Board-level incident report if P1; share summary with NBFC partners</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="doc-footer">
+  <div>
+    <div class="ft-brand">Alt<span>Score</span> · Security</div>
+    <div style="margin-top:6px;">SAR-ALTSCORE-001 · v1.0 · May 2026</div>
+  </div>
+  <div style="text-align:right;">
+    <div>CONFIDENTIAL — INTERNAL USE ONLY</div>
+    <div style="margin-top:4px;">Companion to PRD-ALTSCORE-001</div>
+  </div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('.section');
+  const dots = document.querySelectorAll('.nav-dot');
+  const sectionIds = ['principles','auth','encryption','network','access','erp','ml','audit','compliance','incident'];
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = sectionIds.indexOf(entry.target.id);
+        if (idx >= 0) { dots.forEach(d => d.classList.remove('active')); dots[idx + 1]?.classList.add('active'); }
+      }
+    });
+  }, { threshold: 0.15 });
+  sections.forEach(s => observer.observe(s));
+  const coverObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) { dots.forEach(d => d.classList.remove('active')); dots[0].classList.add('active'); }
+  }, { threshold: 0.3 });
+  coverObserver.observe(document.getElementById('cover'));
+  window.scrollTo = function(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+</script>
+</body>
+</html>
